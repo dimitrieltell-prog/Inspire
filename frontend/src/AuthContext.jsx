@@ -1,0 +1,55 @@
+import { createContext, useContext, useEffect, useState } from 'react'
+import { api } from './api'
+
+const AuthContext = createContext(null)
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('inspire_user')
+    if (stored) setUser(JSON.parse(stored))
+    setReady(true)
+  }, [])
+
+  function saveSession({ access_token, user }) {
+    localStorage.setItem('inspire_token', access_token)
+    localStorage.setItem('inspire_user', JSON.stringify(user))
+    setUser(user)
+  }
+
+  async function register(email, password, display_name) {
+    const data = await api.register({ email, password, display_name })
+    saveSession(data)
+    return data
+  }
+
+  async function login(email, password) {
+    const data = await api.login(email, password)
+    saveSession(data)
+    return data
+  }
+
+  function logout() {
+    localStorage.removeItem('inspire_token')
+    localStorage.removeItem('inspire_user')
+    setUser(null)
+  }
+
+  async function refreshPremium() {
+    const updated = await api.mockUpgrade()
+    localStorage.setItem('inspire_user', JSON.stringify(updated))
+    setUser(updated)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, ready, register, login, logout, refreshPremium }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  return useContext(AuthContext)
+}

@@ -1,0 +1,50 @@
+import time
+
+from fastapi import APIRouter, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Depends
+
+from app.auth import create_access_token, hash_password, verify_password
+from app.database import get_db
+from app.models import TokenOut, UserLogin, UserOut, UserRegister
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _to_user_out(user: dict) -> UserOut:
+    return UserOut(
+        id=user["_id"],
+        email=user["email"],
+        display_name=user["display_name"],
+        is_premium=user.get("is_premium", False),
+        is_founder=user.get("is_founder", False),
+    )
+
+
+@router.post("/register", response_model=TokenOut)
+async def register(payload: UserRegister):
+    db = get_db()
+    existing = await db.users.find_one({"email": payload.email})
+    if existing:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "An account with this email already exists.")
+
+    user = await db.users.insert_one({
+        "email": payload.email,
+        "display_name": payload.display_name,
+        "password_hash": hash_password(payload.password),
+        "is_premium": False,
+        "is_founder": False,
+        "created_at": time.time(),
+    })
+    token = create_access_token(user["_id"])
+    return TokenOut(access_token=token, user=_to_user_out(user))
+
+
+@router.post("/login", response_model=TokenOut)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    db = get_db()
+    user = await db.users.find_one({"email": form_data.username})
+    if not user or not verify_password(form_data.password, user["password_hash"]):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect email or password.")
+    token = create_access_token(user["_id"])
+    return TokenOut(access_token=token, user=_to_user_out(user))
