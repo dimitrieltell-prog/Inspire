@@ -20,6 +20,8 @@ class Settings:
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))
 
+    google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
+
     aria_free_daily_limit: int = int(os.getenv("ARIA_FREE_DAILY_LIMIT", "5"))
 
     cors_origins: list = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]

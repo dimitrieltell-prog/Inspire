@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Register() {
-  const { register } = useAuth()
+  const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -25,6 +26,16 @@ export default function Register() {
     }
   }
 
+  async function onGoogleCredential(credential) {
+    setError('')
+    try {
+      await loginWithGoogle(credential)
+      navigate('/stories')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div className="max-w-sm mx-auto px-7 py-20">
       <h1 className="text-2xl font-bold mb-2">Join Inspire</h1>
@@ -41,6 +52,12 @@ export default function Register() {
           {loading ? 'Creating account…' : 'Create account'}
         </button>
       </form>
+      <div className="flex items-center gap-3 my-6">
+        <div className="h-px flex-1 bg-line" />
+        <span className="text-xs text-slate uppercase tracking-wide">or</span>
+        <div className="h-px flex-1 bg-line" />
+      </div>
+      <GoogleSignInButton onCredential={onGoogleCredential} onError={(err) => setError(err.message)} />
       <p className="text-sm text-slate mt-6">
         Already have an account? <Link to="/login" className="text-indigo font-semibold">Sign in</Link>
       </p>

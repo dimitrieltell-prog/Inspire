@@ -31,6 +31,12 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  async function loginWithGoogle(credential) {
+    const data = await api.googleLogin(credential)
+    saveSession(data)
+    return data
+  }
+
   function logout() {
     localStorage.removeItem('inspire_token')
     localStorage.removeItem('inspire_user')
@@ -44,7 +50,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, ready, register, login, logout, refreshPremium }}>
+    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, logout, refreshPremium }}>
       {children}
     </AuthContext.Provider>
   )

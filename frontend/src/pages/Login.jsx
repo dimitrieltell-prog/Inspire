@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,6 +25,16 @@ export default function Login() {
     }
   }
 
+  async function onGoogleCredential(credential) {
+    setError('')
+    try {
+      await loginWithGoogle(credential)
+      navigate('/stories')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div className="max-w-sm mx-auto px-7 py-20">
       <h1 className="text-2xl font-bold mb-2">Welcome back</h1>
@@ -38,6 +49,12 @@ export default function Login() {
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+      <div className="flex items-center gap-3 my-6">
+        <div className="h-px flex-1 bg-line" />
+        <span className="text-xs text-slate uppercase tracking-wide">or</span>
+        <div className="h-px flex-1 bg-line" />
+      </div>
+      <GoogleSignInButton onCredential={onGoogleCredential} onError={(err) => setError(err.message)} />
       <p className="text-sm text-slate mt-6">
         New here? <Link to="/register" className="text-indigo font-semibold">Create an account</Link>
       </p>
