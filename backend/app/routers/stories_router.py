@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, StoryCreate, StoryOut
-from app.moderation import contains_profanity
+from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
@@ -40,11 +40,6 @@ def _to_comment_out(comment: dict) -> CommentOut:
 
 @router.post("", response_model=StoryOut, status_code=status.HTTP_201_CREATED)
 async def create_story(payload: StoryCreate, user: dict = Depends(get_current_user)):
-    if contains_profanity(payload.title, payload.body):
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Let's keep this space respectful — please remove any offensive language and try again.",
-        )
     db = get_db()
     story = await db.stories.insert_one({
         "title": payload.title,
@@ -89,10 +84,10 @@ async def list_comments(story_id: str):
 
 @router.post("/comments", response_model=CommentOut, status_code=status.HTTP_201_CREATED)
 async def create_comment(payload: CommentCreate, user: dict = Depends(get_current_user)):
-    if contains_profanity(payload.body):
+    if contains_hostility(payload.body):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            "Let's keep this space respectful — please remove any offensive language and try again.",
+            "Let's keep this space respectful — please remove any hurtful language and try again.",
         )
 
     db = get_db()
