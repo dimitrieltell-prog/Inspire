@@ -10,6 +10,7 @@ from app.auth import create_access_token, get_current_user, hash_password, verif
 from app.config import settings
 from app.database import get_db
 from app.models import GoogleAuthIn, TokenOut, UserLogin, UserOut, UserRegister
+from app.moderation import contains_profanity
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -31,6 +32,9 @@ async def me(user: dict = Depends(get_current_user)):
 
 @router.post("/register", response_model=TokenOut)
 async def register(payload: UserRegister):
+    if contains_profanity(payload.display_name):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please choose a display name without offensive language.")
+
     db = get_db()
     existing = await db.users.find_one({"email": payload.email})
     if existing:
