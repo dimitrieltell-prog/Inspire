@@ -27,3 +27,11 @@ services:
         value: "https://inspirerealexperiences.com,https://www.inspirerealexperiences.com"
       - key: GOOGLE_CLIENT_ID
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: "https://www.inspirerealexperiences.com"

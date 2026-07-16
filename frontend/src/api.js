@@ -47,7 +47,8 @@ export const api = {
   reactToStory: (storyId, reaction) => request('/stories/react', { method: 'POST', body: { story_id: storyId, reaction } }),
   ariaUsage: () => request('/aria/usage'),
   ariaChat: (message) => request('/aria/chat', { method: 'POST', body: { message } }),
-  mockUpgrade: () => request('/premium/mock-upgrade', { method: 'POST' }),
+  me: () => request('/auth/me'),
+  createCheckoutSession: () => request('/premium/checkout', { method: 'POST' }),
 }
 
 export { getToken }

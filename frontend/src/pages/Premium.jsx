@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../AuthContext'
+import { api } from '../api'
 
 const PERKS = [
   'Unlimited messages with Aria (free plan: 5/day)',
@@ -11,20 +12,35 @@ const PERKS = [
 ]
 
 export default function Premium() {
-  const { user, refreshPremium } = useAuth()
+  const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    const checkout = searchParams.get('checkout')
+    if (checkout === 'success') {
+      refreshUser().catch(() => {})
+      setNotice("Payment received — welcome to Premium!")
+      setSearchParams({}, { replace: true })
+    } else if (checkout === 'canceled') {
+      setNotice('Checkout canceled — no charge was made.')
+      setSearchParams({}, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function upgrade() {
     if (!user) { navigate('/login'); return }
     setLoading(true)
     setError('')
     try {
-      await refreshPremium()
+      const { checkout_url } = await api.createCheckoutSession()
+      window.location.href = checkout_url
     } catch (err) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }
@@ -33,6 +49,8 @@ export default function Premium() {
     <div className="max-w-md mx-auto px-7 py-16">
       <span className="text-xs font-bold uppercase tracking-wide text-indigo">Premium</span>
       <h1 className="text-3xl font-bold mt-3 mb-8">Go deeper with Premium</h1>
+
+      {notice && <p className="text-sm text-indigo-deep bg-indigo/10 rounded-xl px-4 py-3 mb-6">{notice}</p>}
 
       <div className="bg-gradient-to-br from-indigo to-indigo-deep text-white rounded-xl2 p-8">
         <div className="flex items-baseline gap-1.5 mb-6">
@@ -55,7 +73,7 @@ export default function Premium() {
             disabled={loading}
             className="w-full bg-white text-indigo-deep rounded-full py-3 font-semibold hover:shadow-lg transition-shadow disabled:opacity-60"
           >
-            {loading ? 'Upgrading…' : 'Upgrade to Premium'}
+            {loading ? 'Redirecting to checkout…' : 'Upgrade to Premium'}
           </button>
         )}
         {error && <p className="text-xs text-rose-100 mt-3">{error}</p>}
@@ -65,8 +83,7 @@ export default function Premium() {
       </div>
 
       <p className="text-xs text-slate-light mt-6 text-center">
-        This upgrade button is a demo (no real payment). A production build would
-        replace it with a real Stripe Checkout flow.
+        Secure checkout powered by Stripe. Cancel anytime.
       </p>
     </div>
   )

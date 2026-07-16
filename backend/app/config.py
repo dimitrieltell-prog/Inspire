@@ -22,9 +22,14 @@ class Settings:
 
     google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
 
+    stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+    stripe_price_id: str = os.getenv("STRIPE_PRICE_ID", "")
+    stripe_webhook_secret: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
     aria_free_daily_limit: int = int(os.getenv("ARIA_FREE_DAILY_LIMIT", "5"))
 
     cors_origins: list = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
+    frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
 settings = Settings()

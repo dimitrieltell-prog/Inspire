@@ -43,14 +43,15 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  async function refreshPremium() {
-    const updated = await api.mockUpgrade()
+  async function refreshUser() {
+    const updated = await api.me()
     localStorage.setItem('inspire_user', JSON.stringify(updated))
     setUser(updated)
+    return updated
   }
 
   return (
-    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, logout, refreshPremium }}>
+    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

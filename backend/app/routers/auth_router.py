@@ -6,7 +6,7 @@ from fastapi import Depends
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 
-from app.auth import create_access_token, hash_password, verify_password
+from app.auth import create_access_token, get_current_user, hash_password, verify_password
 from app.config import settings
 from app.database import get_db
 from app.models import GoogleAuthIn, TokenOut, UserLogin, UserOut, UserRegister
@@ -22,6 +22,11 @@ def _to_user_out(user: dict) -> UserOut:
         is_premium=user.get("is_premium", False),
         is_founder=user.get("is_founder", False),
     )
+
+
+@router.get("/me", response_model=UserOut)
+async def me(user: dict = Depends(get_current_user)):
+    return _to_user_out(user)
 
 
 @router.post("/register", response_model=TokenOut)
