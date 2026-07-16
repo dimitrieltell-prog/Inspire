@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
@@ -32,7 +33,9 @@ export default function StoryCard({ story }) {
         </span>
       )}
       <span className="text-[11.5px] font-bold uppercase tracking-wide text-indigo mb-3">{story.category}</span>
-      <h3 className="text-[18.5px] font-bold mb-2.5 leading-snug">{story.title}</h3>
+      <h3 className="text-[18.5px] font-bold mb-2.5 leading-snug">
+        <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.title}</Link>
+      </h3>
       <p className="text-sm text-slate leading-relaxed mb-5 flex-grow">{story.body}</p>
 
       <div className="relative">
@@ -55,7 +58,7 @@ export default function StoryCard({ story }) {
             <button onClick={() => setOpen((o) => !o)} className="hover:text-indigo transition-colors font-medium">
               {supportCount} support
             </button>
-            <span>{story.comment_count} replies</span>
+            <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.comment_count} replies</Link>
           </div>
         </div>
         {error && <p className="text-xs text-rose-ink mt-2">{error}</p>}

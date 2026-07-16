@@ -74,6 +74,19 @@ class ReactionCreate(BaseModel):
     reaction: str = Field(description=f"One of: {', '.join(REACTIONS)}")
 
 
+class CommentCreate(BaseModel):
+    story_id: str
+    body: str = Field(min_length=1, max_length=1000)
+
+
+class CommentOut(BaseModel):
+    id: str
+    story_id: str
+    author_name: str
+    body: str
+    created_at: float
+
+
 class AriaMessageIn(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
 

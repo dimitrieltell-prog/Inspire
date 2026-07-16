@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Stories from './pages/Stories'
 import StoryCreate from './pages/StoryCreate'
+import StoryDetail from './pages/StoryDetail'
 import Aria from './pages/Aria'
 import Premium from './pages/Premium'
 
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/stories" element={<Stories />} />
           <Route path="/stories/new" element={<StoryCreate />} />
+          <Route path="/stories/:storyId" element={<StoryDetail />} />
           <Route path="/aria" element={<Aria />} />
           <Route path="/premium" element={<Premium />} />
         </Routes>

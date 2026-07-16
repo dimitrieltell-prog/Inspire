@@ -92,11 +92,13 @@ class DB:
             self.users = MongoCollection(mongo_db["users"])
             self.stories = MongoCollection(mongo_db["stories"])
             self.reactions = MongoCollection(mongo_db["reactions"])
+            self.comments = MongoCollection(mongo_db["comments"])
             self.aria_usage = MongoCollection(mongo_db["aria_usage"])
         else:
             self.users = InMemoryCollection()
             self.stories = InMemoryCollection()
             self.reactions = InMemoryCollection()
+            self.comments = InMemoryCollection()
             self.aria_usage = InMemoryCollection()
 
 
