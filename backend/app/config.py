@@ -31,5 +31,7 @@ class Settings:
     cors_origins: list = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+    admin_key: str = os.getenv("ADMIN_KEY", "")
+
 
 settings = Settings()

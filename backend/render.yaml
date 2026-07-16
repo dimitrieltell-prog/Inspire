@@ -35,3 +35,5 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: "https://www.inspirerealexperiences.com"
+      - key: ADMIN_KEY
+        sync: false
