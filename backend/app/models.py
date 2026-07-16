@@ -49,7 +49,7 @@ class StoryCreate(BaseModel):
     body: str = Field(min_length=1, max_length=5000)
     category: Category
     is_anonymous: bool = False
-    media_url: Optional[str] = None
+    media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
 

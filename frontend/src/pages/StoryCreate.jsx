@@ -5,17 +5,25 @@ import { useAuth } from '../AuthContext'
 
 const CATEGORIES = ['Mental Health', 'Relationships', 'Family', 'School', 'Growth', 'Life Challenges', 'Achievements', 'Advice']
 
-// NOTE ON MEDIA: for this MVP, uploaded files are inlined as base64 data URLs
-// and stored directly on the story document -- fine for a demo, but for
-// production swap this for a real upload to S3/Cloudinary/etc. and store the
-// resulting URL instead of the file bytes.
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
+
+async function uploadToCloudinary(file) {
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+    throw new Error('Media uploads are not configured yet.')
+  }
+  const form = new FormData()
+  form.append('file', file)
+  form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+    method: 'POST',
+    body: form,
   })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error?.message || 'Upload failed. Please try a different file.')
+  return data.secure_url
 }
 
 export default function StoryCreate() {
@@ -43,6 +51,12 @@ export default function StoryCreate() {
   function onFileChange(e) {
     const file = e.target.files[0]
     if (!file) return
+    if (file.size > MAX_FILE_SIZE) {
+      setError('That file is too large — please choose one under 25MB.')
+      e.target.value = ''
+      return
+    }
+    setError('')
     const type = file.type.startsWith('video') ? 'video' : 'photo'
     setMediaFile(file)
     setMediaType(type)
@@ -55,7 +69,7 @@ export default function StoryCreate() {
     setError('')
     try {
       let media_url = null
-      if (mediaFile) media_url = await fileToDataUrl(mediaFile)
+      if (mediaFile) media_url = await uploadToCloudinary(mediaFile)
 
       await api.createStory({
         title,
