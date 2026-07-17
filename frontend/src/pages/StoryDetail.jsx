@@ -107,8 +107,8 @@ export default function StoryDetail() {
         </div>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-lg font-bold mb-4">Replies</h2>
+      <div className="mt-5">
+        <h2 className="text-lg font-bold mb-3">Replies</h2>
 
         {user ? (
           <form onSubmit={submitComment} className="flex flex-col gap-3 mb-6">
