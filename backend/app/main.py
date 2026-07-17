@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import admin_router, aria_router, auth_router, premium_router, stories_router
+from app.routers import admin_router, aria_router, auth_router, premium_router, stories_router, users_router
 
 app = FastAPI(title="Inspire API", version="0.1.0")
 
@@ -19,6 +19,7 @@ app.include_router(stories_router.router)
 app.include_router(aria_router.router)
 app.include_router(premium_router.router)
 app.include_router(admin_router.router)
+app.include_router(users_router.router)
 
 
 @app.get("/health")

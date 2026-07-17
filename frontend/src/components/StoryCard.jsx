@@ -53,7 +53,11 @@ export default function StoryCard({ story }) {
           </div>
         )}
         <div className="flex items-center justify-between pt-4 border-t border-line">
-          <span className="text-xs font-semibold text-slate">{story.author_name}</span>
+          {story.author_id ? (
+            <Link to={`/users/${story.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{story.author_name}</Link>
+          ) : (
+            <span className="text-xs font-semibold text-slate">{story.author_name}</span>
+          )}
           <div className="flex items-center gap-3 text-xs text-slate-light">
             <button onClick={() => setOpen((o) => !o)} className="hover:text-indigo transition-colors font-medium">
               {supportCount} support

@@ -9,7 +9,7 @@ from google.oauth2 import id_token as google_id_token
 from app.auth import create_access_token, get_current_user, hash_password, verify_password
 from app.config import settings
 from app.database import get_db
-from app.models import GoogleAuthIn, TokenOut, UserLogin, UserOut, UserRegister
+from app.models import DisplayNameUpdate, GoogleAuthIn, TokenOut, UserLogin, UserOut, UserRegister
 from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -31,6 +31,27 @@ def _to_user_out(user: dict) -> UserOut:
 @router.get("/me", response_model=UserOut)
 async def me(user: dict = Depends(get_current_user)):
     return _to_user_out(user)
+
+
+@router.patch("/me", response_model=UserOut)
+async def update_me(payload: DisplayNameUpdate, user: dict = Depends(get_current_user)):
+    name = payload.display_name.strip()
+    if not name:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Display name can't be empty.")
+    if contains_hostility(name):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please choose a display name without offensive language.")
+    db = get_db()
+    updated = await db.users.update_one({"_id": user["_id"]}, {"$set": {"display_name": name}})
+    # Keep the name shown on this user's existing stories/comments in sync.
+    await _sync_author_name(db, user["_id"], name)
+    return _to_user_out(updated)
+
+
+async def _sync_author_name(db, user_id: str, name: str):
+    for story in await db.stories.find({"author_id": user_id}):
+        await db.stories.update_one({"_id": story["_id"]}, {"$set": {"author_display_name": name}})
+    for comment in await db.comments.find({"author_id": user_id}):
+        await db.comments.update_one({"_id": comment["_id"]}, {"$set": {"author_display_name": name}})
 
 
 @router.post("/register", response_model=TokenOut)

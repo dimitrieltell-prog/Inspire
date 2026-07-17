@@ -16,12 +16,12 @@ export default function Nav() {
           <Link to="/stories" className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" className="hover:text-navy transition-colors">Aria</Link>
           <Link to="/premium" className="hover:text-navy transition-colors">Premium</Link>
-          {user?.is_founder && <Link to="/accounts" className="hover:text-navy transition-colors">Accounts</Link>}
+          {user && <Link to="/profile" className="hover:text-navy transition-colors">Profile</Link>}
         </nav>
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5">
+              <Link to="/profile" className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5 hover:text-navy transition-colors">
                 {user.display_name}
                 {user.is_founder && (
                   <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
@@ -29,7 +29,7 @@ export default function Nav() {
                 {user.is_premium && (
                   <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
                 )}
-              </span>
+              </Link>
               <button
                 onClick={() => { logout(); navigate('/') }}
                 className="px-5 py-2.5 rounded-full text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors"

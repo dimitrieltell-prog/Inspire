@@ -50,8 +50,15 @@ export function AuthProvider({ children }) {
     return updated
   }
 
+  async function updateName(display_name) {
+    const updated = await api.updateName(display_name)
+    localStorage.setItem('inspire_user', JSON.stringify(updated))
+    setUser(updated)
+    return updated
+  }
+
   return (
-    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, logout, refreshUser, updateName }}>
       {children}
     </AuthContext.Provider>
   )

@@ -49,6 +49,13 @@ class InMemoryCollection:
             doc[field] = doc.get(field, 0) + amount
         return doc
 
+    async def delete_one(self, query: dict) -> bool:
+        doc = await self.find_one(query)
+        if not doc:
+            return False
+        del self._docs[doc["_id"]]
+        return True
+
 
 def _matches(doc: dict, query: dict) -> bool:
     return all(doc.get(k) == v for k, v in query.items())
@@ -79,6 +86,10 @@ class MongoCollection:
         await self._c.update_one(query, update)
         return await self.find_one(query)
 
+    async def delete_one(self, query: dict) -> bool:
+        result = await self._c.delete_one(query)
+        return result.deleted_count > 0
+
 
 class DB:
     """Holds one collection instance per entity type."""
@@ -93,12 +104,14 @@ class DB:
             self.stories = MongoCollection(mongo_db["stories"])
             self.reactions = MongoCollection(mongo_db["reactions"])
             self.comments = MongoCollection(mongo_db["comments"])
+            self.follows = MongoCollection(mongo_db["follows"])
             self.aria_usage = MongoCollection(mongo_db["aria_usage"])
         else:
             self.users = InMemoryCollection()
             self.stories = InMemoryCollection()
             self.reactions = InMemoryCollection()
             self.comments = InMemoryCollection()
+            self.follows = InMemoryCollection()
             self.aria_usage = InMemoryCollection()
 
 

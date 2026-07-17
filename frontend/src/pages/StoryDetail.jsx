@@ -95,7 +95,11 @@ export default function StoryDetail() {
             </div>
           )}
           <div className="flex items-center justify-between pt-4 border-t border-line">
-            <span className="text-xs font-semibold text-slate">{story.author_name}</span>
+            {story.author_id ? (
+              <Link to={`/users/${story.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{story.author_name}</Link>
+            ) : (
+              <span className="text-xs font-semibold text-slate">{story.author_name}</span>
+            )}
             <div className="flex items-center gap-3 text-xs text-slate-light">
               <button onClick={() => setReactOpen((o) => !o)} className="hover:text-indigo transition-colors font-medium">
                 {story.support_count} support
@@ -140,7 +144,11 @@ export default function StoryDetail() {
         <div className="flex flex-col gap-4">
           {comments.map((c) => (
             <div key={c.id} className="border-b border-line pb-4">
-              <span className="text-xs font-semibold text-slate">{c.author_name}</span>
+              {c.author_id ? (
+                <Link to={`/users/${c.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{c.author_name}</Link>
+              ) : (
+                <span className="text-xs font-semibold text-slate">{c.author_name}</span>
+              )}
               <p className="text-sm text-slate leading-relaxed mt-1 whitespace-pre-wrap">{c.body}</p>
             </div>
           ))}

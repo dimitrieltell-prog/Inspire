@@ -18,6 +18,7 @@ def _to_story_out(story: dict) -> StoryOut:
         body=story["body"],
         category=story["category"],
         author_name="Anonymous" if story["is_anonymous"] else story["author_display_name"],
+        author_id=None if story["is_anonymous"] else story.get("author_id"),
         is_anonymous=story["is_anonymous"],
         media_url=story.get("media_url"),
         media_type=story.get("media_type"),
@@ -33,6 +34,7 @@ def _to_comment_out(comment: dict) -> CommentOut:
         id=comment["_id"],
         story_id=comment["story_id"],
         author_name=comment["author_display_name"],
+        author_id=comment.get("author_id"),
         body=comment["body"],
         created_at=comment["created_at"],
     )

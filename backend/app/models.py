@@ -44,6 +44,31 @@ class TokenOut(BaseModel):
     user: UserOut
 
 
+class DisplayNameUpdate(BaseModel):
+    display_name: str = Field(min_length=1, max_length=40)
+
+
+class ProfileUser(BaseModel):
+    """A user summary used in follower/following lists."""
+    id: str
+    display_name: str
+    is_premium: bool
+    is_founder: bool
+
+
+class PublicProfile(BaseModel):
+    id: str
+    display_name: str
+    is_premium: bool
+    is_founder: bool
+    follower_count: int
+    following_count: int
+    story_count: int
+    is_following: bool = False  # whether the current viewer follows this user
+    is_self: bool = False
+    created_at: Optional[float] = None
+
+
 class StoryCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(min_length=1, max_length=5000)
@@ -60,6 +85,7 @@ class StoryOut(BaseModel):
     body: str
     category: str
     author_name: str
+    author_id: Optional[str] = None  # only set for non-anonymous stories
     is_anonymous: bool
     media_url: Optional[str] = None
     media_type: Optional[str] = None
@@ -83,6 +109,7 @@ class CommentOut(BaseModel):
     id: str
     story_id: str
     author_name: str
+    author_id: Optional[str] = None
     body: str
     created_at: float
 

@@ -51,8 +51,14 @@ export const api = {
   ariaUsage: () => request('/aria/usage'),
   ariaChat: (message) => request('/aria/chat', { method: 'POST', body: { message } }),
   me: () => request('/auth/me'),
+  updateName: (display_name) => request('/auth/me', { method: 'PATCH', body: { display_name } }),
   createCheckoutSession: () => request('/premium/checkout', { method: 'POST' }),
   listAccounts: () => request('/admin/users'),
+  getProfile: (userId) => request(`/users/${userId}`),
+  listFollowers: (userId) => request(`/users/${userId}/followers`, { auth: false }),
+  listFollowing: (userId) => request(`/users/${userId}/following`, { auth: false }),
+  followUser: (userId) => request(`/users/${userId}/follow`, { method: 'POST' }),
+  unfollowUser: (userId) => request(`/users/${userId}/follow`, { method: 'DELETE' }),
 }
 
 export { getToken }
