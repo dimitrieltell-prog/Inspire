@@ -16,6 +16,7 @@ export default function Nav() {
           <Link to="/stories" className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" className="hover:text-navy transition-colors">Aria</Link>
           <Link to="/premium" className="hover:text-navy transition-colors">Premium</Link>
+          {user?.is_founder && <Link to="/accounts" className="hover:text-navy transition-colors">Accounts</Link>}
         </nav>
         <div className="flex items-center gap-3">
           {user ? (

@@ -52,6 +52,7 @@ export const api = {
   ariaChat: (message) => request('/aria/chat', { method: 'POST', body: { message } }),
   me: () => request('/auth/me'),
   createCheckoutSession: () => request('/premium/checkout', { method: 'POST' }),
+  listAccounts: () => request('/admin/users'),
 }
 
 export { getToken }

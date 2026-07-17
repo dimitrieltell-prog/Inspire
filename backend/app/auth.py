@@ -44,3 +44,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     if not user:
         raise credentials_error
     return user
+
+
+def is_founder(user: dict) -> bool:
+    return user.get("is_founder", False) or user["email"].lower() in settings.founder_emails
+
+
+async def require_founder(user: dict = Depends(get_current_user)) -> dict:
+    # 404 rather than 403 so the endpoint's existence isn't revealed to non-founders.
+    if not is_founder(user):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found.")
+    return user

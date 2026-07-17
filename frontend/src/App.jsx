@@ -8,6 +8,7 @@ import StoryCreate from './pages/StoryCreate'
 import StoryDetail from './pages/StoryDetail'
 import Aria from './pages/Aria'
 import Premium from './pages/Premium'
+import Accounts from './pages/Accounts'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/stories/:storyId" element={<StoryDetail />} />
           <Route path="/aria" element={<Aria />} />
           <Route path="/premium" element={<Premium />} />
+          <Route path="/accounts" element={<Accounts />} />
         </Routes>
       </main>
       <footer className="bg-navy text-white/60 py-8 mt-10">
