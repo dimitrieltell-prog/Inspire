@@ -33,5 +33,11 @@ class Settings:
 
     admin_key: str = os.getenv("ADMIN_KEY", "")
 
+    # Emails that always get founder status (and premium for free), regardless of
+    # what's stored in the DB -- makes the owner's badges permanent. Comma-separated.
+    founder_emails: set = {
+        e.strip().lower() for e in os.getenv("FOUNDER_EMAILS", "").split(",") if e.strip()
+    }
+
 
 settings = Settings()

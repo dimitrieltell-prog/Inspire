@@ -16,12 +16,15 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _to_user_out(user: dict) -> UserOut:
+    is_founder = user.get("is_founder", False) or user["email"].lower() in settings.founder_emails
+    # Founders always get premium for free.
+    is_premium = user.get("is_premium", False) or is_founder
     return UserOut(
         id=user["_id"],
         email=user["email"],
         display_name=user["display_name"],
-        is_premium=user.get("is_premium", False),
-        is_founder=user.get("is_founder", False),
+        is_premium=is_premium,
+        is_founder=is_founder,
     )
 
 

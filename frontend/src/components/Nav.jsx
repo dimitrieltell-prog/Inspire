@@ -20,8 +20,14 @@ export default function Nav() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-sm text-slate hidden sm:inline">
-                {user.display_name} {user.is_premium && <span className="text-indigo font-semibold">· Premium</span>}
+              <span className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5">
+                {user.display_name}
+                {user.is_founder && (
+                  <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
+                )}
+                {user.is_premium && (
+                  <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
+                )}
               </span>
               <button
                 onClick={() => { logout(); navigate('/') }}

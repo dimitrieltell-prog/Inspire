@@ -37,3 +37,5 @@ services:
         value: "https://www.inspirerealexperiences.com"
       - key: ADMIN_KEY
         sync: false
+      - key: FOUNDER_EMAILS
+        sync: false
