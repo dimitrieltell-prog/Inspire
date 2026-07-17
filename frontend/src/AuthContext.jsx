@@ -11,6 +11,16 @@ export function AuthProvider({ children }) {
     const stored = localStorage.getItem('inspire_user')
     if (stored) setUser(JSON.parse(stored))
     setReady(true)
+    // Refresh from the server so badges, name, and premium status stay current
+    // (e.g. founder status granted after the cached login).
+    if (localStorage.getItem('inspire_token')) {
+      api.me()
+        .then((fresh) => {
+          localStorage.setItem('inspire_user', JSON.stringify(fresh))
+          setUser(fresh)
+        })
+        .catch(() => {}) // keep cached data on transient errors
+    }
   }, [])
 
   function saveSession({ access_token, user }) {

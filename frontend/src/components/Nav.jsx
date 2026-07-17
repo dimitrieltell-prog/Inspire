@@ -7,18 +7,20 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line">
-      <div className="max-w-6xl mx-auto px-7 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-lg">
-          <span className="w-[30px] h-[30px] rounded-[9px] bg-indigo text-white flex items-center justify-center text-sm font-bold">i</span>
-          Inspire
-        </Link>
+      <div className="max-w-6xl mx-auto px-7 py-4 flex items-center justify-between gap-4">
+        <div className="flex-1 flex">
+          <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-lg">
+            <span className="w-[30px] h-[30px] rounded-[9px] bg-indigo text-white flex items-center justify-center text-sm font-bold">i</span>
+            Inspire
+          </Link>
+        </div>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate">
           <Link to="/stories" className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" className="hover:text-navy transition-colors">Aria</Link>
           <Link to="/premium" className="hover:text-navy transition-colors">Premium</Link>
           {user && <Link to="/profile" className="hover:text-navy transition-colors">Profile</Link>}
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex-1 flex items-center justify-end gap-3">
           {user ? (
             <>
               <Link to="/profile" className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5 hover:text-navy transition-colors">
