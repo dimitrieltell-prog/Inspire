@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="5%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3E4876"/>
+      <stop offset="50%" stop-color="#333D68"/>
+      <stop offset="100%" stop-color="#22273F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" fill="url(#bg)"/>
+
+  <g stroke="#EDECF6" fill="none" opacity="0.95">
+    <!-- outer diamond -->
+    <rect x="98" y="98" width="204" height="204" stroke-width="3" transform="rotate(45 200 200)"/>
+    <!-- inner diamond, tight gap like a double border -->
+    <rect x="110" y="110" width="180" height="180" stroke-width="1.5" transform="rotate(45 200 200)"/>
+  </g>
+
+  <text x="200" y="253" text-anchor="middle"
+    font-family="'Times New Roman', Times, serif" font-weight="700"
+    font-size="155" fill="#FDFCF8">i</text>
+</svg>

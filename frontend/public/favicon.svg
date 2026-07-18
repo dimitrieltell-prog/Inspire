@@ -1,5 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="30" fill="#3B4A8C"/>
-  <rect x="41" y="24" width="18" height="17" rx="5.5" fill="#ffffff"/>
-  <rect x="41" y="45" width="18" height="33" rx="6" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="5%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3E4876"/>
+      <stop offset="50%" stop-color="#333D68"/>
+      <stop offset="100%" stop-color="#22273F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" rx="80" fill="url(#bg)"/>
+
+  <!-- single thicker diamond: the double border blurs away at 16px -->
+  <rect x="92" y="92" width="216" height="216" stroke="#EDECF6" stroke-width="12"
+    fill="none" transform="rotate(45 200 200)"/>
+
+  <text x="200" y="268" text-anchor="middle"
+    font-family="'Times New Roman', Times, serif" font-weight="700"
+    font-size="190" fill="#FDFCF8">i</text>
 </svg>

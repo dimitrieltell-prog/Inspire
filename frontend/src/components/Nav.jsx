@@ -10,7 +10,7 @@ export default function Nav() {
       <div className="max-w-6xl mx-auto px-7 py-4 flex items-center justify-between gap-4">
         <div className="flex-1 flex">
           <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-lg">
-            <span className="w-[30px] h-[30px] rounded-[9px] bg-indigo text-white flex items-center justify-center text-sm font-bold">i</span>
+            <img src="/logo.svg" alt="" className="w-[30px] h-[30px] rounded-[9px]" />
             Inspire
           </Link>
         </div>
