@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+import StoryCard from '../components/StoryCard'
 
 function formatDate(ts) {
   if (!ts) return '—'
@@ -18,6 +19,10 @@ export default function UserProfile() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
+  const [tab, setTab] = useState('posts')
+  const [tabStories, setTabStories] = useState([])
+  const [tabLoading, setTabLoading] = useState(true)
+
   useEffect(() => {
     // Viewing your own profile? Send to the editable one.
     if (user && user.id === userId) { navigate('/profile'); return }
@@ -27,6 +32,12 @@ export default function UserProfile() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [userId, user, navigate])
+
+  useEffect(() => {
+    setTabLoading(true)
+    const load = tab === 'posts' ? api.getUserStories(userId) : api.getUserReposts(userId)
+    load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
+  }, [tab, userId])
 
   async function toggleFollow() {
     if (!user) { navigate('/login'); return }
@@ -98,6 +109,35 @@ export default function UserProfile() {
             <div className="text-xs text-slate">Stories</div>
           </div>
         </div>
+      </div>
+
+      {/* Posts / Reposts */}
+      <div className="mt-6">
+        <div className="flex gap-2 border-b border-line mb-5">
+          {['posts', 'reposts'].map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 -mb-px transition-colors ${
+                tab === t ? 'border-indigo text-indigo' : 'border-transparent text-slate hover:text-navy'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {tabLoading ? (
+          <p className="text-center text-slate py-8">Loading…</p>
+        ) : tabStories.length === 0 ? (
+          <p className="text-center text-slate-light py-8">
+            {tab === 'posts' ? `${profile.display_name} hasn't posted anything yet.` : `${profile.display_name} hasn't reposted anything yet.`}
+          </p>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-5">
+            {tabStories.map((s) => <StoryCard key={s.id} story={s} />)}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -92,6 +92,9 @@ class StoryOut(BaseModel):
     tags: list[str]
     support_count: int
     comment_count: int
+    repost_count: int = 0
+    is_saved: bool = False       # whether the current viewer saved it
+    is_reposted: bool = False    # whether the current viewer reposted it
     created_at: float
 
 

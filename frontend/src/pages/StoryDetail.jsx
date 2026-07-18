@@ -45,6 +45,30 @@ export default function StoryDetail() {
     }
   }
 
+  async function toggleSave() {
+    if (!user) { setReactError('Sign in to save.'); return }
+    const next = !story.is_saved
+    setStory((s) => ({ ...s, is_saved: next }))
+    try {
+      next ? await api.saveStory(story.id) : await api.unsaveStory(story.id)
+    } catch (e) {
+      setStory((s) => ({ ...s, is_saved: !next }))
+      setReactError(e.message)
+    }
+  }
+
+  async function toggleRepost() {
+    if (!user) { setReactError('Sign in to repost.'); return }
+    const next = !story.is_reposted
+    setStory((s) => ({ ...s, is_reposted: next, repost_count: s.repost_count + (next ? 1 : -1) }))
+    try {
+      next ? await api.repostStory(story.id) : await api.unrepostStory(story.id)
+    } catch (e) {
+      setStory((s) => ({ ...s, is_reposted: !next, repost_count: s.repost_count + (next ? -1 : 1) }))
+      setReactError(e.message)
+    }
+  }
+
   async function submitComment(e) {
     e.preventDefault()
     if (!user) { setCommentError('Sign in to leave a reply.'); return }
@@ -105,6 +129,12 @@ export default function StoryDetail() {
                 {story.support_count} support
               </button>
               <span>{story.comment_count} replies</span>
+              <button onClick={toggleRepost} className={`transition-colors font-medium ${story.is_reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
+                ⇄ {story.repost_count}
+              </button>
+              <button onClick={toggleSave} className={`transition-colors font-medium ${story.is_saved ? 'text-indigo' : 'hover:text-indigo'}`}>
+                {story.is_saved ? '★ Saved' : '☆ Save'}
+              </button>
             </div>
           </div>
           {reactError && <p className="text-xs text-rose-ink mt-2">{reactError}</p>}

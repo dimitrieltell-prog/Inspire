@@ -12,6 +12,10 @@ export default function StoryCard({ story }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
 
+  const [saved, setSaved] = useState(story.is_saved)
+  const [reposted, setReposted] = useState(story.is_reposted)
+  const [repostCount, setRepostCount] = useState(story.repost_count || 0)
+
   async function react(reaction) {
     if (!user) { setError('Sign in to send support.'); return }
     try {
@@ -21,6 +25,32 @@ export default function StoryCard({ story }) {
       setOpen(false)
       setError('')
     } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  async function toggleSave() {
+    if (!user) { setError('Sign in to save.'); return }
+    const next = !saved
+    setSaved(next)
+    try {
+      next ? await api.saveStory(story.id) : await api.unsaveStory(story.id)
+    } catch (e) {
+      setSaved(!next)
+      setError(e.message)
+    }
+  }
+
+  async function toggleRepost() {
+    if (!user) { setError('Sign in to repost.'); return }
+    const next = !reposted
+    setReposted(next)
+    setRepostCount((c) => c + (next ? 1 : -1))
+    try {
+      next ? await api.repostStory(story.id) : await api.unrepostStory(story.id)
+    } catch (e) {
+      setReposted(!next)
+      setRepostCount((c) => c + (next ? -1 : 1))
       setError(e.message)
     }
   }
@@ -63,6 +93,12 @@ export default function StoryCard({ story }) {
               {supportCount} support
             </button>
             <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.comment_count} replies</Link>
+            <button onClick={toggleRepost} className={`transition-colors font-medium ${reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
+              ⇄ {repostCount}
+            </button>
+            <button onClick={toggleSave} className={`transition-colors font-medium ${saved ? 'text-indigo' : 'hover:text-indigo'}`}>
+              {saved ? '★ Saved' : '☆ Save'}
+            </button>
           </div>
         </div>
         {error && <p className="text-xs text-rose-ink mt-2">{error}</p>}

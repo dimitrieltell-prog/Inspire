@@ -2,34 +2,13 @@ import time
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 
-from app.auth import get_current_user, is_founder
-from app.config import settings
+from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
-from app.models import ProfileUser, PublicProfile
-from jose import JWTError, jwt
+from app.models import ProfileUser, PublicProfile, StoryOut
+from app.routers.stories_router import serialize_story
 
 router = APIRouter(prefix="/users", tags=["users"])
-
-# auto_error=False so profiles are viewable while logged out (token is optional).
-optional_oauth2 = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
-
-
-async def _optional_user(token: Optional[str] = Depends(optional_oauth2)) -> Optional[dict]:
-    """Like get_current_user but returns None instead of 401 when not signed in,
-    so public profiles work for logged-out visitors too."""
-    if not token:
-        return None
-    try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-        user_id = payload.get("sub")
-    except JWTError:
-        return None
-    if not user_id:
-        return None
-    db = get_db()
-    return await db.users.find_one({"_id": user_id})
 
 
 def _profile_user(u: dict) -> ProfileUser:
@@ -66,7 +45,7 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
 
 
 @router.get("/{user_id}", response_model=PublicProfile)
-async def get_profile(user_id: str, viewer: Optional[dict] = Depends(_optional_user)):
+async def get_profile(user_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
     user = await db.users.find_one({"_id": user_id})
     if not user:
@@ -119,3 +98,40 @@ async def follow_user(user_id: str, user: dict = Depends(get_current_user)):
 async def unfollow_user(user_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
     await db.follows.delete_one({"follower_id": user["_id"], "following_id": user_id})
+
+
+@router.get("/{user_id}/stories", response_model=list[StoryOut])
+async def user_stories(user_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
+    db = get_db()
+    stories = await db.stories.find({"author_id": user_id}, sort_key="created_at", reverse=True)
+    is_owner = bool(viewer and viewer["_id"] == user_id)
+    # Others only see non-anonymous posts; you see all of your own.
+    visible = [s for s in stories if is_owner or not s.get("is_anonymous")]
+    return [await serialize_story(s, viewer, db) for s in visible]
+
+
+@router.get("/{user_id}/reposts", response_model=list[StoryOut])
+async def user_reposts(user_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
+    db = get_db()
+    reposts = await db.reposts.find({"user_id": user_id}, sort_key="created_at", reverse=True)
+    result = []
+    for r in reposts:
+        story = await db.stories.find_one({"_id": r["story_id"]})
+        if story:
+            result.append(await serialize_story(story, viewer, db))
+    return result
+
+
+@router.get("/{user_id}/saved", response_model=list[StoryOut])
+async def user_saved(user_id: str, viewer: dict = Depends(get_current_user)):
+    # Saved is private -- only the owner can see their own saved stories.
+    if viewer["_id"] != user_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found.")
+    db = get_db()
+    saves = await db.saves.find({"user_id": user_id}, sort_key="created_at", reverse=True)
+    result = []
+    for sv in saves:
+        story = await db.stories.find_one({"_id": sv["story_id"]})
+        if story:
+            result.append(await serialize_story(story, viewer, db))
+    return result

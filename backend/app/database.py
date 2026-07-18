@@ -105,6 +105,8 @@ class DB:
             self.reactions = MongoCollection(mongo_db["reactions"])
             self.comments = MongoCollection(mongo_db["comments"])
             self.follows = MongoCollection(mongo_db["follows"])
+            self.reposts = MongoCollection(mongo_db["reposts"])
+            self.saves = MongoCollection(mongo_db["saves"])
             self.aria_usage = MongoCollection(mongo_db["aria_usage"])
         else:
             self.users = InMemoryCollection()
@@ -112,6 +114,8 @@ class DB:
             self.reactions = InMemoryCollection()
             self.comments = InMemoryCollection()
             self.follows = InMemoryCollection()
+            self.reposts = InMemoryCollection()
+            self.saves = InMemoryCollection()
             self.aria_usage = InMemoryCollection()
 
 
