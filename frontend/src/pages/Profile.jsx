@@ -9,8 +9,10 @@ function formatDate(ts) {
   return new Date(ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+const emptyDraft = { display_name: '', username: '', bio: '', pronouns: '', links: [], schools: [] }
+
 export default function Profile() {
-  const { user, ready, updateName } = useAuth()
+  const { user, ready, updateProfile } = useAuth()
   const navigate = useNavigate()
 
   const [profile, setProfile] = useState(null)
@@ -18,8 +20,8 @@ export default function Profile() {
   const [error, setError] = useState('')
 
   const [editing, setEditing] = useState(false)
-  const [nameDraft, setNameDraft] = useState('')
-  const [nameError, setNameError] = useState('')
+  const [draft, setDraft] = useState(emptyDraft)
+  const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const [listMode, setListMode] = useState(null) // 'followers' | 'following' | null
@@ -54,16 +56,54 @@ export default function Profile() {
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
   }, [tab, user])
 
-  async function saveName(e) {
+  function startEditing() {
+    setDraft({
+      display_name: profile.display_name,
+      username: profile.username || '',
+      bio: profile.bio || '',
+      pronouns: profile.pronouns || '',
+      links: profile.links?.length ? [...profile.links] : [''],
+      schools: profile.schools?.length ? [...profile.schools] : [''],
+    })
+    setSaveError('')
+    setEditing(true)
+  }
+
+  function updateListField(field, index, value) {
+    setDraft((d) => ({ ...d, [field]: d[field].map((v, i) => (i === index ? value : v)) }))
+  }
+  function addListField(field) {
+    setDraft((d) => ({ ...d, [field]: [...d[field], ''] }))
+  }
+  function removeListField(field, index) {
+    setDraft((d) => ({ ...d, [field]: d[field].filter((_, i) => i !== index) }))
+  }
+
+  async function saveProfile(e) {
     e.preventDefault()
     setSaving(true)
-    setNameError('')
+    setSaveError('')
     try {
-      const updated = await updateName(nameDraft)
-      setProfile((p) => ({ ...p, display_name: updated.display_name }))
+      const updated = await updateProfile({
+        display_name: draft.display_name,
+        username: draft.username,
+        bio: draft.bio,
+        pronouns: draft.pronouns,
+        links: draft.links.filter((l) => l.trim()),
+        schools: draft.schools.filter((s) => s.trim()),
+      })
+      setProfile((p) => ({
+        ...p,
+        display_name: updated.display_name,
+        username: updated.username,
+        bio: draft.bio,
+        pronouns: draft.pronouns,
+        links: draft.links.filter((l) => l.trim()),
+        schools: draft.schools.filter((s) => s.trim()),
+      }))
       setEditing(false)
     } catch (err) {
-      setNameError(err.message)
+      setSaveError(err.message)
     } finally {
       setSaving(false)
     }
@@ -85,48 +125,143 @@ export default function Profile() {
     <div className="max-w-2xl mx-auto px-7 py-16">
       {/* Header card */}
       <div className="bg-white border border-line rounded-xl2 p-7">
-        <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
-            {profile.display_name.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-grow min-w-0">
-            {editing ? (
-              <form onSubmit={saveName} className="flex flex-col gap-2">
+        {editing ? (
+          <form onSubmit={saveProfile} className="flex flex-col gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-light block mb-1">Display name</label>
+              <input
+                autoFocus
+                maxLength={40}
+                value={draft.display_name}
+                onChange={(e) => setDraft((d) => ({ ...d, display_name: e.target.value }))}
+                className="w-full border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-light block mb-1">Username</label>
+              <div className="flex items-center border border-line rounded-xl px-3 focus-within:border-indigo">
+                <span className="text-slate-light text-sm">@</span>
                 <input
-                  autoFocus
-                  maxLength={40}
-                  value={nameDraft}
-                  onChange={(e) => setNameDraft(e.target.value)}
-                  className="border border-line rounded-xl px-3 py-2 text-lg font-bold focus:outline-none focus:border-indigo"
+                  maxLength={30}
+                  value={draft.username}
+                  onChange={(e) => setDraft((d) => ({ ...d, username: e.target.value.toLowerCase() }))}
+                  className="w-full px-1.5 py-2 text-sm focus:outline-none"
+                  placeholder="username"
                 />
-                {nameError && <p className="text-xs text-rose-ink">{nameError}</p>}
-                <div className="flex gap-2">
-                  <button disabled={saving} className="bg-indigo text-white rounded-full px-4 py-1.5 text-sm font-semibold disabled:opacity-60">
-                    {saving ? 'Saving…' : 'Save'}
-                  </button>
-                  <button type="button" onClick={() => setEditing(false)} className="text-sm text-slate px-3 py-1.5">Cancel</button>
-                </div>
-              </form>
-            ) : (
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-                {profile.is_founder && (
-                  <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
-                )}
-                {profile.is_premium && (
-                  <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
-                )}
-                <button
-                  onClick={() => { setNameDraft(profile.display_name); setEditing(true) }}
-                  className="text-xs text-indigo font-semibold ml-1 hover:underline"
-                >
-                  Edit
-                </button>
               </div>
-            )}
-            <p className="text-sm text-slate-light mt-1">Joined {formatDate(profile.created_at)}</p>
-          </div>
-        </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-light block mb-1">Pronouns</label>
+              <input
+                maxLength={40}
+                value={draft.pronouns}
+                onChange={(e) => setDraft((d) => ({ ...d, pronouns: e.target.value }))}
+                placeholder="e.g. she/her"
+                className="w-full border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-light block mb-1">Bio</label>
+              <textarea
+                maxLength={300}
+                rows={3}
+                value={draft.bio}
+                onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
+                placeholder="A little about you…"
+                className="w-full border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo resize-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-light block mb-1">Links</label>
+              <div className="flex flex-col gap-2">
+                {draft.links.map((l, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      value={l}
+                      onChange={(e) => updateListField('links', i, e.target.value)}
+                      placeholder="https://…"
+                      className="flex-grow border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"
+                    />
+                    <button type="button" onClick={() => removeListField('links', i)} className="text-slate-light hover:text-rose-ink px-2">✕</button>
+                  </div>
+                ))}
+                {draft.links.length < 5 && (
+                  <button type="button" onClick={() => addListField('links')} className="text-xs text-indigo font-semibold self-start hover:underline">
+                    + Add link
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-light block mb-1">Schools</label>
+              <div className="flex flex-col gap-2">
+                {draft.schools.map((s, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      value={s}
+                      onChange={(e) => updateListField('schools', i, e.target.value)}
+                      placeholder="School name"
+                      className="flex-grow border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"
+                    />
+                    <button type="button" onClick={() => removeListField('schools', i)} className="text-slate-light hover:text-rose-ink px-2">✕</button>
+                  </div>
+                ))}
+                {draft.schools.length < 5 && (
+                  <button type="button" onClick={() => addListField('schools')} className="text-xs text-indigo font-semibold self-start hover:underline">
+                    + Add school
+                  </button>
+                )}
+              </div>
+            </div>
+            {saveError && <p className="text-sm text-rose-ink">{saveError}</p>}
+            <div className="flex gap-2">
+              <button disabled={saving} className="bg-indigo text-white rounded-full px-5 py-2 text-sm font-semibold disabled:opacity-60">
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button type="button" onClick={() => setEditing(false)} className="text-sm text-slate px-3 py-2">Cancel</button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-indigo text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                {profile.display_name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-grow min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold">{profile.display_name}</h1>
+                  {profile.is_founder && (
+                    <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
+                  )}
+                  {profile.is_premium && (
+                    <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
+                  )}
+                  <button onClick={startEditing} className="text-xs text-indigo font-semibold ml-1 hover:underline">
+                    Edit
+                  </button>
+                </div>
+                <p className="text-sm text-slate-light mt-0.5">
+                  {profile.username && `@${profile.username}`}
+                  {profile.pronouns && ` · ${profile.pronouns}`}
+                </p>
+                {profile.bio && <p className="text-sm mt-2 whitespace-pre-wrap">{profile.bio}</p>}
+                {(profile.links?.length > 0) && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                    {profile.links.map((l) => (
+                      <a key={l} href={l} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo font-medium hover:underline">
+                        🔗 {l.replace(/^https?:\/\//, '')}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {(profile.schools?.length > 0) && (
+                  <p className="text-sm text-slate mt-2">🎓 {profile.schools.join(' · ')}</p>
+                )}
+                <p className="text-sm text-slate-light mt-2">Joined {formatDate(profile.created_at)}</p>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Stats */}
         <div className="flex gap-3 mt-6">

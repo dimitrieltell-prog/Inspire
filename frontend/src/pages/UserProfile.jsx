@@ -80,7 +80,24 @@ export default function UserProfile() {
                 <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
               )}
             </div>
-            <p className="text-sm text-slate-light mt-1">Joined {formatDate(profile.created_at)}</p>
+            <p className="text-sm text-slate-light mt-0.5">
+              {profile.username && `@${profile.username}`}
+              {profile.pronouns && ` · ${profile.pronouns}`}
+            </p>
+            {profile.bio && <p className="text-sm mt-2 whitespace-pre-wrap">{profile.bio}</p>}
+            {(profile.links?.length > 0) && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                {profile.links.map((l) => (
+                  <a key={l} href={l} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo font-medium hover:underline">
+                    🔗 {l.replace(/^https?:\/\//, '')}
+                  </a>
+                ))}
+              </div>
+            )}
+            {(profile.schools?.length > 0) && (
+              <p className="text-sm text-slate mt-2">🎓 {profile.schools.join(' · ')}</p>
+            )}
+            <p className="text-sm text-slate-light mt-2">Joined {formatDate(profile.created_at)}</p>
           </div>
           <button
             onClick={toggleFollow}

@@ -15,6 +15,7 @@ def _profile_user(u: dict) -> ProfileUser:
     return ProfileUser(
         id=u["_id"],
         display_name=u["display_name"],
+        username=u.get("username"),
         is_premium=u.get("is_premium", False) or is_founder(u),
         is_founder=is_founder(u),
     )
@@ -33,6 +34,11 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
     return PublicProfile(
         id=u["_id"],
         display_name=u["display_name"],
+        username=u.get("username"),
+        bio=u.get("bio", ""),
+        pronouns=u.get("pronouns", ""),
+        links=u.get("links", []),
+        schools=u.get("schools", []),
         is_premium=u.get("is_premium", False) or is_founder(u),
         is_founder=is_founder(u),
         follower_count=len(followers),

@@ -34,6 +34,7 @@ class UserOut(BaseModel):
     id: str
     email: EmailStr
     display_name: str
+    username: Optional[str] = None
     is_premium: bool
     is_founder: bool = False
 
@@ -44,14 +45,21 @@ class TokenOut(BaseModel):
     user: UserOut
 
 
-class DisplayNameUpdate(BaseModel):
-    display_name: str = Field(min_length=1, max_length=40)
+class ProfileUpdate(BaseModel):
+    # All optional -- only the provided fields are changed.
+    display_name: Optional[str] = Field(default=None, min_length=1, max_length=40)
+    username: Optional[str] = Field(default=None, min_length=3, max_length=30)
+    bio: Optional[str] = Field(default=None, max_length=300)
+    pronouns: Optional[str] = Field(default=None, max_length=40)
+    links: Optional[list[str]] = None
+    schools: Optional[list[str]] = None
 
 
 class ProfileUser(BaseModel):
     """A user summary used in follower/following lists."""
     id: str
     display_name: str
+    username: Optional[str] = None
     is_premium: bool
     is_founder: bool
 
@@ -59,6 +67,11 @@ class ProfileUser(BaseModel):
 class PublicProfile(BaseModel):
     id: str
     display_name: str
+    username: Optional[str] = None
+    bio: str = ""
+    pronouns: str = ""
+    links: list[str] = []
+    schools: list[str] = []
     is_premium: bool
     is_founder: bool
     follower_count: int
