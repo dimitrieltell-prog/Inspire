@@ -1,3 +1,5 @@
+import logging
+
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -5,6 +7,8 @@ from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
 from app.routers.auth_router import _to_user_out
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/premium", tags=["premium"])
 
@@ -25,7 +29,8 @@ async def create_checkout_session(user: dict = Depends(get_current_user)):
             success_url=f"{settings.frontend_url}/premium?checkout=success",
             cancel_url=f"{settings.frontend_url}/premium?checkout=canceled",
         )
-    except stripe.StripeError:
+    except stripe.StripeError as e:
+        logger.error("Stripe checkout session creation failed: %s", e)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Could not start checkout. Please try again shortly.")
     return {"checkout_url": session.url}
 
