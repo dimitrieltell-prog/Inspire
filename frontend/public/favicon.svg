@@ -1,19 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
-  <defs>
-    <linearGradient id="bg" x1="5%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3E4876"/>
-      <stop offset="50%" stop-color="#333D68"/>
-      <stop offset="100%" stop-color="#22273F"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="48 48 304 304">
+  <g stroke="#333D68" fill="none" opacity="0.95">
+    <!-- single diamond, thick enough to read at 16px tab size -->
+    <rect x="98" y="98" width="204" height="204" stroke-width="14" transform="rotate(45 200 200)"/>
+  </g>
 
-  <rect width="400" height="400" rx="80" fill="url(#bg)"/>
-
-  <!-- single thicker diamond: the double border blurs away at 16px -->
-  <rect x="92" y="92" width="216" height="216" stroke="#EDECF6" stroke-width="12"
-    fill="none" transform="rotate(45 200 200)"/>
-
-  <text x="200" y="268" text-anchor="middle"
+  <text x="200" y="262" text-anchor="middle"
     font-family="'Times New Roman', Times, serif" font-weight="700"
-    font-size="190" fill="#FDFCF8">i</text>
+    font-size="185" fill="#333D68">i</text>
 </svg>
