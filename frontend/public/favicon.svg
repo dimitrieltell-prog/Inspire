@@ -13,7 +13,7 @@
   <rect x="92" y="92" width="216" height="216" stroke="#EDECF6" stroke-width="12"
     fill="none" transform="rotate(45 200 200)"/>
 
-  <text x="200" y="268" text-anchor="middle"
+  <text x="200" y="262" text-anchor="middle"
     font-family="'Times New Roman', Times, serif" font-weight="700"
-    font-size="190" fill="#FDFCF8">i</text>
+    font-size="175" fill="#FDFCF8">i</text>
 </svg>
