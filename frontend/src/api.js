@@ -73,6 +73,8 @@ export const api = {
   getMyActivity: () => request('/me/activity'),
   getMyBlocked: () => request('/me/blocked'),
   getMyCloseCircle: () => request('/me/close-circle'),
+  getMyInsights: () => request('/me/insights'),
+  searchUsers: (q) => request(`/users?q=${encodeURIComponent(q)}`),
 }
 
 export { getToken }

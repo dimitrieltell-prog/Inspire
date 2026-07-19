@@ -49,11 +49,13 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         )
         is_blocked = bool(await db.blocks.find_one({"blocker_id": viewer["_id"], "blocked_id": u["_id"]}))
     can_view = await can_view_account(db, u, viewer)
+    # Private accounts still show the simple stuff -- name, username, bio --
+    # but hide everything else from non-followers.
     return PublicProfile(
         id=u["_id"],
         display_name=u["display_name"],
         username=u.get("username"),
-        bio=u.get("bio", "") if can_view else "",
+        bio=u.get("bio", ""),
         pronouns=u.get("pronouns", "") if can_view else "",
         links=u.get("links", []) if can_view else [],
         schools=u.get("schools", []) if can_view else [],
@@ -61,6 +63,9 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         is_founder=is_founder(u),
         is_private=u.get("is_private", False),
         is_business=u.get("is_business", False),
+        business_category=u.get("business_category"),
+        contact_email=u.get("contact_email") if u.get("is_business") else None,
+        contact_website=u.get("contact_website") if u.get("is_business") else None,
         follower_count=len(followers),
         following_count=len(following),
         story_count=len([s for s in stories if not s.get("is_anonymous")]),
@@ -70,6 +75,25 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         can_view=can_view,
         created_at=u.get("created_at"),
     )
+
+
+@router.get("", response_model=list[ProfileUser])
+async def search_users(q: str = "", viewer: Optional[dict] = Depends(get_optional_user)):
+    """Search people by name or username (for close circle, mentions, etc.)."""
+    q = q.strip().lower()
+    if len(q) < 2:
+        return []
+    db = get_db()
+    users = await db.users.find({})
+    matches = [
+        u for u in users
+        if q in u.get("display_name", "").lower() or q in (u.get("username") or "").lower()
+    ]
+    # Don't surface people who blocked the viewer.
+    if viewer:
+        hidden = {b["blocker_id"] for b in await db.blocks.find({"blocked_id": viewer["_id"]})}
+        matches = [u for u in matches if u["_id"] not in hidden]
+    return [_profile_user(u) for u in matches[:15]]
 
 
 @router.get("/{user_id}", response_model=PublicProfile)

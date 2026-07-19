@@ -10,7 +10,7 @@ from google.oauth2 import id_token as google_id_token
 from app.auth import create_access_token, get_current_user, hash_password, verify_password
 from app.config import settings
 from app.database import get_db
-from app.models import GoogleAuthIn, ProfileUpdate, TokenOut, UserLogin, UserOut, UserRegister
+from app.models import BUSINESS_CATEGORIES, COMMENT_AUDIENCES, GoogleAuthIn, ProfileUpdate, TokenOut, UserLogin, UserOut, UserRegister
 from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -56,6 +56,11 @@ def _to_user_out(user: dict) -> UserOut:
         is_founder=is_founder,
         is_private=user.get("is_private", False),
         is_business=user.get("is_business", False),
+        business_category=user.get("business_category"),
+        contact_email=user.get("contact_email"),
+        contact_website=user.get("contact_website"),
+        comment_audience=user.get("comment_audience", "everyone"),
+        hide_support_counts=user.get("hide_support_counts", False),
     )
 
 
@@ -118,6 +123,32 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.is_business is not None:
         updates["is_business"] = payload.is_business
+
+    if payload.business_category is not None:
+        cat = payload.business_category.strip()
+        if cat and cat not in BUSINESS_CATEGORIES:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Category must be one of: {', '.join(BUSINESS_CATEGORIES)}")
+        updates["business_category"] = cat or None
+
+    if payload.contact_email is not None:
+        email = payload.contact_email.strip()
+        if email and ("@" not in email or "." not in email.split("@")[-1]):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That doesn't look like a valid contact email.")
+        updates["contact_email"] = email or None
+
+    if payload.contact_website is not None:
+        site = payload.contact_website.strip()
+        if site and not (site.startswith("http://") or site.startswith("https://")):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Website must start with http:// or https://")
+        updates["contact_website"] = site or None
+
+    if payload.comment_audience is not None:
+        if payload.comment_audience not in COMMENT_AUDIENCES:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid reply audience.")
+        updates["comment_audience"] = payload.comment_audience
+
+    if payload.hide_support_counts is not None:
+        updates["hide_support_counts"] = payload.hide_support_counts
 
     if payload.schools is not None:
         schools = [s.strip() for s in payload.schools if s.strip()]

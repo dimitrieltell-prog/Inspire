@@ -18,6 +18,13 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
     if viewer:
         is_saved = bool(await db.saves.find_one({"user_id": viewer["_id"], "story_id": story["_id"]}))
         is_reposted = any(r["user_id"] == viewer["_id"] for r in reposts)
+
+    author = await db.users.find_one({"_id": story.get("author_id")}) if story.get("author_id") else None
+    is_author = bool(viewer and story.get("author_id") == viewer["_id"])
+    counts_hidden = bool(author and author.get("hide_support_counts") and not is_author)
+    # Business visibility perk: category chip on non-anonymous posts.
+    author_is_business = bool(author and author.get("is_business") and not story["is_anonymous"])
+
     return StoryOut(
         id=story["_id"],
         title=story["title"],
@@ -29,11 +36,14 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         media_url=story.get("media_url"),
         media_type=story.get("media_type"),
         tags=story.get("tags", []),
-        support_count=story.get("support_count", 0),
+        support_count=0 if counts_hidden else story.get("support_count", 0),
         comment_count=story.get("comment_count", 0),
         repost_count=len(reposts),
         is_saved=is_saved,
         is_reposted=is_reposted,
+        counts_hidden=counts_hidden,
+        author_is_business=author_is_business,
+        author_business_category=author.get("business_category") if author_is_business else None,
         created_at=story["created_at"],
     )
 
@@ -124,6 +134,25 @@ async def create_comment(payload: CommentCreate, user: dict = Depends(get_curren
     story = await db.stories.find_one({"_id": payload.story_id})
     if not story:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+
+    author_id = story.get("author_id")
+    if author_id and author_id != user["_id"]:
+        # Blocks (either direction) prevent replying.
+        if await db.blocks.find_one({"blocker_id": author_id, "blocked_id": user["_id"]}) or \
+           await db.blocks.find_one({"blocker_id": user["_id"], "blocked_id": author_id}):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+
+        # Respect the author's reply-audience setting.
+        author = await db.users.find_one({"_id": author_id})
+        audience = (author or {}).get("comment_audience", "everyone")
+        if audience == "no_one":
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "The author turned off replies on their stories.")
+        if audience == "followers":
+            if not await db.follows.find_one({"follower_id": user["_id"], "following_id": author_id}):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "Only people who follow the author can reply.")
+        if audience == "close_circle":
+            if not await db.close_circle.find_one({"owner_id": author_id, "member_id": user["_id"]}):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the author's close circle can reply.")
 
     comment = await db.comments.insert_one({
         "story_id": payload.story_id,

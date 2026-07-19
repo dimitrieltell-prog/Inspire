@@ -1,11 +1,34 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import ActivityItem, ProfileUser
+from app.models import ActivityItem, Insights, ProfileUser
 from app.routers.users_router import _profile_user
 
 router = APIRouter(prefix="/me", tags=["me"])
+
+
+@router.get("/insights", response_model=Insights)
+async def my_insights(user: dict = Depends(get_current_user)):
+    """Business-account analytics: how your stories are landing."""
+    if not user.get("is_business"):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a business account perk. Turn on Business account in Settings.")
+    db = get_db()
+    my_stories = await db.stories.find({"author_id": user["_id"]})
+    story_ids = {s["_id"] for s in my_stories}
+    supports = sum(s.get("support_count", 0) for s in my_stories)
+    replies = sum(s.get("comment_count", 0) for s in my_stories)
+    reposts = len([r for r in await db.reposts.find({}) if r["story_id"] in story_ids])
+    saves = len([s for s in await db.saves.find({}) if s["story_id"] in story_ids])
+    followers = len(await db.follows.find({"following_id": user["_id"]}))
+    return Insights(
+        followers=followers,
+        stories=len(my_stories),
+        supports_received=supports,
+        replies_received=replies,
+        reposts_received=reposts,
+        saves_received=saves,
+    )
 
 
 @router.get("/activity", response_model=list[ActivityItem])

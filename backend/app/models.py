@@ -30,6 +30,10 @@ class GoogleAuthIn(BaseModel):
     credential: str = Field(min_length=1)
 
 
+BUSINESS_CATEGORIES = ["Creator", "Brand", "Local business", "Community", "Media", "Nonprofit"]
+COMMENT_AUDIENCES = ["everyone", "followers", "close_circle", "no_one"]
+
+
 class UserOut(BaseModel):
     id: str
     email: EmailStr
@@ -39,6 +43,11 @@ class UserOut(BaseModel):
     is_founder: bool = False
     is_private: bool = False
     is_business: bool = False
+    business_category: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_website: Optional[str] = None
+    comment_audience: str = "everyone"
+    hide_support_counts: bool = False
 
 
 class TokenOut(BaseModel):
@@ -57,6 +66,11 @@ class ProfileUpdate(BaseModel):
     schools: Optional[list[str]] = None
     is_private: Optional[bool] = None
     is_business: Optional[bool] = None
+    business_category: Optional[str] = Field(default=None, max_length=40)
+    contact_email: Optional[str] = Field(default=None, max_length=120)
+    contact_website: Optional[str] = Field(default=None, max_length=200)
+    comment_audience: Optional[str] = None
+    hide_support_counts: Optional[bool] = None
 
 
 class ProfileUser(BaseModel):
@@ -80,6 +94,9 @@ class PublicProfile(BaseModel):
     is_founder: bool
     is_private: bool = False
     is_business: bool = False
+    business_category: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_website: Optional[str] = None
     follower_count: int
     following_count: int
     story_count: int
@@ -88,6 +105,16 @@ class PublicProfile(BaseModel):
     is_blocked: bool = False    # whether the current viewer has blocked this user
     can_view: bool = True       # false when the account is private and viewer isn't a follower
     created_at: Optional[float] = None
+
+
+class Insights(BaseModel):
+    """Business-account analytics."""
+    followers: int
+    stories: int
+    supports_received: int
+    replies_received: int
+    reposts_received: int
+    saves_received: int
 
 
 class ActivityItem(BaseModel):
@@ -125,6 +152,9 @@ class StoryOut(BaseModel):
     repost_count: int = 0
     is_saved: bool = False       # whether the current viewer saved it
     is_reposted: bool = False    # whether the current viewer reposted it
+    counts_hidden: bool = False  # author hides support counts from others
+    author_is_business: bool = False
+    author_business_category: Optional[str] = None
     created_at: float
 
 

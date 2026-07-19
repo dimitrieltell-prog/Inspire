@@ -126,7 +126,7 @@ export default function StoryDetail() {
             )}
             <div className="flex items-center gap-3 text-xs text-slate-light">
               <button onClick={() => setReactOpen((o) => !o)} className="hover:text-indigo transition-colors font-medium">
-                {story.support_count} support
+                {story.counts_hidden ? 'Support' : `${story.support_count} support`}
               </button>
               <span>{story.comment_count} replies</span>
               <button onClick={toggleRepost} className={`transition-colors font-medium ${story.is_reposted ? 'text-indigo' : 'hover:text-indigo'}`}>

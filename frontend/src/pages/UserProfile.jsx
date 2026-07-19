@@ -98,7 +98,9 @@ export default function UserProfile() {
                 <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
               )}
               {profile.is_business && (
-                <span className="text-[11px] font-bold uppercase tracking-wide border border-line text-slate px-2 py-0.5 rounded-full">Business</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide border border-line text-slate px-2 py-0.5 rounded-full">
+                  {profile.business_category || 'Business'}
+                </span>
               )}
             </div>
             <p className="text-sm text-slate-light mt-0.5">
@@ -117,6 +119,20 @@ export default function UserProfile() {
             )}
             {(profile.schools?.length > 0) && (
               <p className="text-sm text-slate mt-2">🎓 {profile.schools.join(' · ')}</p>
+            )}
+            {profile.is_business && (profile.contact_email || profile.contact_website) && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {profile.contact_email && (
+                  <a href={`mailto:${profile.contact_email}`} className="text-xs font-semibold border border-line rounded-full px-3.5 py-1.5 hover:border-indigo transition-colors">
+                    ✉️ Email
+                  </a>
+                )}
+                {profile.contact_website && (
+                  <a href={profile.contact_website} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold border border-line rounded-full px-3.5 py-1.5 hover:border-indigo transition-colors">
+                    🌐 Website
+                  </a>
+                )}
+              </div>
             )}
             <p className="text-sm text-slate-light mt-2">Joined {formatDate(profile.created_at)}</p>
           </div>

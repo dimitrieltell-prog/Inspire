@@ -83,14 +83,21 @@ export default function StoryCard({ story }) {
           </div>
         )}
         <div className="flex items-center justify-between pt-4 border-t border-line">
-          {story.author_id ? (
-            <Link to={`/users/${story.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{story.author_name}</Link>
-          ) : (
-            <span className="text-xs font-semibold text-slate">{story.author_name}</span>
-          )}
+          <span className="flex items-center gap-1.5 min-w-0">
+            {story.author_id ? (
+              <Link to={`/users/${story.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors truncate">{story.author_name}</Link>
+            ) : (
+              <span className="text-xs font-semibold text-slate truncate">{story.author_name}</span>
+            )}
+            {story.author_is_business && (
+              <span className="text-[9px] font-bold uppercase tracking-wide border border-line text-slate-light px-1.5 py-0.5 rounded-full flex-shrink-0">
+                {story.author_business_category || 'Business'}
+              </span>
+            )}
+          </span>
           <div className="flex items-center gap-3 text-xs text-slate-light">
             <button onClick={() => setOpen((o) => !o)} className="hover:text-indigo transition-colors font-medium">
-              {supportCount} support
+              {story.counts_hidden ? 'Support' : `${supportCount} support`}
             </button>
             <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.comment_count} replies</Link>
             <button onClick={toggleRepost} className={`transition-colors font-medium ${reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
