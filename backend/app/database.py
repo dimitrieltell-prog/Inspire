@@ -107,6 +107,8 @@ class DB:
             self.follows = MongoCollection(mongo_db["follows"])
             self.reposts = MongoCollection(mongo_db["reposts"])
             self.saves = MongoCollection(mongo_db["saves"])
+            self.blocks = MongoCollection(mongo_db["blocks"])
+            self.close_circle = MongoCollection(mongo_db["close_circle"])
             self.aria_usage = MongoCollection(mongo_db["aria_usage"])
         else:
             self.users = InMemoryCollection()
@@ -116,6 +118,8 @@ class DB:
             self.follows = InMemoryCollection()
             self.reposts = InMemoryCollection()
             self.saves = InMemoryCollection()
+            self.blocks = InMemoryCollection()
+            self.close_circle = InMemoryCollection()
             self.aria_usage = InMemoryCollection()
 
 

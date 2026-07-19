@@ -8,17 +8,18 @@ export default function Nav() {
   return (
     <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line">
       <div className="max-w-6xl mx-auto px-7 py-4 flex items-center justify-between gap-4">
-        <div className="flex-1 flex">
+        <div className="flex-1 flex items-center gap-6">
           <Link to="/" className="flex items-center gap-3 font-display font-bold text-2xl">
             <img src="/logo.svg" alt="" className="w-[42px] h-[42px]" />
             Inspire
           </Link>
+          <Link to="/premium" className="hidden md:inline text-sm font-medium text-slate hover:text-navy transition-colors">Premium</Link>
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate">
           <Link to="/stories" className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" className="hover:text-navy transition-colors">Aria</Link>
-          <Link to="/premium" className="hover:text-navy transition-colors">Premium</Link>
           {user && <Link to="/profile" className="hover:text-navy transition-colors">Profile</Link>}
+          {user && <Link to="/settings" className="hover:text-navy transition-colors">Settings</Link>}
         </nav>
         <div className="flex-1 flex items-center justify-end gap-3">
           {user ? (

@@ -66,6 +66,13 @@ export const api = {
   listFollowing: (userId) => request(`/users/${userId}/following`, { auth: false }),
   followUser: (userId) => request(`/users/${userId}/follow`, { method: 'POST' }),
   unfollowUser: (userId) => request(`/users/${userId}/follow`, { method: 'DELETE' }),
+  blockUser: (userId) => request(`/users/${userId}/block`, { method: 'POST' }),
+  unblockUser: (userId) => request(`/users/${userId}/block`, { method: 'DELETE' }),
+  addToCloseCircle: (userId) => request(`/users/${userId}/close-circle`, { method: 'POST' }),
+  removeFromCloseCircle: (userId) => request(`/users/${userId}/close-circle`, { method: 'DELETE' }),
+  getMyActivity: () => request('/me/activity'),
+  getMyBlocked: () => request('/me/blocked'),
+  getMyCloseCircle: () => request('/me/close-circle'),
 }
 
 export { getToken }

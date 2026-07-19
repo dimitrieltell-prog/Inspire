@@ -54,6 +54,8 @@ def _to_user_out(user: dict) -> UserOut:
         username=user.get("username"),
         is_premium=is_premium,
         is_founder=is_founder,
+        is_private=user.get("is_private", False),
+        is_business=user.get("is_business", False),
     )
 
 
@@ -110,6 +112,12 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
             if not (l.startswith("http://") or l.startswith("https://")):
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, "Links must start with http:// or https://")
         updates["links"] = links
+
+    if payload.is_private is not None:
+        updates["is_private"] = payload.is_private
+
+    if payload.is_business is not None:
+        updates["is_business"] = payload.is_business
 
     if payload.schools is not None:
         schools = [s.strip() for s in payload.schools if s.strip()]

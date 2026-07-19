@@ -69,11 +69,27 @@ async def create_story(payload: StoryCreate, user: dict = Depends(get_current_us
     return await serialize_story(story, user, db)
 
 
+async def _hidden_author_ids(db, viewer: Optional[dict]) -> set:
+    """Authors whose content the viewer shouldn't see: people they blocked and
+    people who blocked them."""
+    if not viewer:
+        return set()
+    hidden = set()
+    for b in await db.blocks.find({"blocker_id": viewer["_id"]}):
+        hidden.add(b["blocked_id"])
+    for b in await db.blocks.find({"blocked_id": viewer["_id"]}):
+        hidden.add(b["blocker_id"])
+    return hidden
+
+
 @router.get("", response_model=list[StoryOut])
 async def list_stories(category: Optional[str] = None, limit: int = 30, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
     query = {"category": category} if category and category != "all" else {}
     stories = await db.stories.find(query, sort_key="created_at", reverse=True)
+    hidden = await _hidden_author_ids(db, viewer)
+    if hidden:
+        stories = [s for s in stories if s.get("author_id") not in hidden]
     return [await serialize_story(s, viewer, db) for s in stories[:limit]]
 
 
@@ -87,9 +103,12 @@ async def get_story(story_id: str, viewer: Optional[dict] = Depends(get_optional
 
 
 @router.get("/{story_id}/comments", response_model=list[CommentOut])
-async def list_comments(story_id: str):
+async def list_comments(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
     comments = await db.comments.find({"story_id": story_id}, sort_key="created_at", reverse=False)
+    hidden = await _hidden_author_ids(db, viewer)
+    if hidden:
+        comments = [c for c in comments if c.get("author_id") not in hidden]
     return [_to_comment_out(c) for c in comments]
 
 

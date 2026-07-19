@@ -37,6 +37,8 @@ class UserOut(BaseModel):
     username: Optional[str] = None
     is_premium: bool
     is_founder: bool = False
+    is_private: bool = False
+    is_business: bool = False
 
 
 class TokenOut(BaseModel):
@@ -53,6 +55,8 @@ class ProfileUpdate(BaseModel):
     pronouns: Optional[str] = Field(default=None, max_length=40)
     links: Optional[list[str]] = None
     schools: Optional[list[str]] = None
+    is_private: Optional[bool] = None
+    is_business: Optional[bool] = None
 
 
 class ProfileUser(BaseModel):
@@ -74,12 +78,25 @@ class PublicProfile(BaseModel):
     schools: list[str] = []
     is_premium: bool
     is_founder: bool
+    is_private: bool = False
+    is_business: bool = False
     follower_count: int
     following_count: int
     story_count: int
     is_following: bool = False  # whether the current viewer follows this user
     is_self: bool = False
+    is_blocked: bool = False    # whether the current viewer has blocked this user
+    can_view: bool = True       # false when the account is private and viewer isn't a follower
     created_at: Optional[float] = None
+
+
+class ActivityItem(BaseModel):
+    """Something the current user did -- support given or reply left."""
+    type: str  # "support" | "reply"
+    detail: str  # the reaction label or the comment text
+    story_id: str
+    story_title: str
+    created_at: float
 
 
 class StoryCreate(BaseModel):

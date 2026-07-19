@@ -57,6 +57,24 @@ export default function UserProfile() {
     }
   }
 
+  async function toggleBlock() {
+    if (!user) { navigate('/login'); return }
+    setBusy(true)
+    try {
+      if (profile.is_blocked) {
+        await api.unblockUser(userId)
+        setProfile((p) => ({ ...p, is_blocked: false }))
+      } else {
+        await api.blockUser(userId)
+        setProfile((p) => ({ ...p, is_blocked: true, is_following: false }))
+      }
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (loading) return <p className="text-center text-slate py-16">Loading…</p>
   if (error) return <p className="text-center text-rose-ink py-16">{error}</p>
   if (!profile) return null
@@ -79,6 +97,9 @@ export default function UserProfile() {
               {profile.is_premium && (
                 <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
               )}
+              {profile.is_business && (
+                <span className="text-[11px] font-bold uppercase tracking-wide border border-line text-slate px-2 py-0.5 rounded-full">Business</span>
+              )}
             </div>
             <p className="text-sm text-slate-light mt-0.5">
               {profile.username && `@${profile.username}`}
@@ -99,17 +120,30 @@ export default function UserProfile() {
             )}
             <p className="text-sm text-slate-light mt-2">Joined {formatDate(profile.created_at)}</p>
           </div>
-          <button
-            onClick={toggleFollow}
-            disabled={busy}
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 flex-shrink-0 ${
-              profile.is_following
-                ? 'border border-line bg-white hover:border-indigo'
-                : 'bg-indigo text-white hover:bg-indigo-deep'
-            }`}
-          >
-            {profile.is_following ? 'Following' : 'Follow'}
-          </button>
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            {!profile.is_blocked && (
+              <button
+                onClick={toggleFollow}
+                disabled={busy}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                  profile.is_following
+                    ? 'border border-line bg-white hover:border-indigo'
+                    : 'bg-indigo text-white hover:bg-indigo-deep'
+                }`}
+              >
+                {profile.is_following ? 'Following' : 'Follow'}
+              </button>
+            )}
+            <button
+              onClick={toggleBlock}
+              disabled={busy}
+              className={`text-xs font-semibold transition-colors disabled:opacity-60 ${
+                profile.is_blocked ? 'text-indigo hover:underline' : 'text-slate-light hover:text-rose-ink'
+              }`}
+            >
+              {profile.is_blocked ? 'Unblock' : 'Block'}
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-3 mt-6">
@@ -128,7 +162,16 @@ export default function UserProfile() {
         </div>
       </div>
 
+      {/* Private account gate */}
+      {!profile.can_view && (
+        <div className="bg-white border border-line rounded-xl2 p-8 mt-6 text-center">
+          <p className="text-sm font-semibold">This account is private</p>
+          <p className="text-xs text-slate mt-1">Follow {profile.display_name} to see their posts and activity.</p>
+        </div>
+      )}
+
       {/* Posts / Reposts */}
+      {profile.can_view && (
       <div className="mt-6">
         <div className="flex gap-2 border-b border-line mb-5">
           {['posts', 'reposts'].map((t) => (
@@ -156,6 +199,7 @@ export default function UserProfile() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }
