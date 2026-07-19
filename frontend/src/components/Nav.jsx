@@ -9,8 +9,8 @@ export default function Nav() {
     <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line">
       <div className="max-w-6xl mx-auto px-7 py-4 flex items-center justify-between gap-4">
         <div className="flex-1 flex">
-          <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-lg">
-            <img src="/logo.svg" alt="" className="w-[34px] h-[34px]" />
+          <Link to="/" className="flex items-center gap-3 font-display font-bold text-2xl">
+            <img src="/logo.svg" alt="" className="w-[42px] h-[42px]" />
             Inspire
           </Link>
         </div>
