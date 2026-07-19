@@ -56,6 +56,12 @@ class InMemoryCollection:
         del self._docs[doc["_id"]]
         return True
 
+    async def delete_many(self, query: dict) -> int:
+        matches = [d["_id"] for d in self._docs.values() if _matches(d, query)]
+        for _id in matches:
+            del self._docs[_id]
+        return len(matches)
+
 
 def _matches(doc: dict, query: dict) -> bool:
     return all(doc.get(k) == v for k, v in query.items())
@@ -90,6 +96,10 @@ class MongoCollection:
         result = await self._c.delete_one(query)
         return result.deleted_count > 0
 
+    async def delete_many(self, query: dict) -> int:
+        result = await self._c.delete_many(query)
+        return result.deleted_count
+
 
 class DB:
     """Holds one collection instance per entity type."""
@@ -109,6 +119,8 @@ class DB:
             self.saves = MongoCollection(mongo_db["saves"])
             self.blocks = MongoCollection(mongo_db["blocks"])
             self.close_circle = MongoCollection(mongo_db["close_circle"])
+            self.mutes = MongoCollection(mongo_db["mutes"])
+            self.follow_requests = MongoCollection(mongo_db["follow_requests"])
             self.aria_usage = MongoCollection(mongo_db["aria_usage"])
         else:
             self.users = InMemoryCollection()
@@ -120,6 +132,8 @@ class DB:
             self.saves = InMemoryCollection()
             self.blocks = InMemoryCollection()
             self.close_circle = InMemoryCollection()
+            self.mutes = InMemoryCollection()
+            self.follow_requests = InMemoryCollection()
             self.aria_usage = InMemoryCollection()
 
 

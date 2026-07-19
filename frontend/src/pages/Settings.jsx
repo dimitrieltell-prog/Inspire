@@ -76,6 +76,21 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Muted words
+  const [wordsOpen, setWordsOpen] = useState(false)
+  const [newWord, setNewWord] = useState('')
+
+  // Muted accounts + follow requests
+  const [muted, setMuted] = useState(null)
+  const [showMuted, setShowMuted] = useState(false)
+  const [requests, setRequests] = useState(null)
+  const [showRequests, setShowRequests] = useState(false)
+
+  // Danger zone
+  const [confirmDelete, setConfirmDelete] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [exporting, setExporting] = useState(false)
+
   // Business
   const [bizOpen, setBizOpen] = useState(false)
   const [bizDraft, setBizDraft] = useState(null)
@@ -200,6 +215,95 @@ export default function Settings() {
       setBlocked((b) => b.filter((p) => p.id !== id))
     } finally {
       setBusyId(null)
+    }
+  }
+
+  async function openMuted() {
+    setShowMuted((s) => !s)
+    if (!muted) {
+      api.getMyMuted().then(setMuted).catch(() => setMuted([]))
+    }
+  }
+
+  async function unmute(id) {
+    setBusyId(id)
+    try {
+      await api.unmuteUser(id)
+      setMuted((m) => m.filter((p) => p.id !== id))
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function openRequests() {
+    setShowRequests((s) => !s)
+    if (!requests) {
+      api.getFollowRequests().then(setRequests).catch(() => setRequests([]))
+    }
+  }
+
+  async function acceptRequest(id) {
+    setBusyId(id)
+    try {
+      await api.acceptFollowRequest(id)
+      setRequests((r) => r.filter((p) => p.id !== id))
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function declineRequest(id) {
+    setBusyId(id)
+    try {
+      await api.declineFollowRequest(id)
+      setRequests((r) => r.filter((p) => p.id !== id))
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  function addMutedWord() {
+    const w = newWord.trim().toLowerCase()
+    if (!w) return
+    const words = user.muted_words || []
+    if (words.includes(w)) { setNewWord(''); return }
+    patch({ muted_words: [...words, w] })
+    setNewWord('')
+  }
+
+  function removeMutedWord(w) {
+    patch({ muted_words: (user.muted_words || []).filter((x) => x !== w) })
+  }
+
+  async function downloadData() {
+    setExporting(true)
+    setError('')
+    try {
+      const data = await api.exportMyData()
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'inspire-data.json'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function deleteAccount() {
+    setDeleting(true)
+    setError('')
+    try {
+      await api.deleteMyAccount()
+      logout()
+      navigate('/')
+    } catch (e) {
+      setError(e.message)
+      setDeleting(false)
     }
   }
 
@@ -329,10 +433,87 @@ export default function Settings() {
           subtitle="Others won't see how much support your stories get. You still will."
           right={<Toggle checked={user.hide_support_counts} onChange={() => patch({ hide_support_counts: !user.hide_support_counts })} disabled={saving} />}
         />
+        <Row
+          title="Muted words"
+          subtitle={`Stories and replies containing these words are hidden from your feed.${(user.muted_words || []).length ? ` (${user.muted_words.length})` : ''}`}
+          onClick={() => setWordsOpen((o) => !o)}
+          expandable
+          expanded={wordsOpen}
+        />
+        {wordsOpen && (
+          <div className="p-4 bg-bg/40">
+            <div className="flex gap-2 mb-3">
+              <input
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addMutedWord() } }}
+                placeholder="Add a word or phrase…"
+                className="flex-grow border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"
+              />
+              <button onClick={addMutedWord} disabled={saving || !newWord.trim()} className="bg-indigo text-white rounded-full px-4 py-2 text-sm font-semibold disabled:opacity-50">
+                Add
+              </button>
+            </div>
+            {(user.muted_words || []).length === 0 ? (
+              <p className="text-sm text-slate-light">No muted words yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {user.muted_words.map((w) => (
+                  <span key={w} className="inline-flex items-center gap-1.5 bg-white border border-line rounded-full px-3 py-1.5 text-sm">
+                    {w}
+                    <button onClick={() => removeMutedWord(w)} disabled={saving} className="text-slate-light hover:text-rose-ink">✕</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* ============ CONNECTIONS ============ */}
       <Section title="Connections">
+        {user.is_private && (
+          <>
+            <Row
+              title="Follow requests"
+              subtitle="People asking to follow your private account."
+              onClick={openRequests}
+              expandable
+              expanded={showRequests}
+            />
+            {showRequests && (
+              <div className="p-4 bg-bg/40">
+                {!requests ? (
+                  <p className="text-sm text-slate-light">Loading…</p>
+                ) : requests.length === 0 ? (
+                  <p className="text-sm text-slate-light">No pending requests.</p>
+                ) : (
+                  requests.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-line last:border-0">
+                      <Link to={`/users/${p.id}`} className="flex items-center gap-2.5 text-sm hover:text-indigo min-w-0">
+                        <span className="w-8 h-8 rounded-lg bg-lavender text-indigo flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {p.display_name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="truncate">
+                          {p.display_name}
+                          {p.username && <span className="text-slate-light ml-1.5">@{p.username}</span>}
+                        </span>
+                      </Link>
+                      <div className="flex gap-2 flex-shrink-0 ml-3">
+                        <button onClick={() => acceptRequest(p.id)} disabled={busyId === p.id} className="bg-indigo text-white rounded-full px-4 py-1.5 text-xs font-semibold disabled:opacity-50">
+                          Accept
+                        </button>
+                        <button onClick={() => declineRequest(p.id)} disabled={busyId === p.id} className="border border-line rounded-full px-4 py-1.5 text-xs font-semibold hover:border-indigo disabled:opacity-50">
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
         <Row
           title="Close circle"
           subtitle="Your inner circle. Add anyone — use it to limit who can reply to your stories."
@@ -366,6 +547,26 @@ export default function Settings() {
             ) : (
               circle.map((p) => (
                 <PersonRow key={p.id} person={p} actionLabel="Remove" busy={busyId === p.id} onAction={() => removeFromCircle(p.id)} />
+              ))
+            )}
+          </div>
+        )}
+        <Row
+          title="Muted accounts"
+          subtitle="You won't see their posts or replies — they won't know, and they can still follow you. Mute someone from their profile."
+          onClick={openMuted}
+          expandable
+          expanded={showMuted}
+        />
+        {showMuted && (
+          <div className="p-4 bg-bg/40">
+            {!muted ? (
+              <p className="text-sm text-slate-light">Loading…</p>
+            ) : muted.length === 0 ? (
+              <p className="text-sm text-slate-light">You haven't muted anyone.</p>
+            ) : (
+              muted.map((p) => (
+                <PersonRow key={p.id} person={p} actionLabel="Unmute" busy={busyId === p.id} onAction={() => unmute(p.id)} />
               ))
             )}
           </div>
@@ -431,12 +632,39 @@ export default function Settings() {
       </Section>
 
       {/* ============ ACCOUNT ACTIONS ============ */}
-      <Section title="Login">
+      <Section title="Your data & account">
+        <Row
+          title="Download your data"
+          subtitle="Get a file with your profile, stories, replies, and activity."
+          onClick={downloadData}
+          right={<span className="text-indigo text-sm font-semibold">{exporting ? 'Preparing…' : 'Download'}</span>}
+        />
         <Row
           title="Sign out"
           onClick={() => { logout(); navigate('/') }}
-          right={<span className="text-rose-ink text-sm font-semibold">Sign out</span>}
+          right={<span className="text-slate text-sm font-semibold">Sign out</span>}
         />
+        <div className="p-4">
+          <p className="text-sm font-semibold text-rose-ink">Delete account</p>
+          <p className="text-xs text-slate mt-0.5 mb-3">
+            Permanently deletes your account, stories, replies, and activity. This can't be undone.
+          </p>
+          <div className="flex gap-2">
+            <input
+              value={confirmDelete}
+              onChange={(e) => setConfirmDelete(e.target.value)}
+              placeholder='Type "DELETE" to confirm'
+              className="flex-grow border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-rose-ink"
+            />
+            <button
+              onClick={deleteAccount}
+              disabled={confirmDelete !== 'DELETE' || deleting}
+              className="bg-rose-ink text-white rounded-full px-5 py-2 text-sm font-semibold disabled:opacity-40"
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        </div>
       </Section>
     </div>
   )

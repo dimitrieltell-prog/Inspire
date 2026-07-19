@@ -80,8 +80,8 @@ async def create_story(payload: StoryCreate, user: dict = Depends(get_current_us
 
 
 async def _hidden_author_ids(db, viewer: Optional[dict]) -> set:
-    """Authors whose content the viewer shouldn't see: people they blocked and
-    people who blocked them."""
+    """Authors whose content the viewer shouldn't see: people they blocked,
+    people who blocked them, and people they muted."""
     if not viewer:
         return set()
     hidden = set()
@@ -89,7 +89,14 @@ async def _hidden_author_ids(db, viewer: Optional[dict]) -> set:
         hidden.add(b["blocked_id"])
     for b in await db.blocks.find({"blocked_id": viewer["_id"]}):
         hidden.add(b["blocker_id"])
+    for m in await db.mutes.find({"muter_id": viewer["_id"]}):
+        hidden.add(m["muted_id"])
     return hidden
+
+
+def _contains_muted_word(text: str, muted_words: list) -> bool:
+    lowered = text.lower()
+    return any(w in lowered for w in muted_words)
 
 
 @router.get("", response_model=list[StoryOut])
@@ -100,6 +107,9 @@ async def list_stories(category: Optional[str] = None, limit: int = 30, viewer: 
     hidden = await _hidden_author_ids(db, viewer)
     if hidden:
         stories = [s for s in stories if s.get("author_id") not in hidden]
+    muted_words = (viewer or {}).get("muted_words", [])
+    if muted_words:
+        stories = [s for s in stories if not _contains_muted_word(s["title"] + " " + s["body"], muted_words)]
     return [await serialize_story(s, viewer, db) for s in stories[:limit]]
 
 
@@ -119,6 +129,9 @@ async def list_comments(story_id: str, viewer: Optional[dict] = Depends(get_opti
     hidden = await _hidden_author_ids(db, viewer)
     if hidden:
         comments = [c for c in comments if c.get("author_id") not in hidden]
+    muted_words = (viewer or {}).get("muted_words", [])
+    if muted_words:
+        comments = [c for c in comments if not _contains_muted_word(c["body"], muted_words)]
     return [_to_comment_out(c) for c in comments]
 
 

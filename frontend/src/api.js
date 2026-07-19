@@ -75,6 +75,14 @@ export const api = {
   getMyCloseCircle: () => request('/me/close-circle'),
   getMyInsights: () => request('/me/insights'),
   searchUsers: (q) => request(`/users?q=${encodeURIComponent(q)}`),
+  muteUser: (userId) => request(`/users/${userId}/mute`, { method: 'POST' }),
+  unmuteUser: (userId) => request(`/users/${userId}/mute`, { method: 'DELETE' }),
+  getMyMuted: () => request('/me/muted'),
+  getFollowRequests: () => request('/me/follow-requests'),
+  acceptFollowRequest: (userId) => request(`/me/follow-requests/${userId}/accept`, { method: 'POST' }),
+  declineFollowRequest: (userId) => request(`/me/follow-requests/${userId}`, { method: 'DELETE' }),
+  exportMyData: () => request('/me/export'),
+  deleteMyAccount: () => request('/me', { method: 'DELETE' }),
 }
 
 export { getToken }

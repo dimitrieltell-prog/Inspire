@@ -61,6 +61,7 @@ def _to_user_out(user: dict) -> UserOut:
         contact_website=user.get("contact_website"),
         comment_audience=user.get("comment_audience", "everyone"),
         hide_support_counts=user.get("hide_support_counts", False),
+        muted_words=user.get("muted_words", []),
     )
 
 
@@ -149,6 +150,15 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.hide_support_counts is not None:
         updates["hide_support_counts"] = payload.hide_support_counts
+
+    if payload.muted_words is not None:
+        words = [w.strip().lower() for w in payload.muted_words if w.strip()]
+        if len(words) > 25:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can mute up to 25 words.")
+        for w in words:
+            if len(w) > 40:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "Muted words must be under 40 characters.")
+        updates["muted_words"] = words
 
     if payload.schools is not None:
         schools = [s.strip() for s in payload.schools if s.strip()]

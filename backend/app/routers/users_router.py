@@ -43,11 +43,15 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
     stories = await db.stories.find({"author_id": u["_id"]})
     is_following = False
     is_blocked = False
+    is_muted = False
+    has_requested = False
     if viewer:
         is_following = any(
             f["follower_id"] == viewer["_id"] and f["following_id"] == u["_id"] for f in followers
         )
         is_blocked = bool(await db.blocks.find_one({"blocker_id": viewer["_id"], "blocked_id": u["_id"]}))
+        is_muted = bool(await db.mutes.find_one({"muter_id": viewer["_id"], "muted_id": u["_id"]}))
+        has_requested = bool(await db.follow_requests.find_one({"requester_id": viewer["_id"], "target_id": u["_id"]}))
     can_view = await can_view_account(db, u, viewer)
     # Private accounts still show the simple stuff -- name, username, bio --
     # but hide everything else from non-followers.
@@ -72,6 +76,8 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         is_following=is_following,
         is_self=bool(viewer and viewer["_id"] == u["_id"]),
         is_blocked=is_blocked,
+        is_muted=is_muted,
+        has_requested=has_requested,
         can_view=can_view,
         created_at=u.get("created_at"),
     )
@@ -153,18 +159,50 @@ async def follow_user(user_id: str, user: dict = Depends(get_current_user)):
     if await db.blocks.find_one({"blocker_id": user_id, "blocked_id": user["_id"]}):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
     existing = await db.follows.find_one({"follower_id": user["_id"], "following_id": user_id})
-    if not existing:
-        await db.follows.insert_one({
-            "follower_id": user["_id"],
-            "following_id": user_id,
-            "created_at": time.time(),
-        })
+    if existing:
+        return
+    # Private accounts get a follow request they can approve or decline.
+    if target.get("is_private", False):
+        pending = await db.follow_requests.find_one({"requester_id": user["_id"], "target_id": user_id})
+        if not pending:
+            await db.follow_requests.insert_one({
+                "requester_id": user["_id"],
+                "target_id": user_id,
+                "created_at": time.time(),
+            })
+        return
+    await db.follows.insert_one({
+        "follower_id": user["_id"],
+        "following_id": user_id,
+        "created_at": time.time(),
+    })
 
 
 @router.delete("/{user_id}/follow", status_code=status.HTTP_204_NO_CONTENT)
 async def unfollow_user(user_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
     await db.follows.delete_one({"follower_id": user["_id"], "following_id": user_id})
+    # Also cancels any pending follow request.
+    await db.follow_requests.delete_one({"requester_id": user["_id"], "target_id": user_id})
+
+
+@router.post("/{user_id}/mute", status_code=status.HTTP_204_NO_CONTENT)
+async def mute_user(user_id: str, user: dict = Depends(get_current_user)):
+    if user_id == user["_id"]:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can't mute yourself.")
+    db = get_db()
+    target = await db.users.find_one({"_id": user_id})
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
+    existing = await db.mutes.find_one({"muter_id": user["_id"], "muted_id": user_id})
+    if not existing:
+        await db.mutes.insert_one({"muter_id": user["_id"], "muted_id": user_id, "created_at": time.time()})
+
+
+@router.delete("/{user_id}/mute", status_code=status.HTTP_204_NO_CONTENT)
+async def unmute_user(user_id: str, user: dict = Depends(get_current_user)):
+    db = get_db()
+    await db.mutes.delete_one({"muter_id": user["_id"], "muted_id": user_id})
 
 
 @router.post("/{user_id}/block", status_code=status.HTTP_204_NO_CONTENT)
@@ -187,6 +225,8 @@ async def block_user(user_id: str, user: dict = Depends(get_current_user)):
     await db.follows.delete_one({"follower_id": user_id, "following_id": user["_id"]})
     await db.close_circle.delete_one({"owner_id": user["_id"], "member_id": user_id})
     await db.close_circle.delete_one({"owner_id": user_id, "member_id": user["_id"]})
+    await db.follow_requests.delete_one({"requester_id": user["_id"], "target_id": user_id})
+    await db.follow_requests.delete_one({"requester_id": user_id, "target_id": user["_id"]})
 
 
 @router.delete("/{user_id}/block", status_code=status.HTTP_204_NO_CONTENT)

@@ -85,3 +85,113 @@ async def my_close_circle(user: dict = Depends(get_current_user)):
         if u:
             result.append(_profile_user(u))
     return result
+
+
+@router.get("/muted", response_model=list[ProfileUser])
+async def my_muted(user: dict = Depends(get_current_user)):
+    db = get_db()
+    mutes = await db.mutes.find({"muter_id": user["_id"]})
+    result = []
+    for m in mutes:
+        u = await db.users.find_one({"_id": m["muted_id"]})
+        if u:
+            result.append(_profile_user(u))
+    return result
+
+
+@router.get("/follow-requests", response_model=list[ProfileUser])
+async def my_follow_requests(user: dict = Depends(get_current_user)):
+    """People asking to follow you (private accounts only get these)."""
+    db = get_db()
+    requests = await db.follow_requests.find({"target_id": user["_id"]}, sort_key="created_at", reverse=True)
+    result = []
+    for r in requests:
+        u = await db.users.find_one({"_id": r["requester_id"]})
+        if u:
+            result.append(_profile_user(u))
+    return result
+
+
+@router.post("/follow-requests/{requester_id}/accept", status_code=204)
+async def accept_follow_request(requester_id: str, user: dict = Depends(get_current_user)):
+    import time
+    db = get_db()
+    pending = await db.follow_requests.find_one({"requester_id": requester_id, "target_id": user["_id"]})
+    if not pending:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No such request.")
+    await db.follow_requests.delete_one({"requester_id": requester_id, "target_id": user["_id"]})
+    existing = await db.follows.find_one({"follower_id": requester_id, "following_id": user["_id"]})
+    if not existing:
+        await db.follows.insert_one({
+            "follower_id": requester_id,
+            "following_id": user["_id"],
+            "created_at": time.time(),
+        })
+
+
+@router.delete("/follow-requests/{requester_id}", status_code=204)
+async def decline_follow_request(requester_id: str, user: dict = Depends(get_current_user)):
+    db = get_db()
+    await db.follow_requests.delete_one({"requester_id": requester_id, "target_id": user["_id"]})
+
+
+@router.get("/export")
+async def export_my_data(user: dict = Depends(get_current_user)):
+    """Download everything Inspire holds about you, as JSON."""
+    db = get_db()
+    uid = user["_id"]
+    profile = {k: v for k, v in user.items() if k not in ("password_hash",)}
+    return {
+        "profile": profile,
+        "stories": await db.stories.find({"author_id": uid}),
+        "comments": await db.comments.find({"author_id": uid}),
+        "reactions_given": await db.reactions.find({"user_id": uid}),
+        "reposts": await db.reposts.find({"user_id": uid}),
+        "saves": await db.saves.find({"user_id": uid}),
+        "following": await db.follows.find({"follower_id": uid}),
+        "followers": await db.follows.find({"following_id": uid}),
+        "close_circle": await db.close_circle.find({"owner_id": uid}),
+        "blocked": await db.blocks.find({"blocker_id": uid}),
+        "muted": await db.mutes.find({"muter_id": uid}),
+    }
+
+
+@router.delete("", status_code=204)
+async def delete_my_account(user: dict = Depends(get_current_user)):
+    """Permanently delete this account and everything it created."""
+    db = get_db()
+    uid = user["_id"]
+
+    # Reactions/comments this user left on other people's stories: remove and
+    # fix the counters so nothing overcounts.
+    for r in await db.reactions.find({"user_id": uid}):
+        await db.stories.update_one({"_id": r["story_id"]}, {"$inc": {"support_count": -1}})
+    await db.reactions.delete_many({"user_id": uid})
+    for c in await db.comments.find({"author_id": uid}):
+        await db.stories.update_one({"_id": c["story_id"]}, {"$inc": {"comment_count": -1}})
+    await db.comments.delete_many({"author_id": uid})
+
+    # This user's own stories and everything attached to them.
+    for s in await db.stories.find({"author_id": uid}):
+        await db.comments.delete_many({"story_id": s["_id"]})
+        await db.reactions.delete_many({"story_id": s["_id"]})
+        await db.reposts.delete_many({"story_id": s["_id"]})
+        await db.saves.delete_many({"story_id": s["_id"]})
+    await db.stories.delete_many({"author_id": uid})
+
+    # Relationships and settings state.
+    await db.reposts.delete_many({"user_id": uid})
+    await db.saves.delete_many({"user_id": uid})
+    await db.follows.delete_many({"follower_id": uid})
+    await db.follows.delete_many({"following_id": uid})
+    await db.blocks.delete_many({"blocker_id": uid})
+    await db.blocks.delete_many({"blocked_id": uid})
+    await db.mutes.delete_many({"muter_id": uid})
+    await db.mutes.delete_many({"muted_id": uid})
+    await db.close_circle.delete_many({"owner_id": uid})
+    await db.close_circle.delete_many({"member_id": uid})
+    await db.follow_requests.delete_many({"requester_id": uid})
+    await db.follow_requests.delete_many({"target_id": uid})
+    await db.aria_usage.delete_many({"user_id": uid})
+
+    await db.users.delete_one({"_id": uid})

@@ -46,9 +46,33 @@ export default function UserProfile() {
       if (profile.is_following) {
         await api.unfollowUser(userId)
         setProfile((p) => ({ ...p, is_following: false, follower_count: p.follower_count - 1 }))
+      } else if (profile.has_requested) {
+        await api.unfollowUser(userId) // cancels the pending request
+        setProfile((p) => ({ ...p, has_requested: false }))
+      } else if (profile.is_private) {
+        await api.followUser(userId) // private accounts get a request
+        setProfile((p) => ({ ...p, has_requested: true }))
       } else {
         await api.followUser(userId)
         setProfile((p) => ({ ...p, is_following: true, follower_count: p.follower_count + 1 }))
+      }
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function toggleMute() {
+    if (!user) { navigate('/login'); return }
+    setBusy(true)
+    try {
+      if (profile.is_muted) {
+        await api.unmuteUser(userId)
+        setProfile((p) => ({ ...p, is_muted: false }))
+      } else {
+        await api.muteUser(userId)
+        setProfile((p) => ({ ...p, is_muted: true }))
       }
     } catch (e) {
       setError(e.message)
@@ -142,23 +166,36 @@ export default function UserProfile() {
                 onClick={toggleFollow}
                 disabled={busy}
                 className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
-                  profile.is_following
+                  profile.is_following || profile.has_requested
                     ? 'border border-line bg-white hover:border-indigo'
                     : 'bg-indigo text-white hover:bg-indigo-deep'
                 }`}
               >
-                {profile.is_following ? 'Following' : 'Follow'}
+                {profile.is_following ? 'Following' : profile.has_requested ? 'Requested' : 'Follow'}
               </button>
             )}
-            <button
-              onClick={toggleBlock}
-              disabled={busy}
-              className={`text-xs font-semibold transition-colors disabled:opacity-60 ${
-                profile.is_blocked ? 'text-indigo hover:underline' : 'text-slate-light hover:text-rose-ink'
-              }`}
-            >
-              {profile.is_blocked ? 'Unblock' : 'Block'}
-            </button>
+            <div className="flex gap-3">
+              {!profile.is_blocked && (
+                <button
+                  onClick={toggleMute}
+                  disabled={busy}
+                  className={`text-xs font-semibold transition-colors disabled:opacity-60 ${
+                    profile.is_muted ? 'text-indigo hover:underline' : 'text-slate-light hover:text-navy'
+                  }`}
+                >
+                  {profile.is_muted ? 'Unmute' : 'Mute'}
+                </button>
+              )}
+              <button
+                onClick={toggleBlock}
+                disabled={busy}
+                className={`text-xs font-semibold transition-colors disabled:opacity-60 ${
+                  profile.is_blocked ? 'text-indigo hover:underline' : 'text-slate-light hover:text-rose-ink'
+                }`}
+              >
+                {profile.is_blocked ? 'Unblock' : 'Block'}
+              </button>
+            </div>
           </div>
         </div>
 

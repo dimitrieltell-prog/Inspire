@@ -48,6 +48,7 @@ class UserOut(BaseModel):
     contact_website: Optional[str] = None
     comment_audience: str = "everyone"
     hide_support_counts: bool = False
+    muted_words: list[str] = []
 
 
 class TokenOut(BaseModel):
@@ -71,6 +72,7 @@ class ProfileUpdate(BaseModel):
     contact_website: Optional[str] = Field(default=None, max_length=200)
     comment_audience: Optional[str] = None
     hide_support_counts: Optional[bool] = None
+    muted_words: Optional[list[str]] = None
 
 
 class ProfileUser(BaseModel):
@@ -103,6 +105,8 @@ class PublicProfile(BaseModel):
     is_following: bool = False  # whether the current viewer follows this user
     is_self: bool = False
     is_blocked: bool = False    # whether the current viewer has blocked this user
+    is_muted: bool = False      # whether the current viewer has muted this user
+    has_requested: bool = False # viewer has a pending follow request to this private account
     can_view: bool = True       # false when the account is private and viewer isn't a follower
     created_at: Optional[float] = None
 
