@@ -4,6 +4,12 @@ import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
 const CATEGORIES = ['Mental Health', 'Relationships', 'Family', 'School', 'Growth', 'Life Challenges', 'Achievements', 'Advice']
+const DURATIONS = [
+  { hours: 24, label: '24 hours' },
+  { hours: 48, label: '48 hours' },
+  { hours: 72, label: '3 days' },
+  { hours: 168, label: '7 days' },
+]
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -33,6 +39,8 @@ export default function StoryCreate() {
   const [body, setBody] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
   const [isAnonymous, setIsAnonymous] = useState(false)
+  const [audience, setAudience] = useState('everyone')
+  const [durationHours, setDurationHours] = useState(24)
   const [mediaFile, setMediaFile] = useState(null)
   const [mediaPreview, setMediaPreview] = useState(null)
   const [mediaType, setMediaType] = useState(null)
@@ -79,6 +87,8 @@ export default function StoryCreate() {
         media_url,
         media_type: mediaFile ? mediaType : null,
         tags: [],
+        audience,
+        duration_hours: user.is_premium ? durationHours : 24,
       })
       navigate('/stories')
     } catch (err) {
@@ -120,6 +130,52 @@ export default function StoryCreate() {
           <span className="text-sm font-medium">Post anonymously</span>
           <input type="checkbox" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} className="w-5 h-5 accent-indigo" />
         </label>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">Who can see this</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAudience('everyone')}
+              className={`flex-1 text-sm font-semibold rounded-xl px-4 py-2.5 border transition-colors ${
+                audience === 'everyone' ? 'bg-indigo text-white border-indigo' : 'border-line hover:border-indigo'
+              }`}
+            >
+              Everyone
+            </button>
+            <button
+              type="button"
+              onClick={() => setAudience('close_circle')}
+              className={`flex-1 text-sm font-semibold rounded-xl px-4 py-2.5 border transition-colors ${
+                audience === 'close_circle' ? 'bg-indigo text-white border-indigo' : 'border-line hover:border-indigo'
+              }`}
+            >
+              🔒 Close circle only
+            </button>
+          </div>
+          {audience === 'close_circle' && (
+            <p className="text-xs text-slate-light mt-2">
+              Only people in your close circle can see this. Manage who's in it from Settings.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">How long it stays up</label>
+          {user.is_premium ? (
+            <select
+              value={durationHours}
+              onChange={(e) => setDurationHours(Number(e.target.value))}
+              className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo bg-white w-full"
+            >
+              {DURATIONS.map((d) => <option key={d.hours} value={d.hours}>{d.label}</option>)}
+            </select>
+          ) : (
+            <p className="text-xs text-slate-light border border-line rounded-xl px-4 py-3">
+              24 hours, then it's gone — like every story on Inspire. <span className="text-indigo font-semibold">Premium</span> lets you keep stories up for up to 7 days.
+            </p>
+          )}
+        </div>
 
         {error && <p className="text-sm text-rose-ink">{error}</p>}
 

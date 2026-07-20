@@ -19,7 +19,6 @@ async def my_insights(user: dict = Depends(get_current_user)):
     supports = sum(s.get("support_count", 0) for s in my_stories)
     replies = sum(s.get("comment_count", 0) for s in my_stories)
     reposts = len([r for r in await db.reposts.find({}) if r["story_id"] in story_ids])
-    saves = len([s for s in await db.saves.find({}) if s["story_id"] in story_ids])
     followers = len(await db.follows.find({"following_id": user["_id"]}))
     return Insights(
         followers=followers,
@@ -27,7 +26,6 @@ async def my_insights(user: dict = Depends(get_current_user)):
         supports_received=supports,
         replies_received=replies,
         reposts_received=reposts,
-        saves_received=saves,
     )
 
 
@@ -147,7 +145,6 @@ async def export_my_data(user: dict = Depends(get_current_user)):
         "comments": await db.comments.find({"author_id": uid}),
         "reactions_given": await db.reactions.find({"user_id": uid}),
         "reposts": await db.reposts.find({"user_id": uid}),
-        "saves": await db.saves.find({"user_id": uid}),
         "following": await db.follows.find({"follower_id": uid}),
         "followers": await db.follows.find({"following_id": uid}),
         "close_circle": await db.close_circle.find({"owner_id": uid}),
@@ -176,12 +173,10 @@ async def delete_my_account(user: dict = Depends(get_current_user)):
         await db.comments.delete_many({"story_id": s["_id"]})
         await db.reactions.delete_many({"story_id": s["_id"]})
         await db.reposts.delete_many({"story_id": s["_id"]})
-        await db.saves.delete_many({"story_id": s["_id"]})
     await db.stories.delete_many({"author_id": uid})
 
     # Relationships and settings state.
     await db.reposts.delete_many({"user_id": uid})
-    await db.saves.delete_many({"user_id": uid})
     await db.follows.delete_many({"follower_id": uid})
     await db.follows.delete_many({"following_id": uid})
     await db.blocks.delete_many({"blocker_id": uid})

@@ -30,7 +30,7 @@ export default function Profile() {
   // Founder-only accounts section
   const [accounts, setAccounts] = useState(null)
 
-  // Posts / Reposts / Saved tabs
+  // Posts / Reposts tabs
   const [tab, setTab] = useState('posts')
   const [tabStories, setTabStories] = useState([])
   const [tabLoading, setTabLoading] = useState(true)
@@ -50,9 +50,7 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return
     setTabLoading(true)
-    const load = tab === 'posts' ? api.getUserStories(user.id)
-      : tab === 'reposts' ? api.getUserReposts(user.id)
-      : api.getSavedStories(user.id)
+    const load = tab === 'posts' ? api.getUserStories(user.id) : api.getUserReposts(user.id)
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
   }, [tab, user])
 
@@ -301,10 +299,10 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Posts / Reposts / Saved */}
+      {/* Posts / Reposts */}
       <div className="mt-6">
         <div className="flex gap-2 border-b border-line mb-5">
-          {['posts', 'reposts', 'saved'].map((t) => (
+          {['posts', 'reposts'].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -323,7 +321,6 @@ export default function Profile() {
           <p className="text-center text-slate-light py-8">
             {tab === 'posts' && "You haven't posted anything yet."}
             {tab === 'reposts' && "You haven't reposted anything yet."}
-            {tab === 'saved' && "You haven't saved anything yet."}
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-5">

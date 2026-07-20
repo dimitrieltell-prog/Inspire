@@ -7,7 +7,6 @@ const BUSINESS_CATEGORIES = ['Creator', 'Brand', 'Local business', 'Community', 
 const AUDIENCES = [
   { value: 'everyone', label: 'Everyone' },
   { value: 'followers', label: 'People who follow you' },
-  { value: 'close_circle', label: 'Close circle only' },
   { value: 'no_one', label: 'No one' },
 ]
 
@@ -383,7 +382,6 @@ export default function Settings() {
                       ['Support received', insights.supports_received],
                       ['Replies received', insights.replies_received],
                       ['Reposts', insights.reposts_received],
-                      ['Saves', insights.saves_received],
                     ].map(([label, value]) => (
                       <div key={label} className="bg-white border border-line rounded-xl px-3 py-3 text-center">
                         <div className="text-xl font-bold">{value}</div>
@@ -516,7 +514,7 @@ export default function Settings() {
         )}
         <Row
           title="Close circle"
-          subtitle="Your inner circle. Add anyone — use it to limit who can reply to your stories."
+          subtitle="Your inner circle. Add anyone — when you post, you can choose to share with just this list instead of everyone."
           onClick={openCircle}
           expandable
           expanded={showCircle}
@@ -623,12 +621,6 @@ export default function Settings() {
             )}
           </div>
         )}
-        <Row
-          title="Saved stories"
-          subtitle="Everything you've bookmarked, on your profile."
-          onClick={() => navigate('/profile')}
-          right={<span className="text-slate-light">›</span>}
-        />
       </Section>
 
       {/* ============ ACCOUNT ACTIONS ============ */}

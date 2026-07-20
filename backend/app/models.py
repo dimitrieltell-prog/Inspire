@@ -31,7 +31,7 @@ class GoogleAuthIn(BaseModel):
 
 
 BUSINESS_CATEGORIES = ["Creator", "Brand", "Local business", "Community", "Media", "Nonprofit"]
-COMMENT_AUDIENCES = ["everyone", "followers", "close_circle", "no_one"]
+COMMENT_AUDIENCES = ["everyone", "followers", "no_one"]
 
 
 class UserOut(BaseModel):
@@ -118,7 +118,6 @@ class Insights(BaseModel):
     supports_received: int
     replies_received: int
     reposts_received: int
-    saves_received: int
 
 
 class ActivityItem(BaseModel):
@@ -130,6 +129,10 @@ class ActivityItem(BaseModel):
     created_at: float
 
 
+STORY_DURATIONS_FREE = [24]
+STORY_DURATIONS_PREMIUM = [24, 48, 72, 168]  # up to 7 days
+
+
 class StoryCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(min_length=1, max_length=5000)
@@ -138,6 +141,8 @@ class StoryCreate(BaseModel):
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
+    audience: Literal["everyone", "close_circle"] = "everyone"
+    duration_hours: Optional[int] = None  # defaults to 24; premium can pick longer
 
 
 class StoryOut(BaseModel):
@@ -154,11 +159,12 @@ class StoryOut(BaseModel):
     support_count: int
     comment_count: int
     repost_count: int = 0
-    is_saved: bool = False       # whether the current viewer saved it
     is_reposted: bool = False    # whether the current viewer reposted it
     counts_hidden: bool = False  # author hides support counts from others
     author_is_business: bool = False
     author_business_category: Optional[str] = None
+    audience: str = "everyone"   # "everyone" | "close_circle"
+    expires_at: float
     created_at: float
 
 

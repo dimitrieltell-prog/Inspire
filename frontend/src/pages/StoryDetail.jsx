@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+import { timeLeftLabel } from '../timeLeft'
 
 const REACTIONS = ["I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -45,18 +46,6 @@ export default function StoryDetail() {
     }
   }
 
-  async function toggleSave() {
-    if (!user) { setReactError('Sign in to save.'); return }
-    const next = !story.is_saved
-    setStory((s) => ({ ...s, is_saved: next }))
-    try {
-      next ? await api.saveStory(story.id) : await api.unsaveStory(story.id)
-    } catch (e) {
-      setStory((s) => ({ ...s, is_saved: !next }))
-      setReactError(e.message)
-    }
-  }
-
   async function toggleRepost() {
     if (!user) { setReactError('Sign in to repost.'); return }
     const next = !story.is_reposted
@@ -95,12 +84,22 @@ export default function StoryDetail() {
       <Link to="/stories" className="text-sm text-indigo font-semibold">← Back to stories</Link>
 
       <div className="bg-white border border-line rounded-xl2 p-6 mt-6">
-        {story.media_type && (
-          <span className="inline-flex items-center gap-1.5 bg-lavender text-indigo text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3 w-fit">
-            {story.media_type === 'photo' ? '📷 Photo' : '🎥 Video'}
-          </span>
-        )}
-        <span className="text-[11.5px] font-bold uppercase tracking-wide text-indigo mb-3 block">{story.category}</span>
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          {story.media_type && (
+            <span className="inline-flex items-center gap-1.5 bg-lavender text-indigo text-[11px] font-semibold px-2.5 py-1 rounded-full w-fit">
+              {story.media_type === 'photo' ? '📷 Photo' : '🎥 Video'}
+            </span>
+          )}
+          {story.audience === 'close_circle' && (
+            <span className="inline-flex items-center gap-1.5 bg-navy text-white text-[11px] font-semibold px-2.5 py-1 rounded-full w-fit">
+              🔒 Close circle
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className="text-[11.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
+          <span className="text-[11px] text-slate-light font-medium flex-shrink-0">{timeLeftLabel(story.expires_at)}</span>
+        </div>
         <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>
         <p className="text-sm text-slate leading-relaxed mb-6 whitespace-pre-wrap">{story.body}</p>
 
@@ -129,12 +128,11 @@ export default function StoryDetail() {
                 {story.counts_hidden ? 'Support' : `${story.support_count} support`}
               </button>
               <span>{story.comment_count} replies</span>
-              <button onClick={toggleRepost} className={`transition-colors font-medium ${story.is_reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
-                ⇄ {story.repost_count}
-              </button>
-              <button onClick={toggleSave} className={`transition-colors font-medium ${story.is_saved ? 'text-indigo' : 'hover:text-indigo'}`}>
-                {story.is_saved ? '★ Saved' : '☆ Save'}
-              </button>
+              {story.audience !== 'close_circle' && (
+                <button onClick={toggleRepost} className={`transition-colors font-medium ${story.is_reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
+                  ⇄ {story.repost_count}
+                </button>
+              )}
             </div>
           </div>
           {reactError && <p className="text-xs text-rose-ink mt-2">{reactError}</p>}
