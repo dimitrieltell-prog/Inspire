@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 
 from app.auth import is_founder, require_founder
 from app.config import settings
 from app.database import get_db
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class BulkUserIds(BaseModel):
+    user_ids: list[str]
 
 
 @router.get("/stats")
@@ -57,3 +62,20 @@ async def mark_test_account(user_id: str, founder: dict = Depends(require_founde
 async def unmark_test_account(user_id: str, founder: dict = Depends(require_founder)):
     db = get_db()
     await db.users.update_one({"_id": user_id}, {"$set": {"is_test_account": False}})
+
+
+@router.post("/users/bulk-mark-test")
+async def bulk_mark_test_accounts(payload: BulkUserIds, founder: dict = Depends(require_founder)):
+    db = get_db()
+    marked = 0
+    skipped_founders = 0
+    for user_id in payload.user_ids:
+        target = await db.users.find_one({"_id": user_id})
+        if not target:
+            continue
+        if is_founder(target):
+            skipped_founders += 1
+            continue
+        await db.users.update_one({"_id": user_id}, {"$set": {"is_test_account": True}})
+        marked += 1
+    return {"marked": marked, "skipped_founders": skipped_founders}

@@ -64,6 +64,7 @@ export const api = {
   listAccounts: (includeTest) => request(`/admin/users${includeTest ? '?include_test=true' : ''}`),
   markTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'POST' }),
   unmarkTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'DELETE' }),
+  bulkMarkTestAccounts: (userIds) => request('/admin/users/bulk-mark-test', { method: 'POST', body: { user_ids: userIds } }),
   getProfile: (userId) => request(`/users/${userId}`),
   listFollowers: (userId) => request(`/users/${userId}/followers`, { auth: false }),
   listFollowing: (userId) => request(`/users/${userId}/following`, { auth: false }),

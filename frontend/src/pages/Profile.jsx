@@ -33,6 +33,9 @@ export default function Profile() {
   const [hiddenTestCount, setHiddenTestCount] = useState(0)
   const [showTestAccounts, setShowTestAccounts] = useState(false)
   const [accountBusyId, setAccountBusyId] = useState(null)
+  const [accountFilter, setAccountFilter] = useState('')
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   // Posts / Reposts / Saved tabs
   const [tab, setTab] = useState('posts')
@@ -68,6 +71,48 @@ export default function Profile() {
       setHiddenTestCount(d.hidden_test_count || 0)
     } finally {
       setAccountBusyId(null)
+    }
+  }
+
+  const filteredAccounts = (accounts || []).filter((a) => {
+    const q = accountFilter.trim().toLowerCase()
+    if (!q) return true
+    return a.display_name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q)
+  })
+  const selectableFiltered = filteredAccounts.filter((a) => !a.is_founder)
+  const allFilteredSelected = selectableFiltered.length > 0 && selectableFiltered.every((a) => selectedIds.has(a.id))
+
+  function toggleSelectAllFiltered() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allFilteredSelected) {
+        selectableFiltered.forEach((a) => next.delete(a.id))
+      } else {
+        selectableFiltered.forEach((a) => next.add(a.id))
+      }
+      return next
+    })
+  }
+
+  function toggleSelectOne(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  async function bulkMarkSelected() {
+    if (selectedIds.size === 0) return
+    setBulkBusy(true)
+    try {
+      await api.bulkMarkTestAccounts([...selectedIds])
+      setSelectedIds(new Set())
+      const d = await api.listAccounts(showTestAccounts)
+      setAccounts(d.users || [])
+      setHiddenTestCount(d.hidden_test_count || 0)
+    } finally {
+      setBulkBusy(false)
     }
   }
 
@@ -387,45 +432,85 @@ export default function Profile() {
           {!accounts ? (
             <p className="text-sm text-slate-light mt-3">Loading…</p>
           ) : (
-            <div className="overflow-x-auto mt-3">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-slate-light border-b border-line">
-                    <th className="font-semibold py-2 pr-4">Name</th>
-                    <th className="font-semibold py-2 pr-4">Email</th>
-                    <th className="font-semibold py-2 pr-4">Plan</th>
-                    <th className="font-semibold py-2 pr-4">Joined</th>
-                    <th className="font-semibold py-2"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((a) => (
-                    <tr key={a.id} className="border-b border-line last:border-0">
-                      <td className="py-2 pr-4 font-medium">
-                        {a.display_name}
-                        {a.is_test_account && (
-                          <span className="ml-1.5 text-[9px] font-bold uppercase bg-rose text-rose-ink px-1.5 py-0.5 rounded-full">Test</span>
-                        )}
-                      </td>
-                      <td className="py-2 pr-4 text-slate">{a.email}</td>
-                      <td className="py-2 pr-4 text-slate">{a.is_premium ? 'Premium' : 'Free'}</td>
-                      <td className="py-2 pr-4 text-slate">{formatDate(a.created_at)}</td>
-                      <td className="py-2">
-                        {!a.is_founder && (
-                          <button
-                            onClick={() => toggleTestFlag(a)}
-                            disabled={accountBusyId === a.id}
-                            className="text-xs text-slate-light hover:text-indigo font-semibold disabled:opacity-50"
-                          >
-                            {a.is_test_account ? 'Unmark' : 'Mark as test'}
-                          </button>
-                        )}
-                      </td>
+            <>
+              <div className="flex items-center gap-3 mt-3 mb-3">
+                <input
+                  value={accountFilter}
+                  onChange={(e) => setAccountFilter(e.target.value)}
+                  placeholder="Filter by name or email (e.g. example.com, Deploy Check)…"
+                  className="flex-grow border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"
+                />
+                {selectedIds.size > 0 && (
+                  <button
+                    onClick={bulkMarkSelected}
+                    disabled={bulkBusy}
+                    className="flex-shrink-0 text-xs font-semibold bg-indigo text-white rounded-full px-4 py-2 disabled:opacity-50"
+                  >
+                    {bulkBusy ? 'Marking…' : `Mark ${selectedIds.size} as test`}
+                  </button>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-slate-light border-b border-line">
+                      <th className="font-semibold py-2 pr-2 w-6">
+                        <input
+                          type="checkbox"
+                          checked={allFilteredSelected}
+                          onChange={toggleSelectAllFiltered}
+                          className="w-4 h-4 accent-indigo"
+                        />
+                      </th>
+                      <th className="font-semibold py-2 pr-4">Name</th>
+                      <th className="font-semibold py-2 pr-4">Email</th>
+                      <th className="font-semibold py-2 pr-4">Plan</th>
+                      <th className="font-semibold py-2 pr-4">Joined</th>
+                      <th className="font-semibold py-2"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredAccounts.map((a) => (
+                      <tr key={a.id} className="border-b border-line last:border-0">
+                        <td className="py-2 pr-2">
+                          {!a.is_founder && (
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(a.id)}
+                              onChange={() => toggleSelectOne(a.id)}
+                              className="w-4 h-4 accent-indigo"
+                            />
+                          )}
+                        </td>
+                        <td className="py-2 pr-4 font-medium">
+                          {a.display_name}
+                          {a.is_test_account && (
+                            <span className="ml-1.5 text-[9px] font-bold uppercase bg-rose text-rose-ink px-1.5 py-0.5 rounded-full">Test</span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-4 text-slate">{a.email}</td>
+                        <td className="py-2 pr-4 text-slate">{a.is_premium ? 'Premium' : 'Free'}</td>
+                        <td className="py-2 pr-4 text-slate">{formatDate(a.created_at)}</td>
+                        <td className="py-2">
+                          {!a.is_founder && (
+                            <button
+                              onClick={() => toggleTestFlag(a)}
+                              disabled={accountBusyId === a.id}
+                              className="text-xs text-slate-light hover:text-indigo font-semibold disabled:opacity-50"
+                            >
+                              {a.is_test_account ? 'Unmark' : 'Mark as test'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredAccounts.length === 0 && (
+                  <p className="text-sm text-slate-light text-center py-6">No accounts match "{accountFilter}".</p>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}
