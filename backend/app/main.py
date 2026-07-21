@@ -9,6 +9,7 @@ from app.routers import (
     ephemeral_story_router,
     me_router,
     premium_router,
+    search_router,
     stories_router,
     users_router,
 )
@@ -29,6 +30,7 @@ app.include_router(aria_router.router)
 app.include_router(premium_router.router)
 app.include_router(admin_router.router)
 app.include_router(users_router.router)
+app.include_router(search_router.router)
 app.include_router(ephemeral_story_router.router)
 app.include_router(me_router.router)
 

@@ -162,6 +162,12 @@ class StoryOut(BaseModel):
     created_at: float
 
 
+class SearchResults(BaseModel):
+    """Combined results for the global search bar."""
+    users: list[ProfileUser] = []
+    stories: list[StoryOut] = []
+
+
 class ReactionCreate(BaseModel):
     story_id: str
     reaction: str = Field(description=f"One of: {', '.join(REACTIONS)}")
