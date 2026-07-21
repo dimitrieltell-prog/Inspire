@@ -265,7 +265,7 @@ async def google_auth(payload: GoogleAuthIn):
     db = get_db()
     user = await db.users.find_one({"email": email})
     if not user:
-        name = idinfo.get("name") or email.split("@")[0]
+        name = (idinfo.get("name") or email.split("@")[0])[:35]
         username = await _generate_username(db, name)
         user = await db.users.insert_one({
             "email": email,

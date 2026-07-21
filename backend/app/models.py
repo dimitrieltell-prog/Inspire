@@ -18,7 +18,7 @@ REACTIONS = [
 class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
-    display_name: str = Field(min_length=1, max_length=40)
+    display_name: str = Field(min_length=1, max_length=35)
     username: Optional[str] = Field(default=None, min_length=3, max_length=30)
 
 
@@ -60,7 +60,7 @@ class TokenOut(BaseModel):
 
 class ProfileUpdate(BaseModel):
     # All optional -- only the provided fields are changed.
-    display_name: Optional[str] = Field(default=None, min_length=1, max_length=40)
+    display_name: Optional[str] = Field(default=None, min_length=1, max_length=35)
     username: Optional[str] = Field(default=None, min_length=3, max_length=30)
     bio: Optional[str] = Field(default=None, max_length=300)
     pronouns: Optional[str] = Field(default=None, max_length=40)

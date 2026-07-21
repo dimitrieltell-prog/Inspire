@@ -132,7 +132,7 @@ export default function Profile() {
               <label className="text-xs font-semibold text-slate-light block mb-1">Display name</label>
               <input
                 autoFocus
-                maxLength={40}
+                maxLength={35}
                 value={draft.display_name}
                 onChange={(e) => setDraft((d) => ({ ...d, display_name: e.target.value }))}
                 className="w-full border border-line rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo"

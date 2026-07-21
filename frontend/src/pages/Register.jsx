@@ -64,7 +64,7 @@ export default function Register() {
       <p className="text-sm text-slate mb-8">A quieter kind of social — no highlight reels required.</p>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <div>
-          <input required maxLength={40} placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+          <input required maxLength={35} placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
             className="w-full border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
           <p className="text-xs text-slate-light mt-1.5 px-1">Shown on your posts — doesn't need to be unique.</p>
         </div>
