@@ -17,20 +17,43 @@ async def stats(key: str):
 
 
 @router.get("/users")
-async def list_users(founder: dict = Depends(require_founder)):
+async def list_users(include_test: bool = False, founder: dict = Depends(require_founder)):
     # Owner-only: access is tied to being signed in as a founder account, not a
     # shared key -- so nobody but the owner can ever read users' emails.
     db = get_db()
     users = await db.users.find({})
     result = []
+    hidden_count = 0
     for u in users:
-        founder = is_founder(u)
+        is_test = u.get("is_test_account", False)
+        if is_test and not include_test:
+            hidden_count += 1
+            continue
+        founder_flag = is_founder(u)
         result.append({
             "id": str(u["_id"]),
             "email": u["email"],
             "display_name": u["display_name"],
-            "is_premium": u.get("is_premium", False) or founder,
-            "is_founder": founder,
+            "is_premium": u.get("is_premium", False) or founder_flag,
+            "is_founder": founder_flag,
+            "is_test_account": is_test,
             "created_at": u.get("created_at"),
         })
-    return {"users": result}
+    return {"users": result, "hidden_test_count": hidden_count}
+
+
+@router.post("/users/{user_id}/mark-test", status_code=status.HTTP_204_NO_CONTENT)
+async def mark_test_account(user_id: str, founder: dict = Depends(require_founder)):
+    db = get_db()
+    target = await db.users.find_one({"_id": user_id})
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
+    if is_founder(target):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Can't mark a founder account as a test account.")
+    await db.users.update_one({"_id": user_id}, {"$set": {"is_test_account": True}})
+
+
+@router.delete("/users/{user_id}/mark-test", status_code=status.HTTP_204_NO_CONTENT)
+async def unmark_test_account(user_id: str, founder: dict = Depends(require_founder)):
+    db = get_db()
+    await db.users.update_one({"_id": user_id}, {"$set": {"is_test_account": False}})

@@ -30,6 +30,9 @@ export default function Profile() {
 
   // Founder-only accounts section
   const [accounts, setAccounts] = useState(null)
+  const [hiddenTestCount, setHiddenTestCount] = useState(0)
+  const [showTestAccounts, setShowTestAccounts] = useState(false)
+  const [accountBusyId, setAccountBusyId] = useState(null)
 
   // Posts / Reposts / Saved tabs
   const [tab, setTab] = useState('posts')
@@ -43,10 +46,30 @@ export default function Profile() {
       .then(setProfile)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-    if (user.is_founder) {
-      api.listAccounts().then((d) => setAccounts(d.users || [])).catch(() => {})
-    }
   }, [ready, user, navigate])
+
+  useEffect(() => {
+    if (!user?.is_founder) return
+    api.listAccounts(showTestAccounts)
+      .then((d) => { setAccounts(d.users || []); setHiddenTestCount(d.hidden_test_count || 0) })
+      .catch(() => {})
+  }, [user, showTestAccounts])
+
+  async function toggleTestFlag(account) {
+    setAccountBusyId(account.id)
+    try {
+      if (account.is_test_account) {
+        await api.unmarkTestAccount(account.id)
+      } else {
+        await api.markTestAccount(account.id)
+      }
+      const d = await api.listAccounts(showTestAccounts)
+      setAccounts(d.users || [])
+      setHiddenTestCount(d.hidden_test_count || 0)
+    } finally {
+      setAccountBusyId(null)
+    }
+  }
 
   useEffect(() => {
     if (!user) return
@@ -349,30 +372,55 @@ export default function Profile() {
       {/* Founder-only: all accounts */}
       {user.is_founder && (
         <div className="bg-white border border-line rounded-xl2 p-6 mt-5">
-          <div className="flex items-baseline justify-between mb-4">
+          <div className="flex items-baseline justify-between mb-1">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">All accounts (founder only)</h2>
-            {accounts && <span className="text-xs text-slate">{accounts.length} total</span>}
+            {accounts && <span className="text-xs text-slate">{accounts.length} shown</span>}
           </div>
+          {(hiddenTestCount > 0 || showTestAccounts) && (
+            <button
+              onClick={() => setShowTestAccounts((s) => !s)}
+              className="text-xs text-indigo font-semibold hover:underline mb-3"
+            >
+              {showTestAccounts ? 'Hide test accounts' : `${hiddenTestCount} test account${hiddenTestCount === 1 ? '' : 's'} hidden — show`}
+            </button>
+          )}
           {!accounts ? (
-            <p className="text-sm text-slate-light">Loading…</p>
+            <p className="text-sm text-slate-light mt-3">Loading…</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto mt-3">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-slate-light border-b border-line">
                     <th className="font-semibold py-2 pr-4">Name</th>
                     <th className="font-semibold py-2 pr-4">Email</th>
                     <th className="font-semibold py-2 pr-4">Plan</th>
-                    <th className="font-semibold py-2">Joined</th>
+                    <th className="font-semibold py-2 pr-4">Joined</th>
+                    <th className="font-semibold py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {accounts.map((a) => (
                     <tr key={a.id} className="border-b border-line last:border-0">
-                      <td className="py-2 pr-4 font-medium">{a.display_name}</td>
+                      <td className="py-2 pr-4 font-medium">
+                        {a.display_name}
+                        {a.is_test_account && (
+                          <span className="ml-1.5 text-[9px] font-bold uppercase bg-rose text-rose-ink px-1.5 py-0.5 rounded-full">Test</span>
+                        )}
+                      </td>
                       <td className="py-2 pr-4 text-slate">{a.email}</td>
                       <td className="py-2 pr-4 text-slate">{a.is_premium ? 'Premium' : 'Free'}</td>
-                      <td className="py-2 text-slate">{formatDate(a.created_at)}</td>
+                      <td className="py-2 pr-4 text-slate">{formatDate(a.created_at)}</td>
+                      <td className="py-2">
+                        {!a.is_founder && (
+                          <button
+                            onClick={() => toggleTestFlag(a)}
+                            disabled={accountBusyId === a.id}
+                            className="text-xs text-slate-light hover:text-indigo font-semibold disabled:opacity-50"
+                          >
+                            {a.is_test_account ? 'Unmark' : 'Mark as test'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
