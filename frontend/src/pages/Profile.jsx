@@ -36,6 +36,7 @@ export default function Profile() {
   const [accountFilter, setAccountFilter] = useState('')
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkBusy, setBulkBusy] = useState(false)
+  const [piiHidden, setPiiHidden] = useState(false)
 
   // Posts / Reposts / Saved tabs
   const [tab, setTab] = useState('posts')
@@ -419,7 +420,15 @@ export default function Profile() {
         <div className="bg-white border border-line rounded-xl2 p-6 mt-5">
           <div className="flex items-baseline justify-between mb-1">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">All accounts (founder only)</h2>
-            {accounts && <span className="text-xs text-slate">{accounts.length} shown</span>}
+            <div className="flex items-center gap-3">
+              {accounts && <span className="text-xs text-slate">{accounts.length} shown</span>}
+              <button
+                onClick={() => setPiiHidden((h) => !h)}
+                className="text-xs font-semibold text-slate hover:text-indigo flex items-center gap-1"
+              >
+                {piiHidden ? '👁 Show names & emails' : '🙈 Hide names & emails'}
+              </button>
+            </div>
           </div>
           {(hiddenTestCount > 0 || showTestAccounts) && (
             <button
@@ -482,13 +491,13 @@ export default function Profile() {
                             />
                           )}
                         </td>
-                        <td className="py-2 pr-4 font-medium">
+                        <td className={`py-2 pr-4 font-medium ${piiHidden ? 'blur-sm select-none' : ''}`}>
                           {a.display_name}
                           {a.is_test_account && (
                             <span className="ml-1.5 text-[9px] font-bold uppercase bg-rose text-rose-ink px-1.5 py-0.5 rounded-full">Test</span>
                           )}
                         </td>
-                        <td className="py-2 pr-4 text-slate">{a.email}</td>
+                        <td className={`py-2 pr-4 text-slate ${piiHidden ? 'blur-sm select-none' : ''}`}>{a.email}</td>
                         <td className="py-2 pr-4 text-slate">{a.is_premium ? 'Premium' : 'Free'}</td>
                         <td className="py-2 pr-4 text-slate">{formatDate(a.created_at)}</td>
                         <td className="py-2">
