@@ -35,6 +35,13 @@ async def _generate_username(db, base: str) -> str:
     return candidate
 
 
+def _validate_username_format(uname: str) -> None:
+    if not USERNAME_RE.match(uname):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Username must be 3–30 characters: letters, numbers, or underscores.")
+    if contains_hostility(uname):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please choose a username without offensive language.")
+
+
 async def ensure_username(db, user: dict) -> dict:
     """Existing accounts predate usernames -- lazily assign one when needed."""
     if not user.get("username"):
@@ -87,10 +94,7 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.username is not None:
         uname = payload.username.strip().lower()
-        if not USERNAME_RE.match(uname):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Username must be 3–30 characters: letters, numbers, or underscores.")
-        if contains_hostility(uname):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please choose a username without offensive language.")
+        _validate_username_format(uname)
         taken = await db.users.find_one({"username": uname})
         if taken and taken["_id"] != user["_id"]:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
@@ -186,6 +190,21 @@ async def _sync_author_name(db, user_id: str, name: str):
         await db.comments.update_one({"_id": comment["_id"]}, {"$set": {"author_display_name": name}})
 
 
+@router.get("/username-available")
+async def username_available(username: str = ""):
+    """Live check while someone's typing a username, at signup or in Settings."""
+    uname = username.strip().lower()
+    if not USERNAME_RE.match(uname):
+        return {"available": False, "reason": "Username must be 3–30 characters: letters, numbers, or underscores."}
+    if contains_hostility(uname):
+        return {"available": False, "reason": "Please choose a username without offensive language."}
+    db = get_db()
+    taken = await db.users.find_one({"username": uname})
+    if taken:
+        return {"available": False, "reason": "That username is already taken."}
+    return {"available": True, "reason": None}
+
+
 @router.post("/register", response_model=TokenOut)
 async def register(payload: UserRegister):
     if contains_hostility(payload.display_name):
@@ -196,7 +215,14 @@ async def register(payload: UserRegister):
     if existing:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "An account with this email already exists.")
 
-    username = await _generate_username(db, payload.display_name)
+    if payload.username:
+        username = payload.username.strip().lower()
+        _validate_username_format(username)
+        if await db.users.find_one({"username": username}):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
+    else:
+        username = await _generate_username(db, payload.display_name)
+
     user = await db.users.insert_one({
         "email": payload.email,
         "display_name": payload.display_name,

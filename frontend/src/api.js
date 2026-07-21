@@ -35,6 +35,7 @@ async function request(path, { method = 'GET', body, form, auth = true } = {}) {
 
 export const api = {
   register: (payload) => request('/auth/register', { method: 'POST', body: payload, auth: false }),
+  usernameAvailable: (username) => request(`/auth/username-available?username=${encodeURIComponent(username)}`, { auth: false }),
   login: (email, password) => {
     const form = new URLSearchParams()
     form.set('username', email)

@@ -19,6 +19,7 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     display_name: str = Field(min_length=1, max_length=40)
+    username: Optional[str] = Field(default=None, min_length=3, max_length=30)
 
 
 class UserLogin(BaseModel):
