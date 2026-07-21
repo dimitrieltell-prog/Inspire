@@ -118,6 +118,7 @@ class Insights(BaseModel):
     supports_received: int
     replies_received: int
     reposts_received: int
+    saves_received: int
 
 
 class ActivityItem(BaseModel):
@@ -129,10 +130,6 @@ class ActivityItem(BaseModel):
     created_at: float
 
 
-STORY_DURATIONS_FREE = [24]
-STORY_DURATIONS_PREMIUM = [24, 48, 72, 168]  # up to 7 days
-
-
 class StoryCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(min_length=1, max_length=5000)
@@ -141,8 +138,6 @@ class StoryCreate(BaseModel):
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
-    audience: Literal["everyone", "close_circle"] = "everyone"
-    duration_hours: Optional[int] = None  # defaults to 24; premium can pick longer
 
 
 class StoryOut(BaseModel):
@@ -159,12 +154,11 @@ class StoryOut(BaseModel):
     support_count: int
     comment_count: int
     repost_count: int = 0
+    is_saved: bool = False       # whether the current viewer saved it
     is_reposted: bool = False    # whether the current viewer reposted it
     counts_hidden: bool = False  # author hides support counts from others
     author_is_business: bool = False
     author_business_category: Optional[str] = None
-    audience: str = "everyone"   # "everyone" | "close_circle"
-    expires_at: float
     created_at: float
 
 
@@ -185,6 +179,60 @@ class CommentOut(BaseModel):
     author_id: Optional[str] = None
     body: str
     created_at: float
+
+
+STORY_DURATIONS_FREE = [24]
+STORY_DURATIONS_PREMIUM = [24, 48, 72, 168]  # up to 7 days
+
+
+class EphemeralStoryCreate(BaseModel):
+    """An Instagram-style Story: ephemeral, tied to the author's avatar,
+    never saveable."""
+    body: Optional[str] = Field(default=None, max_length=500)
+    media_url: Optional[str] = Field(default=None, max_length=2000)
+    media_type: Optional[Literal["photo", "video"]] = None
+    audience: Literal["everyone", "close_circle"] = "everyone"
+    duration_hours: Optional[int] = None  # defaults to 24; premium can pick longer
+
+
+class EphemeralStoryOut(BaseModel):
+    id: str
+    author_id: str
+    author_name: str
+    body: Optional[str] = None
+    media_url: Optional[str] = None
+    media_type: Optional[str] = None
+    audience: str = "everyone"
+    like_count: int = 0
+    is_liked: bool = False
+    reply_count: int = 0
+    expires_at: float
+    created_at: float
+
+
+class StoryReplyCreate(BaseModel):
+    ephemeral_story_id: str
+    body: str = Field(min_length=1, max_length=1000)
+
+
+class StoryReplyOut(BaseModel):
+    id: str
+    ephemeral_story_id: str
+    author_id: str
+    author_name: str
+    body: str
+    created_at: float
+
+
+class StorySendCreate(BaseModel):
+    recipient_id: str
+
+
+class StoryInboxItem(BaseModel):
+    story: EphemeralStoryOut
+    sender_id: str
+    sender_name: str
+    sent_at: float
 
 
 class AriaMessageIn(BaseModel):

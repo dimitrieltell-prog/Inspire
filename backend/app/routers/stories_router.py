@@ -3,52 +3,20 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.auth import get_current_user, get_optional_user, is_founder
+from app.auth import get_current_user, get_optional_user
 from app.database import get_db
-from app.models import (
-    REACTIONS,
-    STORY_DURATIONS_FREE,
-    STORY_DURATIONS_PREMIUM,
-    CommentCreate,
-    CommentOut,
-    ReactionCreate,
-    StoryCreate,
-    StoryOut,
-)
+from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, StoryCreate, StoryOut
 from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
 
-async def _expire_stories(db) -> None:
-    """Stories are ephemeral. Sweep out anything past its expiry -- along with
-    its comments, reactions, and reposts -- so it disappears everywhere,
-    including from other people's reposts."""
-    now = time.time()
-    expired = [s for s in await db.stories.find({}) if s.get("expires_at", 0) < now]
-    for s in expired:
-        sid = s["_id"]
-        await db.comments.delete_many({"story_id": sid})
-        await db.reactions.delete_many({"story_id": sid})
-        await db.reposts.delete_many({"story_id": sid})
-        await db.stories.delete_one({"_id": sid})
-
-
-async def _can_view_story(db, story: dict, viewer: Optional[dict]) -> bool:
-    if story.get("audience") != "close_circle":
-        return True
-    author_id = story.get("author_id")
-    if viewer and (viewer["_id"] == author_id or is_founder(viewer)):
-        return True
-    if not viewer:
-        return False
-    return bool(await db.close_circle.find_one({"owner_id": author_id, "member_id": viewer["_id"]}))
-
-
 async def serialize_story(story: dict, viewer, db) -> StoryOut:
     reposts = await db.reposts.find({"story_id": story["_id"]})
+    is_saved = False
     is_reposted = False
     if viewer:
+        is_saved = bool(await db.saves.find_one({"user_id": viewer["_id"], "story_id": story["_id"]}))
         is_reposted = any(r["user_id"] == viewer["_id"] for r in reposts)
 
     author = await db.users.find_one({"_id": story.get("author_id")}) if story.get("author_id") else None
@@ -71,12 +39,11 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         support_count=0 if counts_hidden else story.get("support_count", 0),
         comment_count=story.get("comment_count", 0),
         repost_count=len(reposts),
+        is_saved=is_saved,
         is_reposted=is_reposted,
         counts_hidden=counts_hidden,
         author_is_business=author_is_business,
         author_business_category=author.get("business_category") if author_is_business else None,
-        audience=story.get("audience", "everyone"),
-        expires_at=story.get("expires_at", story["created_at"] + 24 * 3600),
         created_at=story["created_at"],
     )
 
@@ -95,11 +62,6 @@ def _to_comment_out(comment: dict) -> CommentOut:
 @router.post("", response_model=StoryOut, status_code=status.HTTP_201_CREATED)
 async def create_story(payload: StoryCreate, user: dict = Depends(get_current_user)):
     db = get_db()
-    is_premium = user.get("is_premium", False) or is_founder(user)
-    allowed = STORY_DURATIONS_PREMIUM if is_premium else STORY_DURATIONS_FREE
-    duration_hours = payload.duration_hours if payload.duration_hours in allowed else allowed[0]
-
-    now = time.time()
     story = await db.stories.insert_one({
         "title": payload.title,
         "body": payload.body,
@@ -110,11 +72,9 @@ async def create_story(payload: StoryCreate, user: dict = Depends(get_current_us
         "media_url": payload.media_url,
         "media_type": payload.media_type,
         "tags": payload.tags,
-        "audience": payload.audience,
         "support_count": 0,
         "comment_count": 0,
-        "created_at": now,
-        "expires_at": now + duration_hours * 3600,
+        "created_at": time.time(),
     })
     return await serialize_story(story, user, db)
 
@@ -142,7 +102,6 @@ def _contains_muted_word(text: str, muted_words: list) -> bool:
 @router.get("", response_model=list[StoryOut])
 async def list_stories(category: Optional[str] = None, limit: int = 30, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    await _expire_stories(db)
     query = {"category": category} if category and category != "all" else {}
     stories = await db.stories.find(query, sort_key="created_at", reverse=True)
     hidden = await _hidden_author_ids(db, viewer)
@@ -151,18 +110,14 @@ async def list_stories(category: Optional[str] = None, limit: int = 30, viewer: 
     muted_words = (viewer or {}).get("muted_words", [])
     if muted_words:
         stories = [s for s in stories if not _contains_muted_word(s["title"] + " " + s["body"], muted_words)]
-    visible = [s for s in stories if await _can_view_story(db, s, viewer)]
-    return [await serialize_story(s, viewer, db) for s in visible[:limit]]
+    return [await serialize_story(s, viewer, db) for s in stories[:limit]]
 
 
 @router.get("/{story_id}", response_model=StoryOut)
 async def get_story(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    await _expire_stories(db)
     story = await db.stories.find_one({"_id": story_id})
     if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
-    if not await _can_view_story(db, story, viewer):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
     return await serialize_story(story, viewer, db)
 
@@ -170,10 +125,6 @@ async def get_story(story_id: str, viewer: Optional[dict] = Depends(get_optional
 @router.get("/{story_id}/comments", response_model=list[CommentOut])
 async def list_comments(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    await _expire_stories(db)
-    story = await db.stories.find_one({"_id": story_id})
-    if not story or not await _can_view_story(db, story, viewer):
-        return []
     comments = await db.comments.find({"story_id": story_id}, sort_key="created_at", reverse=False)
     hidden = await _hidden_author_ids(db, viewer)
     if hidden:
@@ -193,11 +144,8 @@ async def create_comment(payload: CommentCreate, user: dict = Depends(get_curren
         )
 
     db = get_db()
-    await _expire_stories(db)
     story = await db.stories.find_one({"_id": payload.story_id})
     if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
-    if not await _can_view_story(db, story, user):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
 
     author_id = story.get("author_id")
@@ -233,11 +181,8 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Reaction must be one of: {', '.join(REACTIONS)}")
 
     db = get_db()
-    await _expire_stories(db)
     story = await db.stories.find_one({"_id": payload.story_id})
     if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
-    if not await _can_view_story(db, story, user):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
 
     # one reaction per user per story -- update if it already exists, else create + increment
@@ -257,9 +202,9 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
         await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"support_count": 1}})
 
 
-async def _require_story(db, story_id: str, viewer: Optional[dict] = None) -> dict:
+async def _require_story(db, story_id: str) -> dict:
     story = await db.stories.find_one({"_id": story_id})
-    if not story or not await _can_view_story(db, story, viewer):
+    if not story:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
     return story
 
@@ -267,11 +212,7 @@ async def _require_story(db, story_id: str, viewer: Optional[dict] = None) -> di
 @router.post("/{story_id}/repost", status_code=status.HTTP_204_NO_CONTENT)
 async def repost_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
-    await _expire_stories(db)
-    story = await _require_story(db, story_id, user)
-    # Close-circle-only stories are for the circle's eyes -- not for sharing onward.
-    if story.get("audience") == "close_circle" and story.get("author_id") != user["_id"]:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "This story can't be shared outside the close circle.")
+    await _require_story(db, story_id)
     existing = await db.reposts.find_one({"story_id": story_id, "user_id": user["_id"]})
     if not existing:
         await db.reposts.insert_one({"story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
@@ -281,3 +222,18 @@ async def repost_story(story_id: str, user: dict = Depends(get_current_user)):
 async def unrepost_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
     await db.reposts.delete_one({"story_id": story_id, "user_id": user["_id"]})
+
+
+@router.post("/{story_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def save_story(story_id: str, user: dict = Depends(get_current_user)):
+    db = get_db()
+    await _require_story(db, story_id)
+    existing = await db.saves.find_one({"story_id": story_id, "user_id": user["_id"]})
+    if not existing:
+        await db.saves.insert_one({"story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
+
+
+@router.delete("/{story_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def unsave_story(story_id: str, user: dict = Depends(get_current_user)):
+    db = get_db()
+    await db.saves.delete_one({"story_id": story_id, "user_id": user["_id"]})

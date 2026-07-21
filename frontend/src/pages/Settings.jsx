@@ -382,6 +382,7 @@ export default function Settings() {
                       ['Support received', insights.supports_received],
                       ['Replies received', insights.replies_received],
                       ['Reposts', insights.reposts_received],
+                      ['Saves', insights.saves_received],
                     ].map(([label, value]) => (
                       <div key={label} className="bg-white border border-line rounded-xl px-3 py-3 text-center">
                         <div className="text-xl font-bold">{value}</div>
@@ -621,6 +622,18 @@ export default function Settings() {
             )}
           </div>
         )}
+        <Row
+          title="Saved posts"
+          subtitle="Everything you've bookmarked, on your profile."
+          onClick={() => navigate('/profile')}
+          right={<span className="text-slate-light">›</span>}
+        />
+        <Row
+          title="Story inbox"
+          subtitle="Stories other people have sent you."
+          onClick={() => navigate('/story-inbox')}
+          right={<span className="text-slate-light">›</span>}
+        />
       </Section>
 
       {/* ============ ACCOUNT ACTIONS ============ */}

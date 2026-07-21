@@ -2,10 +2,31 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import ActivityItem, Insights, ProfileUser
+from app.models import ActivityItem, Insights, ProfileUser, StoryInboxItem
+from app.routers.ephemeral_story_router import _expire_ephemeral_stories, _serialize_ephemeral_story
 from app.routers.users_router import _profile_user
 
 router = APIRouter(prefix="/me", tags=["me"])
+
+
+@router.get("/story-inbox", response_model=list[StoryInboxItem])
+async def my_story_inbox(user: dict = Depends(get_current_user)):
+    """Stories other people have sent directly to you."""
+    db = get_db()
+    await _expire_ephemeral_stories(db)
+    sends = await db.story_sends.find({"recipient_id": user["_id"]}, sort_key="created_at", reverse=True)
+    items = []
+    for send in sends:
+        story = await db.ephemeral_stories.find_one({"_id": send["ephemeral_story_id"]})
+        if not story:
+            continue  # expired since it was sent
+        items.append(StoryInboxItem(
+            story=await _serialize_ephemeral_story(story, user, db),
+            sender_id=send["sender_id"],
+            sender_name=send.get("sender_name", "Someone"),
+            sent_at=send["created_at"],
+        ))
+    return items
 
 
 @router.get("/insights", response_model=Insights)
@@ -19,6 +40,7 @@ async def my_insights(user: dict = Depends(get_current_user)):
     supports = sum(s.get("support_count", 0) for s in my_stories)
     replies = sum(s.get("comment_count", 0) for s in my_stories)
     reposts = len([r for r in await db.reposts.find({}) if r["story_id"] in story_ids])
+    saves = len([s for s in await db.saves.find({}) if s["story_id"] in story_ids])
     followers = len(await db.follows.find({"following_id": user["_id"]}))
     return Insights(
         followers=followers,
@@ -26,6 +48,7 @@ async def my_insights(user: dict = Depends(get_current_user)):
         supports_received=supports,
         replies_received=replies,
         reposts_received=reposts,
+        saves_received=saves,
     )
 
 
@@ -145,11 +168,13 @@ async def export_my_data(user: dict = Depends(get_current_user)):
         "comments": await db.comments.find({"author_id": uid}),
         "reactions_given": await db.reactions.find({"user_id": uid}),
         "reposts": await db.reposts.find({"user_id": uid}),
+        "saves": await db.saves.find({"user_id": uid}),
         "following": await db.follows.find({"follower_id": uid}),
         "followers": await db.follows.find({"following_id": uid}),
         "close_circle": await db.close_circle.find({"owner_id": uid}),
         "blocked": await db.blocks.find({"blocker_id": uid}),
         "muted": await db.mutes.find({"muter_id": uid}),
+        "ephemeral_stories": await db.ephemeral_stories.find({"author_id": uid}),
     }
 
 
@@ -173,10 +198,19 @@ async def delete_my_account(user: dict = Depends(get_current_user)):
         await db.comments.delete_many({"story_id": s["_id"]})
         await db.reactions.delete_many({"story_id": s["_id"]})
         await db.reposts.delete_many({"story_id": s["_id"]})
+        await db.saves.delete_many({"story_id": s["_id"]})
     await db.stories.delete_many({"author_id": uid})
+
+    # This user's own ephemeral Stories and everything attached to them.
+    for es in await db.ephemeral_stories.find({"author_id": uid}):
+        await db.story_likes.delete_many({"ephemeral_story_id": es["_id"]})
+        await db.story_replies.delete_many({"ephemeral_story_id": es["_id"]})
+        await db.story_sends.delete_many({"ephemeral_story_id": es["_id"]})
+    await db.ephemeral_stories.delete_many({"author_id": uid})
 
     # Relationships and settings state.
     await db.reposts.delete_many({"user_id": uid})
+    await db.saves.delete_many({"user_id": uid})
     await db.follows.delete_many({"follower_id": uid})
     await db.follows.delete_many({"following_id": uid})
     await db.blocks.delete_many({"blocker_id": uid})
@@ -187,6 +221,10 @@ async def delete_my_account(user: dict = Depends(get_current_user)):
     await db.close_circle.delete_many({"member_id": uid})
     await db.follow_requests.delete_many({"requester_id": uid})
     await db.follow_requests.delete_many({"target_id": uid})
+    await db.story_likes.delete_many({"user_id": uid})
+    await db.story_replies.delete_many({"author_id": uid})
+    await db.story_sends.delete_many({"sender_id": uid})
+    await db.story_sends.delete_many({"recipient_id": uid})
     await db.aria_usage.delete_many({"user_id": uid})
 
     await db.users.delete_one({"_id": uid})

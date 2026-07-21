@@ -10,6 +10,7 @@ import Aria from './pages/Aria'
 import Premium from './pages/Premium'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
+import StoryInbox from './pages/StoryInbox'
 import UserProfile from './pages/UserProfile'
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/premium" element={<Premium />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/story-inbox" element={<StoryInbox />} />
           <Route path="/users/:userId" element={<UserProfile />} />
         </Routes>
       </main>

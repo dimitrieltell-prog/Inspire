@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import StoryCard from '../components/StoryCard'
+import Avatar from '../components/Avatar'
 
 function formatDate(ts) {
   if (!ts) return '—'
@@ -30,7 +31,7 @@ export default function Profile() {
   // Founder-only accounts section
   const [accounts, setAccounts] = useState(null)
 
-  // Posts / Reposts tabs
+  // Posts / Reposts / Saved tabs
   const [tab, setTab] = useState('posts')
   const [tabStories, setTabStories] = useState([])
   const [tabLoading, setTabLoading] = useState(true)
@@ -50,7 +51,9 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return
     setTabLoading(true)
-    const load = tab === 'posts' ? api.getUserStories(user.id) : api.getUserReposts(user.id)
+    const load = tab === 'posts' ? api.getUserStories(user.id)
+      : tab === 'reposts' ? api.getUserReposts(user.id)
+      : api.getSavedStories(user.id)
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
   }, [tab, user])
 
@@ -222,9 +225,7 @@ export default function Profile() {
         ) : (
           <>
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-indigo text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
-                {profile.display_name.charAt(0).toUpperCase()}
-              </div>
+              <Avatar userId={profile.id} displayName={profile.display_name} isSelf />
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold">{profile.display_name}</h1>
@@ -299,10 +300,10 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Posts / Reposts */}
+      {/* Posts / Reposts / Saved */}
       <div className="mt-6">
         <div className="flex gap-2 border-b border-line mb-5">
-          {['posts', 'reposts'].map((t) => (
+          {['posts', 'reposts', 'saved'].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -321,6 +322,7 @@ export default function Profile() {
           <p className="text-center text-slate-light py-8">
             {tab === 'posts' && "You haven't posted anything yet."}
             {tab === 'reposts' && "You haven't reposted anything yet."}
+            {tab === 'saved' && "You haven't saved anything yet."}
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-5">

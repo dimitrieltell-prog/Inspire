@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import StoryCard from '../components/StoryCard'
+import Avatar from '../components/Avatar'
 
 function formatDate(ts) {
   if (!ts) return '—'
@@ -109,9 +110,7 @@ export default function UserProfile() {
 
       <div className="bg-white border border-line rounded-xl2 p-7 mt-6">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
-            {profile.display_name.charAt(0).toUpperCase()}
-          </div>
+          <Avatar userId={profile.id} displayName={profile.display_name} />
           <div className="flex-grow min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.display_name}</h1>

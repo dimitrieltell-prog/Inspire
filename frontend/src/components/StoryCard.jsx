@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
-import { timeLeftLabel } from '../timeLeft'
 
 const REACTIONS = ["I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -13,6 +12,7 @@ export default function StoryCard({ story }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
 
+  const [saved, setSaved] = useState(story.is_saved)
   const [reposted, setReposted] = useState(story.is_reposted)
   const [repostCount, setRepostCount] = useState(story.repost_count || 0)
 
@@ -25,6 +25,18 @@ export default function StoryCard({ story }) {
       setOpen(false)
       setError('')
     } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  async function toggleSave() {
+    if (!user) { setError('Sign in to save.'); return }
+    const next = !saved
+    setSaved(next)
+    try {
+      next ? await api.saveStory(story.id) : await api.unsaveStory(story.id)
+    } catch (e) {
+      setSaved(!next)
       setError(e.message)
     }
   }
@@ -45,22 +57,12 @@ export default function StoryCard({ story }) {
 
   return (
     <div className="bg-white border border-line rounded-xl2 p-6 flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
-      <div className="flex items-center gap-2 flex-wrap mb-3">
-        {story.media_type && (
-          <span className="inline-flex items-center gap-1.5 bg-lavender text-indigo text-[11px] font-semibold px-2.5 py-1 rounded-full w-fit">
-            {story.media_type === 'photo' ? '📷 Photo' : '🎥 Video'}
-          </span>
-        )}
-        {story.audience === 'close_circle' && (
-          <span className="inline-flex items-center gap-1.5 bg-navy text-white text-[11px] font-semibold px-2.5 py-1 rounded-full w-fit">
-            🔒 Close circle
-          </span>
-        )}
-      </div>
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="text-[11.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
-        <span className="text-[11px] text-slate-light font-medium flex-shrink-0">{timeLeftLabel(story.expires_at)}</span>
-      </div>
+      {story.media_type && (
+        <span className="inline-flex items-center gap-1.5 bg-lavender text-indigo text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3 w-fit">
+          {story.media_type === 'photo' ? '📷 Photo' : '🎥 Video'}
+        </span>
+      )}
+      <span className="text-[11.5px] font-bold uppercase tracking-wide text-indigo mb-3">{story.category}</span>
       <h3 className="text-[18.5px] font-bold mb-2.5 leading-snug">
         <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.title}</Link>
       </h3>
@@ -98,11 +100,12 @@ export default function StoryCard({ story }) {
               {story.counts_hidden ? 'Support' : `${supportCount} support`}
             </button>
             <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.comment_count} replies</Link>
-            {story.audience !== 'close_circle' && (
-              <button onClick={toggleRepost} className={`transition-colors font-medium ${reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
-                ⇄ {repostCount}
-              </button>
-            )}
+            <button onClick={toggleRepost} className={`transition-colors font-medium ${reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
+              ⇄ {repostCount}
+            </button>
+            <button onClick={toggleSave} className={`transition-colors font-medium ${saved ? 'text-indigo' : 'hover:text-indigo'}`}>
+              {saved ? '★ Saved' : '☆ Save'}
+            </button>
           </div>
         </div>
         {error && <p className="text-xs text-rose-ink mt-2">{error}</p>}

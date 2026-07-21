@@ -48,8 +48,11 @@ export const api = {
   reactToStory: (storyId, reaction) => request('/stories/react', { method: 'POST', body: { story_id: storyId, reaction } }),
   repostStory: (storyId) => request(`/stories/${storyId}/repost`, { method: 'POST' }),
   unrepostStory: (storyId) => request(`/stories/${storyId}/repost`, { method: 'DELETE' }),
+  saveStory: (storyId) => request(`/stories/${storyId}/save`, { method: 'POST' }),
+  unsaveStory: (storyId) => request(`/stories/${storyId}/save`, { method: 'DELETE' }),
   getUserStories: (userId) => request(`/users/${userId}/stories`),
   getUserReposts: (userId) => request(`/users/${userId}/reposts`),
+  getSavedStories: (userId) => request(`/users/${userId}/saved`),
   listComments: (storyId) => request(`/stories/${storyId}/comments`, { auth: false }),
   createComment: (storyId, body) => request('/stories/comments', { method: 'POST', body: { story_id: storyId, body } }),
   ariaUsage: () => request('/aria/usage'),
@@ -80,6 +83,16 @@ export const api = {
   declineFollowRequest: (userId) => request(`/me/follow-requests/${userId}`, { method: 'DELETE' }),
   exportMyData: () => request('/me/export'),
   deleteMyAccount: () => request('/me', { method: 'DELETE' }),
+
+  // Ephemeral Stories (Instagram-style, avatar-triggered)
+  getUserStory: (userId) => request(`/ephemeral-stories/by-user/${userId}`, { auth: false }),
+  createEphemeralStory: (payload) => request('/ephemeral-stories', { method: 'POST', body: payload }),
+  likeEphemeralStory: (storyId) => request(`/ephemeral-stories/${storyId}/like`, { method: 'POST' }),
+  unlikeEphemeralStory: (storyId) => request(`/ephemeral-stories/${storyId}/like`, { method: 'DELETE' }),
+  getStoryReplies: (storyId) => request(`/ephemeral-stories/${storyId}/replies`, { auth: false }),
+  replyToStory: (storyId, body) => request('/ephemeral-stories/replies', { method: 'POST', body: { ephemeral_story_id: storyId, body } }),
+  sendStory: (storyId, recipientId) => request(`/ephemeral-stories/${storyId}/send`, { method: 'POST', body: { recipient_id: recipientId } }),
+  getStoryInbox: () => request('/me/story-inbox'),
 }
 
 export { getToken }

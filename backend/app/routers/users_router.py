@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
 from app.models import ProfileUser, PublicProfile, StoryOut
-from app.routers.stories_router import _can_view_story, _expire_stories, serialize_story
+from app.routers.stories_router import serialize_story
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -263,7 +263,6 @@ async def remove_from_close_circle(user_id: str, user: dict = Depends(get_curren
 @router.get("/{user_id}/stories", response_model=list[StoryOut])
 async def user_stories(user_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    await _expire_stories(db)
     target = await db.users.find_one({"_id": user_id})
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
@@ -273,14 +272,12 @@ async def user_stories(user_id: str, viewer: Optional[dict] = Depends(get_option
     is_owner = bool(viewer and viewer["_id"] == user_id)
     # Others only see non-anonymous posts; you see all of your own.
     visible = [s for s in stories if is_owner or not s.get("is_anonymous")]
-    visible = [s for s in visible if await _can_view_story(db, s, viewer)]
     return [await serialize_story(s, viewer, db) for s in visible]
 
 
 @router.get("/{user_id}/reposts", response_model=list[StoryOut])
 async def user_reposts(user_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    await _expire_stories(db)
     target = await db.users.find_one({"_id": user_id})
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
@@ -290,8 +287,21 @@ async def user_reposts(user_id: str, viewer: Optional[dict] = Depends(get_option
     result = []
     for r in reposts:
         story = await db.stories.find_one({"_id": r["story_id"]})
-        # A story that expired (or is now close-circle-only and off-limits)
-        # disappears from every repost of it too.
-        if story and await _can_view_story(db, story, viewer):
+        if story:
+            result.append(await serialize_story(story, viewer, db))
+    return result
+
+
+@router.get("/{user_id}/saved", response_model=list[StoryOut])
+async def user_saved(user_id: str, viewer: dict = Depends(get_current_user)):
+    # Saved is private -- only the owner can see their own saved stories.
+    if viewer["_id"] != user_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found.")
+    db = get_db()
+    saves = await db.saves.find({"user_id": user_id}, sort_key="created_at", reverse=True)
+    result = []
+    for sv in saves:
+        story = await db.stories.find_one({"_id": sv["story_id"]})
+        if story:
             result.append(await serialize_story(story, viewer, db))
     return result
