@@ -5,16 +5,16 @@ import { api } from '../api'
 
 const PERKS = [
   'Unlimited messages with Aria (free plan: 5/day)',
-  '1:1 video and voice calls',
-  "See who's viewed your profile",
-  'Advanced message privacy controls',
-  'More ways to customize your space',
+  'Keep your Stories up for up to 7 days (free: 24 hours)',
+  'A Premium badge on your name, everywhere on Inspire',
+  'Business account insights: reach, replies, saves, and more',
 ]
 
 export default function Premium() {
   const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [interval, setInterval] = useState('month')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -37,7 +37,7 @@ export default function Premium() {
     setLoading(true)
     setError('')
     try {
-      const { checkout_url } = await api.createCheckoutSession()
+      const { checkout_url } = await api.createCheckoutSession(interval)
       window.location.href = checkout_url
     } catch (err) {
       setError(err.message)
@@ -53,10 +53,44 @@ export default function Premium() {
       {notice && <p className="text-sm text-indigo-deep bg-indigo/10 rounded-xl px-4 py-3 mb-6">{notice}</p>}
 
       <div className="bg-gradient-to-br from-indigo to-indigo-deep text-white rounded-xl2 p-8">
-        <div className="flex items-baseline gap-1.5 mb-6">
-          <span className="text-4xl font-extrabold font-display">$4.99</span>
-          <span className="text-sm text-white/65">/ month</span>
+        {!user?.is_premium && (
+          <div className="flex bg-white/10 rounded-full p-1 mb-6">
+            <button
+              onClick={() => setInterval('month')}
+              className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${interval === 'month' ? 'bg-white text-indigo-deep' : 'text-white/80'}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setInterval('year')}
+              className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors relative ${interval === 'year' ? 'bg-white text-indigo-deep' : 'text-white/80'}`}
+            >
+              Annual
+              <span className="absolute -top-2.5 -right-1 text-[9px] font-bold uppercase bg-sage text-sage-ink px-1.5 py-0.5 rounded-full">Save 33%</span>
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-baseline gap-1.5 mb-1">
+          {interval === 'month' ? (
+            <>
+              <span className="text-4xl font-extrabold font-display">$4.99</span>
+              <span className="text-sm text-white/65">/ month</span>
+            </>
+          ) : (
+            <>
+              <span className="text-4xl font-extrabold font-display">$39.99</span>
+              <span className="text-sm text-white/65">/ year</span>
+            </>
+          )}
         </div>
+        {interval === 'year' && (
+          <p className="text-xs text-white/65 mb-5">Works out to $3.33/month — billed once a year.</p>
+        )}
+        <p className="text-xs font-semibold text-white/90 mb-6 mt-1">
+          🎁 7-day free trial. Cancel anytime, no lock-in.
+        </p>
+
         <ul className="flex flex-col gap-2.5 mb-7">
           {PERKS.map((p) => (
             <li key={p} className="text-sm flex gap-2.5 items-start text-white/90">
@@ -73,7 +107,7 @@ export default function Premium() {
             disabled={loading}
             className="w-full bg-white text-indigo-deep rounded-full py-3 font-semibold hover:shadow-lg transition-shadow disabled:opacity-60"
           >
-            {loading ? 'Redirecting to checkout…' : 'Upgrade to Premium'}
+            {loading ? 'Redirecting to checkout…' : 'Start your free trial'}
           </button>
         )}
         {error && <p className="text-xs text-rose-100 mt-3">{error}</p>}

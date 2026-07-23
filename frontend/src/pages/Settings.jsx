@@ -95,6 +95,7 @@ export default function Settings() {
   const [bizDraft, setBizDraft] = useState(null)
   const [insights, setInsights] = useState(null)
   const [showInsights, setShowInsights] = useState(false)
+  const [insightsLocked, setInsightsLocked] = useState(null)
 
   // Privacy
   const [audienceOpen, setAudienceOpen] = useState(false)
@@ -159,8 +160,11 @@ export default function Settings() {
 
   async function openInsights() {
     setShowInsights((s) => !s)
-    if (!insights) {
-      api.getMyInsights().then(setInsights).catch((e) => setError(e.message))
+    if (!insights && !insightsLocked) {
+      api.getMyInsights().then(setInsights).catch((e) => {
+        if (e.status === 403) setInsightsLocked(e.message)
+        else setError(e.message)
+      })
     }
   }
 
@@ -369,10 +373,23 @@ export default function Settings() {
                 </button>
               </div>
             )}
-            <Row title="Insights" subtitle="How your stories are performing." onClick={openInsights} expandable expanded={showInsights} />
+            <Row
+              title="Insights"
+              subtitle={user.is_premium ? 'How your stories are performing.' : 'How your stories are performing — a Premium perk.'}
+              onClick={openInsights}
+              expandable
+              expanded={showInsights}
+            />
             {showInsights && (
               <div className="p-4 bg-bg/40">
-                {!insights ? (
+                {insightsLocked ? (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-slate mb-3">{insightsLocked}</p>
+                    <button onClick={() => navigate('/premium')} className="text-sm font-semibold bg-indigo text-white rounded-full px-5 py-2">
+                      Upgrade to Premium
+                    </button>
+                  </div>
+                ) : !insights ? (
                   <p className="text-sm text-slate-light">Loading…</p>
                 ) : (
                   <div className="grid grid-cols-3 gap-3">

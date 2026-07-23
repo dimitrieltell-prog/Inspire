@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.auth import get_current_user
+from app.auth import get_current_user, is_founder
 from app.database import get_db
 from app.models import ActivityItem, Insights, ProfileUser, StoryInboxItem
 from app.routers.ephemeral_story_router import _expire_ephemeral_stories, _serialize_ephemeral_story
@@ -31,9 +31,11 @@ async def my_story_inbox(user: dict = Depends(get_current_user)):
 
 @router.get("/insights", response_model=Insights)
 async def my_insights(user: dict = Depends(get_current_user)):
-    """Business-account analytics: how your stories are landing."""
+    """Business-account analytics: how your stories are landing. A Premium perk."""
     if not user.get("is_business"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a business account perk. Turn on Business account in Settings.")
+    if not (user.get("is_premium", False) or is_founder(user)):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a Premium perk for business accounts. Upgrade to Premium to unlock them.")
     db = get_db()
     my_stories = await db.stories.find({"author_id": user["_id"]})
     story_ids = {s["_id"] for s in my_stories}

@@ -12,20 +12,45 @@ logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/premium", tags=["premium"])
 
+# Annual plan is pure savings framing on the same product -- $39.99/yr works out to
+# ~$3.33/mo, a genuine ~33% discount off paying monthly ($4.99 x 12 = $59.88).
+# Built via Stripe's inline price_data so it needs no separate Price object set up
+# in the Stripe dashboard -- the existing monthly Price ID is left untouched since
+# real subscribers are already tied to it.
+ANNUAL_PRICE_CENTS = 3999
+TRIAL_PERIOD_DAYS = 7
+
 
 @router.post("/checkout")
-async def create_checkout_session(user: dict = Depends(get_current_user)):
+async def create_checkout_session(interval: str = "month", user: dict = Depends(get_current_user)):
+    if interval not in ("month", "year"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "interval must be 'month' or 'year'.")
     if not settings.stripe_secret_key or not settings.stripe_price_id:
         raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Payments are not configured yet.")
 
     stripe.api_key = settings.stripe_secret_key
+
+    if interval == "year":
+        line_item = {
+            "price_data": {
+                "currency": "usd",
+                "unit_amount": ANNUAL_PRICE_CENTS,
+                "recurring": {"interval": "year"},
+                "product_data": {"name": "Inspire Premium (Annual)"},
+            },
+            "quantity": 1,
+        }
+    else:
+        line_item = {"price": settings.stripe_price_id, "quantity": 1}
+
     try:
         session = stripe.checkout.Session.create(
             mode="subscription",
-            line_items=[{"price": settings.stripe_price_id, "quantity": 1}],
+            line_items=[line_item],
+            subscription_data={"trial_period_days": TRIAL_PERIOD_DAYS},
             customer_email=user["email"],
             client_reference_id=user["_id"],
-            metadata={"user_id": user["_id"]},
+            metadata={"user_id": user["_id"], "plan": interval},
             success_url=f"{settings.frontend_url}/premium?checkout=success",
             cancel_url=f"{settings.frontend_url}/premium?checkout=canceled",
         )

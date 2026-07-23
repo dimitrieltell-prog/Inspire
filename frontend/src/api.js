@@ -60,7 +60,7 @@ export const api = {
   ariaChat: (message) => request('/aria/chat', { method: 'POST', body: { message } }),
   me: () => request('/auth/me'),
   updateProfile: (fields) => request('/auth/me', { method: 'PATCH', body: fields }),
-  createCheckoutSession: () => request('/premium/checkout', { method: 'POST' }),
+  createCheckoutSession: (interval = 'month') => request(`/premium/checkout?interval=${interval}`, { method: 'POST' }),
   listAccounts: (includeTest) => request(`/admin/users${includeTest ? '?include_test=true' : ''}`),
   markTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'POST' }),
   unmarkTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'DELETE' }),

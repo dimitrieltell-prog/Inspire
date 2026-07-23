@@ -18,7 +18,8 @@ async def stats(key: str):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found.")
     db = get_db()
     users = await db.users.find({})
-    return {"user_count": len(users)}
+    real_user_count = sum(1 for u in users if not u.get("is_test_account", False))
+    return {"user_count": len(users), "real_user_count": real_user_count}
 
 
 @router.get("/users")
