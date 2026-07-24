@@ -373,44 +373,44 @@ export default function Settings() {
                 </button>
               </div>
             )}
-            <Row
-              title="Insights"
-              subtitle={user.is_premium ? 'How your stories are performing.' : 'How your stories are performing — a Premium perk.'}
-              onClick={openInsights}
-              expandable
-              expanded={showInsights}
-            />
-            {showInsights && (
-              <div className="p-4 bg-bg/40">
-                {insightsLocked ? (
-                  <div className="text-center py-2">
-                    <p className="text-sm text-slate mb-3">{insightsLocked}</p>
-                    <button onClick={() => navigate('/premium')} className="text-sm font-semibold bg-indigo text-white rounded-full px-5 py-2">
-                      Upgrade to Premium
-                    </button>
+          </>
+        )}
+        <Row
+          title="Insights"
+          subtitle={user.is_premium ? 'How your stories are performing.' : 'How your stories are performing — a Premium perk.'}
+          onClick={openInsights}
+          expandable
+          expanded={showInsights}
+        />
+        {showInsights && (
+          <div className="p-4 bg-bg/40">
+            {insightsLocked ? (
+              <div className="text-center py-2">
+                <p className="text-sm text-slate mb-3">{insightsLocked}</p>
+                <button onClick={() => navigate('/premium')} className="text-sm font-semibold bg-indigo text-white rounded-full px-5 py-2">
+                  Upgrade to Premium
+                </button>
+              </div>
+            ) : !insights ? (
+              <p className="text-sm text-slate-light">Loading…</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  ['Followers', insights.followers],
+                  ['Stories', insights.stories],
+                  ['Support received', insights.supports_received],
+                  ['Replies received', insights.replies_received],
+                  ['Reposts', insights.reposts_received],
+                  ['Saves', insights.saves_received],
+                ].map(([label, value]) => (
+                  <div key={label} className="bg-white border border-line rounded-xl px-3 py-3 text-center">
+                    <div className="text-xl font-bold">{value}</div>
+                    <div className="text-[11px] text-slate mt-0.5">{label}</div>
                   </div>
-                ) : !insights ? (
-                  <p className="text-sm text-slate-light">Loading…</p>
-                ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      ['Followers', insights.followers],
-                      ['Stories', insights.stories],
-                      ['Support received', insights.supports_received],
-                      ['Replies received', insights.replies_received],
-                      ['Reposts', insights.reposts_received],
-                      ['Saves', insights.saves_received],
-                    ].map(([label, value]) => (
-                      <div key={label} className="bg-white border border-line rounded-xl px-3 py-3 text-center">
-                        <div className="text-xl font-bold">{value}</div>
-                        <div className="text-[11px] text-slate mt-0.5">{label}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
             )}
-          </>
+          </div>
         )}
       </Section>
 
@@ -451,7 +451,7 @@ export default function Settings() {
         />
         <Row
           title="Muted words"
-          subtitle={`Stories and replies containing these words are hidden from your feed.${(user.muted_words || []).length ? ` (${user.muted_words.length})` : ''}`}
+          subtitle={`Stories and replies containing these words are hidden from your feed. Up to ${user.is_premium ? 100 : 25}${user.is_premium ? '' : ' (Premium: 100)'}.${(user.muted_words || []).length ? ` Using ${user.muted_words.length}.` : ''}`}
           onClick={() => setWordsOpen((o) => !o)}
           expandable
           expanded={wordsOpen}

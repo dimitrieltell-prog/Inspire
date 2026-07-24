@@ -76,6 +76,8 @@ async def create_ephemeral_story(payload: EphemeralStoryCreate, user: dict = Dep
 
     db = get_db()
     is_premium = user.get("is_premium", False) or is_founder(user)
+    if payload.body and len(payload.body) > 500 and not is_premium:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Free accounts can write up to 500 characters — Premium allows up to 1000.")
     allowed = STORY_DURATIONS_PREMIUM if is_premium else STORY_DURATIONS_FREE
     duration_hours = payload.duration_hours if payload.duration_hours in allowed else allowed[0]
 

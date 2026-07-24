@@ -7,7 +7,7 @@ from fastapi import Depends
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 
-from app.auth import create_access_token, get_current_user, hash_password, verify_password
+from app.auth import create_access_token, get_current_user, hash_password, is_founder, verify_password
 from app.config import settings
 from app.database import get_db
 from app.models import BUSINESS_CATEGORIES, COMMENT_AUDIENCES, GoogleAuthIn, ProfileUpdate, TokenOut, UserLogin, UserOut, UserRegister
@@ -157,8 +157,10 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.muted_words is not None:
         words = [w.strip().lower() for w in payload.muted_words if w.strip()]
-        if len(words) > 25:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can mute up to 25 words.")
+        is_premium = user.get("is_premium", False) or is_founder(user)
+        max_words = 100 if is_premium else 25
+        if len(words) > max_words:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"You can mute up to {max_words} words{'' if is_premium else ' — Premium allows up to 100'}.")
         for w in words:
             if len(w) > 40:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, "Muted words must be under 40 characters.")

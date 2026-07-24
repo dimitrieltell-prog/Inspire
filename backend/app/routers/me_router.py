@@ -31,11 +31,10 @@ async def my_story_inbox(user: dict = Depends(get_current_user)):
 
 @router.get("/insights", response_model=Insights)
 async def my_insights(user: dict = Depends(get_current_user)):
-    """Business-account analytics: how your stories are landing. A Premium perk."""
-    if not user.get("is_business"):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a business account perk. Turn on Business account in Settings.")
+    """How your stories are performing. A Premium perk -- available to any
+    Premium account, business or not."""
     if not (user.get("is_premium", False) or is_founder(user)):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a Premium perk for business accounts. Upgrade to Premium to unlock them.")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a Premium perk. Upgrade to Premium to unlock them.")
     db = get_db()
     my_stories = await db.stories.find({"author_id": user["_id"]})
     story_ids = {s["_id"] for s in my_stories}

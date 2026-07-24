@@ -195,7 +195,7 @@ STORY_DURATIONS_PREMIUM = [24, 48, 72, 168]  # up to 7 days
 class EphemeralStoryCreate(BaseModel):
     """An Instagram-style Story: ephemeral, tied to the author's avatar,
     never saveable."""
-    body: Optional[str] = Field(default=None, max_length=500)
+    body: Optional[str] = Field(default=None, max_length=1000)  # free cap enforced at 500 in the router; Premium gets the full 1000
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
     audience: Literal["everyone", "close_circle"] = "everyone"

@@ -6,8 +6,10 @@ import { api } from '../api'
 const PERKS = [
   'Unlimited messages with Aria (free plan: 5/day)',
   'Keep your Stories up for up to 7 days (free: 24 hours)',
+  'Insights: see how your stories are performing',
+  'Mute up to 100 words to protect your feed (free: 25)',
+  'Write longer Story captions — up to 1000 characters (free: 500)',
   'A Premium badge on your name, everywhere on Inspire',
-  'Business account insights: reach, replies, saves, and more',
 ]
 
 export default function Premium() {
