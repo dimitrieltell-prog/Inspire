@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import Nav from './components/Nav'
+import RequireAuth from './components/RequireAuth'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -22,9 +23,9 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/stories" element={<Stories />} />
-          <Route path="/stories/new" element={<StoryCreate />} />
-          <Route path="/stories/:storyId" element={<StoryDetail />} />
+          <Route path="/stories" element={<RequireAuth><Stories /></RequireAuth>} />
+          <Route path="/stories/new" element={<RequireAuth><StoryCreate /></RequireAuth>} />
+          <Route path="/stories/:storyId" element={<RequireAuth><StoryDetail /></RequireAuth>} />
           <Route path="/aria" element={<Aria />} />
           <Route path="/premium" element={<Premium />} />
           <Route path="/profile" element={<Profile />} />

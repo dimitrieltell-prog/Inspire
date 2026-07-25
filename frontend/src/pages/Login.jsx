@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Login() {
   const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo = location.state?.from?.pathname || '/stories'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -17,7 +19,7 @@ export default function Login() {
     setError('')
     try {
       await login(email, password)
-      navigate('/stories')
+      navigate(redirectTo)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -29,7 +31,7 @@ export default function Login() {
     setError('')
     try {
       await loginWithGoogle(credential)
-      navigate('/stories')
+      navigate(redirectTo)
     } catch (err) {
       setError(err.message)
     }

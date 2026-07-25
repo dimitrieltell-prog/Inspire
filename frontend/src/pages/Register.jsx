@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import GoogleSignInButton from '../components/GoogleSignInButton'
@@ -7,6 +7,8 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 export default function Register() {
   const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo = location.state?.from?.pathname || '/stories'
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -40,7 +42,7 @@ export default function Register() {
     setError('')
     try {
       await register(email, password, displayName, username.trim())
-      navigate('/stories')
+      navigate(redirectTo)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -52,7 +54,7 @@ export default function Register() {
     setError('')
     try {
       await loginWithGoogle(credential)
-      navigate('/stories')
+      navigate(redirectTo)
     } catch (err) {
       setError(err.message)
     }
