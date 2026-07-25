@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
-const REACTIONS = ["I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
+const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
 export default function StoryCard({ story }) {
   const { user } = useAuth()
