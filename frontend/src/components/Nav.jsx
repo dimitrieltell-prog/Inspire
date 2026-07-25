@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import SearchOverlay from './SearchOverlay'
 
 export default function Nav() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isHome = location.pathname === '/'
   const [searchOpen, setSearchOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -26,13 +28,15 @@ export default function Nav() {
           {user && <Link to="/settings" className="hover:text-navy transition-colors">Settings</Link>}
         </nav>
         <div className="flex-1 flex items-center justify-end gap-3">
-          <button
-            onClick={() => setSearchOpen(true)}
-            aria-label="Search Inspire"
-            className="w-9 h-9 rounded-full border border-line bg-white hover:border-indigo transition-colors flex items-center justify-center text-sm flex-shrink-0"
-          >
-            🔍
-          </button>
+          {!isHome && (
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search Inspire"
+              className="w-9 h-9 rounded-full border border-line bg-white hover:border-indigo transition-colors flex items-center justify-center text-sm flex-shrink-0"
+            >
+              🔍
+            </button>
+          )}
           {user ? (
             <>
               <Link to="/profile" className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5 hover:text-navy transition-colors">
