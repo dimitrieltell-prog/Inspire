@@ -7,6 +7,7 @@ export default function Nav() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line">
@@ -55,8 +56,35 @@ export default function Nav() {
               Sign in
             </Link>
           )}
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menu"
+            className="md:hidden w-9 h-9 rounded-full border border-line bg-white hover:border-indigo transition-colors flex items-center justify-center text-base flex-shrink-0"
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
         </div>
       </div>
+      {menuOpen && (
+        <div className="md:hidden border-t border-line bg-white px-7 py-4 flex flex-col gap-3 text-sm font-medium text-slate">
+          {user && (
+            <div className="flex items-center gap-1.5 flex-wrap pb-3 border-b border-line">
+              <span className="text-navy font-semibold">{user.display_name}</span>
+              {user.is_founder && (
+                <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
+              )}
+              {user.is_premium && (
+                <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
+              )}
+            </div>
+          )}
+          <Link to="/premium" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Premium</Link>
+          <Link to="/stories" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Stories</Link>
+          <Link to="/aria" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Aria</Link>
+          {user && <Link to="/profile" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Profile</Link>}
+          {user && <Link to="/settings" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Settings</Link>}
+        </div>
+      )}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </header>
   )
