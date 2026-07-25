@@ -26,11 +26,11 @@ export default function App() {
           <Route path="/stories" element={<RequireAuth><Stories /></RequireAuth>} />
           <Route path="/stories/new" element={<RequireAuth><StoryCreate /></RequireAuth>} />
           <Route path="/stories/:storyId" element={<RequireAuth><StoryDetail /></RequireAuth>} />
-          <Route path="/aria" element={<Aria />} />
+          <Route path="/aria" element={<RequireAuth><Aria /></RequireAuth>} />
           <Route path="/premium" element={<Premium />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/story-inbox" element={<StoryInbox />} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+          <Route path="/story-inbox" element={<RequireAuth><StoryInbox /></RequireAuth>} />
           <Route path="/users/:userId" element={<UserProfile />} />
         </Routes>
       </main>
