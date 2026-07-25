@@ -47,6 +47,18 @@ export default function Premium() {
     }
   }
 
+  async function manageSubscription() {
+    setLoading(true)
+    setError('')
+    try {
+      const { portal_url } = await api.createPortalSession()
+      window.location.href = portal_url
+    } catch (err) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="max-w-md mx-auto px-7 py-16">
       <span className="text-xs font-bold uppercase tracking-wide text-indigo">Premium</span>
@@ -102,7 +114,16 @@ export default function Premium() {
         </ul>
 
         {user?.is_premium ? (
-          <div className="bg-white/15 rounded-full py-3 text-center font-semibold text-sm">You're already Premium ✨</div>
+          <div className="flex flex-col gap-2.5">
+            <div className="bg-white/15 rounded-full py-3 text-center font-semibold text-sm">You're already Premium ✨</div>
+            <button
+              onClick={manageSubscription}
+              disabled={loading}
+              className="w-full bg-white/10 border border-white/25 text-white rounded-full py-2.5 text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-60"
+            >
+              {loading ? 'Opening billing portal…' : 'Manage or cancel subscription'}
+            </button>
+          </div>
         ) : (
           <button
             onClick={upgrade}

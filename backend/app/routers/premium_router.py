@@ -60,6 +60,26 @@ async def create_checkout_session(interval: str = "month", user: dict = Depends(
     return {"checkout_url": session.url}
 
 
+@router.post("/portal")
+async def create_portal_session(user: dict = Depends(get_current_user)):
+    if not settings.stripe_secret_key:
+        raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Payments are not configured yet.")
+    customer_id = user.get("stripe_customer_id")
+    if not customer_id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No subscription found for this account.")
+
+    stripe.api_key = settings.stripe_secret_key
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=f"{settings.frontend_url}/premium",
+        )
+    except stripe.StripeError as e:
+        logger.error("Stripe billing portal session creation failed: %s", e)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Could not open the billing portal. Please try again shortly.")
+    return {"portal_url": session.url}
+
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request):
     if not settings.stripe_webhook_secret:

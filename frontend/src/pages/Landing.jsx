@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import SearchOverlay from '../components/SearchOverlay'
 
 export default function Landing() {
+  const [searchOpen, setSearchOpen] = useState(false)
+
   return (
     <div>
-      <section className="text-center pt-24 pb-16 px-7 max-w-3xl mx-auto">
+      <section className="text-center pt-8 md:pt-16 pb-16 px-7 max-w-3xl mx-auto">
         <span className="inline-flex items-center gap-1.5 bg-white border border-line px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide text-slate mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo" /> A quieter kind of social
         </span>
@@ -20,8 +24,15 @@ export default function Landing() {
             Share Yours
           </Link>
         </div>
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="w-full max-w-md mx-auto mt-5 flex items-center gap-2.5 bg-white border border-line rounded-full px-5 py-3 text-sm text-slate-light hover:border-indigo transition-colors"
+        >
+          <span>🔍</span> Search people and stories
+        </button>
         <p className="text-xs text-slate-light mt-4">Text, photo, or video — share it however it actually happened.</p>
       </section>
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
 
       <section className="max-w-6xl mx-auto px-7 pb-24">
         <div className="grid md:grid-cols-3 gap-5">

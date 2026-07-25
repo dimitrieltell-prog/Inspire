@@ -61,6 +61,7 @@ export const api = {
   me: () => request('/auth/me'),
   updateProfile: (fields) => request('/auth/me', { method: 'PATCH', body: fields }),
   createCheckoutSession: (interval = 'month') => request(`/premium/checkout?interval=${interval}`, { method: 'POST' }),
+  createPortalSession: () => request('/premium/portal', { method: 'POST' }),
   listAccounts: (includeTest) => request(`/admin/users${includeTest ? '?include_test=true' : ''}`),
   markTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'POST' }),
   unmarkTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'DELETE' }),
