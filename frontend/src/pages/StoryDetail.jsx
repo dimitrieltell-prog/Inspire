@@ -94,19 +94,46 @@ export default function StoryDetail() {
     <div className="max-w-2xl mx-auto px-7 py-16">
       <Link to="/stories" className="text-sm text-indigo font-semibold">← Back to stories</Link>
 
-      <div className="bg-white border border-line rounded-xl2 p-6 mt-6">
-        {story.media_type && (
-          <span className="inline-flex items-center gap-1.5 bg-lavender text-indigo text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3 w-fit">
-            {story.media_type === 'photo' ? '📷 Photo' : '🎥 Video'}
+      <div className="bg-white border border-line rounded-xl2 overflow-hidden mt-6">
+        <div className="flex items-center gap-2.5 px-6 pt-6 pb-3">
+          <span className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+            {story.author_name.charAt(0).toUpperCase()}
           </span>
-        )}
-        <span className="text-[11.5px] font-bold uppercase tracking-wide text-indigo mb-3 block">{story.category}</span>
-        <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>
-        <p className="text-sm text-slate leading-relaxed mb-6 whitespace-pre-wrap">{story.body}</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {story.author_id ? (
+                <Link to={`/users/${story.author_id}`} className="text-sm font-semibold text-navy hover:text-indigo transition-colors truncate">{story.author_name}</Link>
+              ) : (
+                <span className="text-sm font-semibold text-navy truncate">{story.author_name}</span>
+              )}
+              {story.author_is_business && (
+                <span className="text-[9px] font-bold uppercase tracking-wide border border-line text-slate-light px-1.5 py-0.5 rounded-full flex-shrink-0">
+                  {story.author_business_category || 'Business'}
+                </span>
+              )}
+            </div>
+            <span className="text-[10.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
+          </div>
+        </div>
 
-        <div className="relative">
+        {story.media_url && (
+          <div className="w-full bg-navy">
+            {story.media_type === 'video' ? (
+              <video src={story.media_url} controls className="w-full max-h-[70vh]" />
+            ) : (
+              <img src={story.media_url} alt="" className="w-full max-h-[70vh] object-contain" />
+            )}
+          </div>
+        )}
+
+        <div className="px-6 pt-5">
+          <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>
+          <p className="text-sm text-slate leading-relaxed mb-6 whitespace-pre-wrap">{story.body}</p>
+        </div>
+
+        <div className="relative px-6 pb-6">
           {reactOpen && (
-            <div className="absolute bottom-full mb-2 left-0 right-0 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
+            <div className="absolute bottom-full mb-2 left-6 right-6 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
               {REACTIONS.map((r) => (
                 <button
                   key={r}
@@ -118,24 +145,22 @@ export default function StoryDetail() {
               ))}
             </div>
           )}
-          <div className="flex items-center justify-between pt-4 border-t border-line">
-            {story.author_id ? (
-              <Link to={`/users/${story.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{story.author_name}</Link>
-            ) : (
-              <span className="text-xs font-semibold text-slate">{story.author_name}</span>
-            )}
-            <div className="flex items-center gap-3 text-xs text-slate-light">
-              <button onClick={() => setReactOpen((o) => !o)} className="hover:text-indigo transition-colors font-medium">
-                {story.counts_hidden ? 'Support' : `${story.support_count} support`}
-              </button>
-              <span>{story.comment_count} replies</span>
-              <button onClick={toggleRepost} className={`transition-colors font-medium ${story.is_reposted ? 'text-indigo' : 'hover:text-indigo'}`}>
-                ⇄ {story.repost_count}
-              </button>
-              <button onClick={toggleSave} className={`transition-colors font-medium ${story.is_saved ? 'text-indigo' : 'hover:text-indigo'}`}>
-                {story.is_saved ? '★ Saved' : '☆ Save'}
-              </button>
-            </div>
+          <div className="flex items-center gap-5 pt-4 border-t border-line">
+            <button onClick={() => setReactOpen((o) => !o)} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${picked ? 'text-rose-ink' : 'text-slate-light hover:text-indigo'}`}>
+              <span className="text-lg leading-none">{picked ? '❤️' : '🤍'}</span>
+              {!story.counts_hidden && <span>{story.support_count}</span>}
+            </button>
+            <span className="flex items-center gap-1.5 text-sm font-medium text-slate-light">
+              <span className="text-lg leading-none">💬</span>
+              <span>{story.comment_count}</span>
+            </span>
+            <button onClick={toggleRepost} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${story.is_reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
+              <span className="text-lg leading-none">🔁</span>
+              <span>{story.repost_count}</span>
+            </button>
+            <button onClick={toggleSave} className={`ml-auto text-lg leading-none transition-colors ${story.is_saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
+              🔖
+            </button>
           </div>
           {reactError && <p className="text-xs text-rose-ink mt-2">{reactError}</p>}
         </div>
