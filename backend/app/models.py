@@ -7,6 +7,9 @@ Category = Literal[
 ]
 
 REACTIONS = [
+    "That's awesome!",
+    "Love this!",
+    "So proud of you",
     "I'm here for you",
     "You helped me",
     "I understand",

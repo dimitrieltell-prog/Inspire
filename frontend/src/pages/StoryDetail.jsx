@@ -87,7 +87,16 @@ export default function StoryDetail() {
   }
 
   if (loading) return <p className="text-center text-slate py-16">Loading…</p>
-  if (error) return <p className="text-center text-rose-ink py-16">{error}</p>
+  if (error) return (
+    <div className="text-center py-16 px-7">
+      <p className="text-rose-ink mb-3">{error}</p>
+      {!user && (
+        <p className="text-sm text-slate">
+          <Link to="/login" className="text-indigo font-semibold">Sign in</Link> if you think you should have access to this.
+        </p>
+      )}
+    </div>
+  )
   if (!story) return null
 
   return (

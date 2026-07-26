@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.auth import get_current_user, get_optional_user
+from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
 from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, StoryCreate, StoryOut
 from app.moderation import contains_hostility
@@ -99,6 +99,30 @@ def _contains_muted_word(text: str, muted_words: list) -> bool:
     return any(w in lowered for w in muted_words)
 
 
+async def _can_view_story(db, story: dict, viewer: Optional[dict]) -> bool:
+    """A story/post is visible to everyone unless its author has a private
+    account, in which case only the author, the founder, and people who
+    already follow the author can see it -- a shared link can't bypass that."""
+    author_id = story.get("author_id")
+    if not author_id:
+        return True
+    if viewer and (viewer["_id"] == author_id or is_founder(viewer)):
+        return True
+    author = await db.users.find_one({"_id": author_id})
+    if author and author.get("is_private", False):
+        if not viewer:
+            return False
+        return bool(await db.follows.find_one({"follower_id": viewer["_id"], "following_id": author_id}))
+    return True
+
+
+async def _require_visible_story(db, story_id: str, viewer: Optional[dict]) -> dict:
+    story = await db.stories.find_one({"_id": story_id})
+    if not story or not await _can_view_story(db, story, viewer):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    return story
+
+
 @router.get("", response_model=list[StoryOut])
 async def list_stories(category: Optional[str] = None, limit: int = 30, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
@@ -110,21 +134,21 @@ async def list_stories(category: Optional[str] = None, limit: int = 30, viewer: 
     muted_words = (viewer or {}).get("muted_words", [])
     if muted_words:
         stories = [s for s in stories if not _contains_muted_word(s["title"] + " " + s["body"], muted_words)]
+    stories = [s for s in stories if await _can_view_story(db, s, viewer)]
     return [await serialize_story(s, viewer, db) for s in stories[:limit]]
 
 
 @router.get("/{story_id}", response_model=StoryOut)
 async def get_story(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    story = await db.stories.find_one({"_id": story_id})
-    if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    story = await _require_visible_story(db, story_id, viewer)
     return await serialize_story(story, viewer, db)
 
 
 @router.get("/{story_id}/comments", response_model=list[CommentOut])
 async def list_comments(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
+    await _require_visible_story(db, story_id, viewer)
     comments = await db.comments.find({"story_id": story_id}, sort_key="created_at", reverse=False)
     hidden = await _hidden_author_ids(db, viewer)
     if hidden:
@@ -144,9 +168,7 @@ async def create_comment(payload: CommentCreate, user: dict = Depends(get_curren
         )
 
     db = get_db()
-    story = await db.stories.find_one({"_id": payload.story_id})
-    if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    story = await _require_visible_story(db, payload.story_id, user)
 
     author_id = story.get("author_id")
     if author_id and author_id != user["_id"]:
@@ -181,9 +203,7 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Reaction must be one of: {', '.join(REACTIONS)}")
 
     db = get_db()
-    story = await db.stories.find_one({"_id": payload.story_id})
-    if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    story = await _require_visible_story(db, payload.story_id, user)
 
     # one reaction per user per story -- update if it already exists, else create + increment
     existing = await db.reactions.find_one({"story_id": payload.story_id, "user_id": user["_id"]})
@@ -202,17 +222,10 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
         await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"support_count": 1}})
 
 
-async def _require_story(db, story_id: str) -> dict:
-    story = await db.stories.find_one({"_id": story_id})
-    if not story:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
-    return story
-
-
 @router.post("/{story_id}/repost", status_code=status.HTTP_204_NO_CONTENT)
 async def repost_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
-    await _require_story(db, story_id)
+    await _require_visible_story(db, story_id, user)
     existing = await db.reposts.find_one({"story_id": story_id, "user_id": user["_id"]})
     if not existing:
         await db.reposts.insert_one({"story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
@@ -227,7 +240,7 @@ async def unrepost_story(story_id: str, user: dict = Depends(get_current_user)):
 @router.post("/{story_id}/save", status_code=status.HTTP_204_NO_CONTENT)
 async def save_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
-    await _require_story(db, story_id)
+    await _require_visible_story(db, story_id, user)
     existing = await db.saves.find_one({"story_id": story_id, "user_id": user["_id"]})
     if not existing:
         await db.saves.insert_one({"story_id": story_id, "user_id": user["_id"], "created_at": time.time()})

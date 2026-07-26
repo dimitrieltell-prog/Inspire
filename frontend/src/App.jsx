@@ -25,7 +25,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/stories" element={<RequireAuth><Stories /></RequireAuth>} />
           <Route path="/stories/new" element={<RequireAuth><StoryCreate /></RequireAuth>} />
-          <Route path="/stories/:storyId" element={<RequireAuth><StoryDetail /></RequireAuth>} />
+          <Route path="/stories/:storyId" element={<StoryDetail />} />
           <Route path="/aria" element={<RequireAuth><Aria /></RequireAuth>} />
           <Route path="/premium" element={<Premium />} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
