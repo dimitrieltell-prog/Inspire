@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
@@ -7,6 +7,8 @@ const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here
 
 export default function StoryCard({ story }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [supportCount, setSupportCount] = useState(story.support_count)
   const [picked, setPicked] = useState(null)
   const [open, setOpen] = useState(false)
@@ -16,8 +18,16 @@ export default function StoryCard({ story }) {
   const [reposted, setReposted] = useState(story.is_reposted)
   const [repostCount, setRepostCount] = useState(story.repost_count || 0)
 
+  function promptSignIn() {
+    navigate('/login', { state: { from: location } })
+  }
+
+  function openReactions() {
+    if (!user) { promptSignIn(); return }
+    setOpen((o) => !o)
+  }
+
   async function react(reaction) {
-    if (!user) { setError('Sign in to send support.'); return }
     try {
       await api.reactToStory(story.id, reaction)
       if (!picked) setSupportCount((c) => c + 1)
@@ -30,7 +40,7 @@ export default function StoryCard({ story }) {
   }
 
   async function toggleSave() {
-    if (!user) { setError('Sign in to save.'); return }
+    if (!user) { promptSignIn(); return }
     const next = !saved
     setSaved(next)
     try {
@@ -42,7 +52,7 @@ export default function StoryCard({ story }) {
   }
 
   async function toggleRepost() {
-    if (!user) { setError('Sign in to repost.'); return }
+    if (!user) { promptSignIn(); return }
     const next = !reposted
     setReposted(next)
     setRepostCount((c) => c + (next ? 1 : -1))
@@ -114,7 +124,7 @@ export default function StoryCard({ story }) {
           </div>
         )}
         <div className="flex items-center gap-4 border-t border-line pt-3">
-          <button onClick={() => setOpen((o) => !o)} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${picked ? 'text-rose-ink' : 'text-slate-light hover:text-indigo'}`}>
+          <button onClick={openReactions} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${picked ? 'text-rose-ink' : 'text-slate-light hover:text-indigo'}`}>
             <span className="text-base leading-none">{picked ? '❤️' : '🤍'}</span>
             {!story.counts_hidden && <span>{supportCount}</span>}
           </button>
