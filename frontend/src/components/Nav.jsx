@@ -12,7 +12,7 @@ export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line">
+    <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line pt-[env(safe-area-inset-top)]">
       <div className="max-w-6xl mx-auto px-7 py-4 flex items-center justify-between gap-4">
         <div className="flex-1 flex items-center gap-6">
           <Link to="/" className="flex items-center gap-3 font-display font-bold text-2xl">

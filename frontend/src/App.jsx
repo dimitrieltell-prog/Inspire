@@ -34,7 +34,7 @@ export default function App() {
           <Route path="/users/:userId" element={<UserProfile />} />
         </Routes>
       </main>
-      <footer className="bg-navy text-white/60 py-8 mt-10">
+      <footer className="bg-navy text-white/60 py-8 mt-10 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto px-7 flex flex-col sm:flex-row justify-between gap-2 text-sm">
           <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
           <span>Made for people, not metrics.</span>
