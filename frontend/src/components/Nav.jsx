@@ -7,7 +7,7 @@ export default function Nav() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const isHome = location.pathname === '/'
+  const hideSearch = ['/', '/login', '/register'].includes(location.pathname)
   const [searchOpen, setSearchOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -28,7 +28,7 @@ export default function Nav() {
           {user && <Link to="/settings" className="hover:text-navy transition-colors">Settings</Link>}
         </nav>
         <div className="flex-1 flex items-center justify-end gap-3">
-          {!isHome && (
+          {!hideSearch && (
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Search Inspire"
@@ -56,7 +56,7 @@ export default function Nav() {
               </Link>
             </>
           ) : (
-            <Link to="/login" className="px-5 py-2.5 rounded-full text-sm font-semibold bg-indigo text-white hover:bg-indigo-deep transition-colors">
+            <Link to="/login" className="px-5 py-2.5 rounded-full text-sm font-semibold bg-indigo text-white hover:bg-indigo-deep transition-colors whitespace-nowrap flex-shrink-0">
               Sign in
             </Link>
           )}
