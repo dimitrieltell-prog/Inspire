@@ -1,0 +1,8 @@
+{
+  "appId": "com.inspirerealexperiences.app",
+  "appName": "Inspire",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
