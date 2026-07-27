@@ -134,9 +134,9 @@ export default function Terms() {
           authorized to act on the copyright owner's behalf.
         </p>
         <p>
-          <strong>Designated DMCA agent:</strong> [Agent name] · [Mailing address] · [Email address]
+          <strong>Designated DMCA agent:</strong> DMCA Agent, Inspire · 565 Belmont Ave, New York, NY 11207 · support@inspirerealexperiences.com
           <br />
-          <span className="text-xs text-slate-light">(Registered with the U.S. Copyright Office's DMCA Designated Agent Directory.)</span>
+          <span className="text-xs text-slate-light">(Registered with the U.S. Copyright Office's DMCA Designated Agent Directory, Registration No. DMCA-1076649.)</span>
         </p>
         <p>
           <strong>Counter-notification:</strong> if content you posted was removed and you believe
