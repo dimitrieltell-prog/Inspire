@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
 import Nav from './components/Nav'
 import RequireAuth from './components/RequireAuth'
 import Landing from './pages/Landing'
@@ -13,6 +13,8 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import StoryInbox from './pages/StoryInbox'
 import UserProfile from './pages/UserProfile'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 
 export default function App() {
   return (
@@ -32,12 +34,18 @@ export default function App() {
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/story-inbox" element={<RequireAuth><StoryInbox /></RequireAuth>} />
           <Route path="/users/:userId" element={<UserProfile />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </main>
       <footer className="bg-navy text-white/60 py-8 mt-10 pb-[calc(2rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-6xl mx-auto px-7 flex flex-col sm:flex-row justify-between gap-2 text-sm">
+        <div className="max-w-6xl mx-auto px-7 flex flex-col sm:flex-row justify-between gap-3 text-sm">
           <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
-          <span>Made for people, not metrics.</span>
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <span>Made for people, not metrics.</span>
+          </div>
         </div>
       </footer>
     </div>

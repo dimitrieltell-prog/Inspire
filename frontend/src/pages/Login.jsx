@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import GoogleAgeGate from '../components/GoogleAgeGate'
 
 export default function Login() {
   const { login, loginWithGoogle } = useAuth()
@@ -12,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState(null)
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -30,7 +32,8 @@ export default function Login() {
   async function onGoogleCredential(credential) {
     setError('')
     try {
-      await loginWithGoogle(credential)
+      const data = await loginWithGoogle(credential)
+      if (data.needs_details) { setPendingGoogleCredential(credential); return }
       navigate(redirectTo)
     } catch (err) {
       setError(err.message)
@@ -60,6 +63,14 @@ export default function Login() {
       <p className="text-sm text-slate mt-6">
         New here? <Link to="/register" className="text-indigo font-semibold">Create an account</Link>
       </p>
+
+      {pendingGoogleCredential && (
+        <GoogleAgeGate
+          credential={pendingGoogleCredential}
+          onClose={() => setPendingGoogleCredential(null)}
+          onSuccess={() => navigate(redirectTo)}
+        />
+      )}
     </div>
   )
 }

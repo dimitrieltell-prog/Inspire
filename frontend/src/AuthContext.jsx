@@ -29,8 +29,15 @@ export function AuthProvider({ children }) {
     setUser(user)
   }
 
-  async function register(email, password, display_name, username) {
-    const data = await api.register({ email, password, display_name, username: username || undefined })
+  async function register(email, password, display_name, username, dateOfBirth, acceptedTerms) {
+    const data = await api.register({
+      email,
+      password,
+      display_name,
+      username: username || undefined,
+      date_of_birth: dateOfBirth,
+      accepted_terms: acceptedTerms,
+    })
     saveSession(data)
     return data
   }
@@ -43,6 +50,16 @@ export function AuthProvider({ children }) {
 
   async function loginWithGoogle(credential) {
     const data = await api.googleLogin(credential)
+    // Brand-new Google account: the backend won't create it until we've
+    // collected a birthdate (COPPA) and Terms acceptance. The caller checks
+    // for `needs_details` and shows that step before calling finishGoogleSignup.
+    if (data.needs_details) return data
+    saveSession(data)
+    return data
+  }
+
+  async function finishGoogleSignup(credential, dateOfBirth, acceptedTerms) {
+    const data = await api.finishGoogleSignup(credential, dateOfBirth, acceptedTerms)
     saveSession(data)
     return data
   }
@@ -68,7 +85,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, logout, refreshUser, updateProfile }}>
+    <AuthContext.Provider value={{ user, ready, register, login, loginWithGoogle, finishGoogleSignup, logout, refreshUser, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

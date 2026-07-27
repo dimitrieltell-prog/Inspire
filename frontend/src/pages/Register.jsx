@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import GoogleAgeGate from '../components/GoogleAgeGate'
+
+const TODAY = new Date().toISOString().slice(0, 10)
 
 export default function Register() {
   const { register, loginWithGoogle } = useAuth()
@@ -13,8 +16,11 @@ export default function Register() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState(null)
 
   const [usernameStatus, setUsernameStatus] = useState(null) // { available, reason } | null
   const [checkingUsername, setCheckingUsername] = useState(false)
@@ -41,7 +47,7 @@ export default function Register() {
     setLoading(true)
     setError('')
     try {
-      await register(email, password, displayName, username.trim())
+      await register(email, password, displayName, username.trim(), dateOfBirth, acceptedTerms)
       navigate(redirectTo)
     } catch (err) {
       setError(err.message)
@@ -53,7 +59,8 @@ export default function Register() {
   async function onGoogleCredential(credential) {
     setError('')
     try {
-      await loginWithGoogle(credential)
+      const data = await loginWithGoogle(credential)
+      if (data.needs_details) { setPendingGoogleCredential(credential); return }
       navigate(redirectTo)
     } catch (err) {
       setError(err.message)
@@ -102,8 +109,38 @@ export default function Register() {
           className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
         <input type="password" required minLength={8} placeholder="Password (min. 8 characters)" value={password} onChange={(e) => setPassword(e.target.value)}
           className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
+
+        <div>
+          <label className="block text-xs font-semibold text-slate mb-1.5 px-1">Date of birth</label>
+          <input
+            type="date"
+            required
+            value={dateOfBirth}
+            max={TODAY}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            className="w-full border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo"
+          />
+          <p className="text-xs text-slate-light mt-1.5 px-1">You must be at least 13 to join Inspire.</p>
+        </div>
+
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            required
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+            className="mt-0.5 flex-shrink-0"
+          />
+          <span className="text-sm text-slate">
+            I agree to Inspire's{' '}
+            <Link to="/terms" target="_blank" className="text-indigo font-semibold hover:underline">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/privacy" target="_blank" className="text-indigo font-semibold hover:underline">Privacy Policy</Link>.
+          </span>
+        </label>
+
         {error && <p className="text-sm text-rose-ink">{error}</p>}
-        <button disabled={loading} className="bg-indigo text-white rounded-full py-3 font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60">
+        <button disabled={loading || !acceptedTerms} className="bg-indigo text-white rounded-full py-3 font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60">
           {loading ? 'Creating account…' : 'Create account'}
         </button>
       </form>
@@ -116,6 +153,14 @@ export default function Register() {
       <p className="text-sm text-slate mt-6">
         Already have an account? <Link to="/login" className="text-indigo font-semibold">Sign in</Link>
       </p>
+
+      {pendingGoogleCredential && (
+        <GoogleAgeGate
+          credential={pendingGoogleCredential}
+          onClose={() => setPendingGoogleCredential(null)}
+          onSuccess={() => navigate(redirectTo)}
+        />
+      )}
     </div>
   )
 }

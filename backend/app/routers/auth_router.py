@@ -1,5 +1,6 @@
 import re
 import time
+from datetime import date
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -10,12 +11,54 @@ from google.oauth2 import id_token as google_id_token
 from app.auth import create_access_token, get_current_user, hash_password, is_founder, verify_password
 from app.config import settings
 from app.database import get_db
-from app.models import BUSINESS_CATEGORIES, COMMENT_AUDIENCES, GoogleAuthIn, ProfileUpdate, TokenOut, UserLogin, UserOut, UserRegister
+from app.models import (
+    BUSINESS_CATEGORIES,
+    COMMENT_AUDIENCES,
+    GoogleAuthIn,
+    GoogleSignupFinish,
+    ProfileUpdate,
+    TokenOut,
+    UserLogin,
+    UserOut,
+    UserRegister,
+)
 from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 USERNAME_RE = re.compile(r"^[a-z0-9_]{3,30}$")
+
+MINIMUM_AGE = 13
+
+
+def _validate_birthdate(dob_str: str) -> str:
+    """Parses a YYYY-MM-DD birthdate, enforces the minimum age, and returns it
+    unchanged for storage. Raises a 400 on a bad format or an under-age date."""
+    try:
+        year, month, day = (int(p) for p in dob_str.split("-"))
+        dob = date(year, month, day)
+    except (ValueError, TypeError):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please enter a valid date of birth.")
+
+    if dob > date.today():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "That date of birth is in the future.")
+
+    today = date.today()
+    age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    if age < MINIMUM_AGE:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"You must be at least {MINIMUM_AGE} years old to join Inspire.",
+        )
+    return dob_str
+
+
+def _require_terms_accepted(accepted: bool) -> None:
+    if not accepted:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "You must agree to the Terms of Service and Privacy Policy to continue.",
+        )
 
 
 def _slugify_username(base: str) -> str:
@@ -212,6 +255,9 @@ async def register(payload: UserRegister):
     if contains_hostility(payload.display_name):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please choose a display name without offensive language.")
 
+    _require_terms_accepted(payload.accepted_terms)
+    date_of_birth = _validate_birthdate(payload.date_of_birth)
+
     db = get_db()
     existing = await db.users.find_one({"email": payload.email})
     if existing:
@@ -230,6 +276,8 @@ async def register(payload: UserRegister):
         "display_name": payload.display_name,
         "username": username,
         "password_hash": hash_password(payload.password),
+        "date_of_birth": date_of_birth,
+        "accepted_terms_at": time.time(),
         "is_premium": False,
         "is_founder": False,
         "created_at": time.time(),
@@ -248,21 +296,51 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return TokenOut(access_token=token, user=_to_user_out(user))
 
 
-@router.post("/google", response_model=TokenOut)
-async def google_auth(payload: GoogleAuthIn):
+def _verify_google_credential(credential: str) -> dict:
     if not settings.google_client_id:
         raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Google sign-in is not configured.")
-
     try:
         idinfo = google_id_token.verify_oauth2_token(
-            payload.credential, google_requests.Request(), settings.google_client_id
+            credential, google_requests.Request(), settings.google_client_id
         )
     except ValueError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid Google credential.")
-
-    email = idinfo.get("email")
-    if not email:
+    if not idinfo.get("email"):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Google account has no email.")
+    return idinfo
+
+
+@router.post("/google", response_model=None)
+async def google_auth(payload: GoogleAuthIn):
+    idinfo = _verify_google_credential(payload.credential)
+    email = idinfo["email"]
+
+    db = get_db()
+    user = await db.users.find_one({"email": email})
+    if not user:
+        # Brand-new account: we don't create it yet -- COPPA requires a neutral
+        # age check (and we need Terms acceptance) before any data is stored.
+        # The frontend collects those next and re-submits the same credential
+        # to /auth/google/finish.
+        name = (idinfo.get("name") or email.split("@")[0])[:35]
+        return {"needs_details": True, "email": email, "display_name": name}
+
+    if not user.get("google_id"):
+        user = await db.users.update_one({"_id": user["_id"]}, {"$set": {"google_id": idinfo.get("sub")}})
+
+    user = await ensure_username(db, user)
+    token = create_access_token(user["_id"])
+    return TokenOut(access_token=token, user=_to_user_out(user))
+
+
+@router.post("/google/finish", response_model=TokenOut)
+async def google_auth_finish(payload: GoogleSignupFinish):
+    """Creates a brand-new Google-signup account after the age/Terms step."""
+    idinfo = _verify_google_credential(payload.credential)
+    email = idinfo["email"]
+
+    _require_terms_accepted(payload.accepted_terms)
+    date_of_birth = _validate_birthdate(payload.date_of_birth)
 
     db = get_db()
     user = await db.users.find_one({"email": email})
@@ -275,6 +353,8 @@ async def google_auth(payload: GoogleAuthIn):
             "username": username,
             "password_hash": None,
             "google_id": idinfo.get("sub"),
+            "date_of_birth": date_of_birth,
+            "accepted_terms_at": time.time(),
             "is_premium": False,
             "is_founder": False,
             "created_at": time.time(),

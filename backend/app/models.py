@@ -23,6 +23,8 @@ class UserRegister(BaseModel):
     password: str = Field(min_length=8)
     display_name: str = Field(min_length=1, max_length=35)
     username: Optional[str] = Field(default=None, min_length=3, max_length=30)
+    date_of_birth: str = Field(description="YYYY-MM-DD")
+    accepted_terms: bool
 
 
 class UserLogin(BaseModel):
@@ -32,6 +34,12 @@ class UserLogin(BaseModel):
 
 class GoogleAuthIn(BaseModel):
     credential: str = Field(min_length=1)
+
+
+class GoogleSignupFinish(BaseModel):
+    credential: str = Field(min_length=1)
+    date_of_birth: str = Field(description="YYYY-MM-DD")
+    accepted_terms: bool
 
 
 BUSINESS_CATEGORIES = ["Creator", "Brand", "Local business", "Community", "Media", "Nonprofit"]
