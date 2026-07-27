@@ -3,6 +3,27 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
+// A client-side safety net: shown immediately based on what the user typed,
+// independent of whatever Aria's own reply says, so a crisis resource always
+// appears even if the AI response is delayed, fails, or mishandles it.
+const CRISIS_PATTERNS = [
+  /\bkill (myself|me)\b/, /\bsuicid(e|al)\b/, /\bend my life\b/, /\bwant(ed)? to die\b/,
+  /\bdon'?t want to (be alive|live|exist)\b/, /\bhurt(ing)? myself\b/, /\bself[- ]?harm\b/,
+  /\bcutting myself\b/, /\bno reason to live\b/, /\bbetter off dead\b/, /\bcan'?t go on\b/,
+  /\boverdose\b/, /\bend it all\b/,
+]
+
+function containsCrisisSignal(text) {
+  const t = text.toLowerCase()
+  return CRISIS_PATTERNS.some((re) => re.test(t))
+}
+
+const CRISIS_MESSAGE =
+  "It sounds like you might be going through something really heavy right now. Aria is an AI " +
+  "and isn't equipped to keep you safe — please reach out to real support right now: in the US, " +
+  "call or text 988 (Suicide & Crisis Lifeline), text HOME to 741741 (Crisis Text Line), or " +
+  "contact your local emergency number. You deserve support beyond a chat."
+
 export default function Aria() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -41,6 +62,9 @@ export default function Aria() {
     const userMessage = input
     setInput('')
     setMessages((m) => [...m, { from: 'user', text: userMessage }])
+    if (containsCrisisSignal(userMessage)) {
+      setMessages((m) => [...m, { from: 'crisis', text: CRISIS_MESSAGE }])
+    }
     setSending(true)
     setError('')
     try {
@@ -86,7 +110,11 @@ export default function Aria() {
       </div>
 
       <div className="flex-grow overflow-y-auto bg-white border border-line rounded-xl2 p-5 flex flex-col gap-3 mb-4">
-        {messages.map((m, i) => (
+        {messages.map((m, i) => m.from === 'crisis' ? (
+          <div key={i} className="self-stretch bg-rose border border-rose-ink/30 rounded-xl px-4 py-3 text-sm text-rose-ink leading-relaxed font-medium">
+            {m.text}
+          </div>
+        ) : (
           <div key={i} className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
             m.from === 'user' ? 'bg-indigo text-white self-end' : 'bg-lavender text-navy self-start'
           }`}>

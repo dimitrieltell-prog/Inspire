@@ -117,7 +117,42 @@ export default function Terms() {
         </p>
       </Section>
 
-      <Section title="9. Termination">
+      <Section title="9. Copyright complaints (DMCA)">
+        <p>
+          We respect intellectual property rights and respond to clear notices of alleged
+          copyright infringement under the Digital Millennium Copyright Act (DMCA).
+        </p>
+        <p>
+          <strong>To file a takedown notice</strong>, send our designated agent a written notice
+          that includes: (1) a physical or electronic signature of the copyright owner or their
+          authorized representative; (2) identification of the copyrighted work claimed to be
+          infringed; (3) identification of the material you claim is infringing, with enough
+          detail for us to locate it (a link is best); (4) your contact information (address,
+          phone number, email); (5) a statement that you have a good-faith belief the use isn't
+          authorized by the copyright owner, its agent, or the law; and (6) a statement, under
+          penalty of perjury, that the information in the notice is accurate and that you're
+          authorized to act on the copyright owner's behalf.
+        </p>
+        <p>
+          <strong>Designated DMCA agent:</strong> [Agent name] · [Mailing address] · [Email address]
+          <br />
+          <span className="text-xs text-slate-light">(Registered with the U.S. Copyright Office's DMCA Designated Agent Directory.)</span>
+        </p>
+        <p>
+          <strong>Counter-notification:</strong> if content you posted was removed and you believe
+          that was a mistake, you can send our agent a counter-notice with your contact
+          information, identification of the removed material and where it appeared, and a
+          statement under penalty of perjury that you have a good-faith belief the material was
+          removed by mistake or misidentification, plus your consent to the jurisdiction of the
+          federal court in your district (or ours, if you're outside the US).
+        </p>
+        <p>
+          <strong>Repeat infringers:</strong> we terminate the accounts of users who are
+          repeat copyright infringers in appropriate circumstances.
+        </p>
+      </Section>
+
+      <Section title="10. Termination">
         <p>
           You can delete your account anytime from Settings — this permanently removes your
           profile, posts, and activity. We may suspend or terminate your access if you violate
@@ -125,7 +160,7 @@ export default function Terms() {
         </p>
       </Section>
 
-      <Section title="10. Disclaimers">
+      <Section title="11. Disclaimers">
         <p>
           Inspire is provided "as is" and "as available," without warranties of any kind, express
           or implied. We don't guarantee the Service will be uninterrupted, error-free, or secure.
@@ -133,7 +168,7 @@ export default function Terms() {
         </p>
       </Section>
 
-      <Section title="11. Limitation of liability">
+      <Section title="12. Limitation of liability">
         <p>
           To the fullest extent permitted by law, Inspire and its founder won't be liable for any
           indirect, incidental, or consequential damages arising from your use of the Service. Our
@@ -142,16 +177,53 @@ export default function Terms() {
         </p>
       </Section>
 
-      <Section title="12. Governing law">
+      <Section title="13. Dispute resolution & arbitration">
         <p>
-          These Terms are governed by the laws of the United States and the state in which Inspire
-          operates, without regard to conflict-of-law principles. Any dispute not resolved
-          informally will be handled in the courts located there, unless applicable law requires
-          otherwise.
+          <strong>Please read this section carefully — it affects your legal rights and how
+          disputes between you and Inspire get resolved.</strong>
+        </p>
+        <p>
+          <strong>Informal resolution first.</strong> Before filing a claim, you agree to contact
+          us at{' '}
+          <a href="mailto:support@inspirerealexperiences.com" className="text-indigo font-semibold hover:underline">
+            support@inspirerealexperiences.com
+          </a>{' '}
+          and give us 30 days to try to resolve the issue informally.
+        </p>
+        <p>
+          <strong>Binding arbitration.</strong> If we can't resolve a dispute informally, you and
+          Inspire agree that any dispute arising out of or relating to these Terms or the Service
+          will be resolved by binding individual arbitration, rather than in court, except that
+          either party may bring an individual claim in small-claims court if it qualifies.
+          Arbitration will be administered by a recognized arbitration provider under its rules for
+          consumer disputes then in effect.
+        </p>
+        <p>
+          <strong>Class action waiver.</strong> You and Inspire agree that any proceeding will be
+          conducted only on an individual basis and not as a class, consolidated, or
+          representative action. If this class-action waiver is found unenforceable as to a
+          particular claim, that claim (and only that claim) will proceed in court rather than in
+          arbitration.
+        </p>
+        <p>
+          <strong>Your right to opt out.</strong> You can opt out of this arbitration agreement by
+          emailing{' '}
+          <a href="mailto:support@inspirerealexperiences.com" className="text-indigo font-semibold hover:underline">
+            support@inspirerealexperiences.com
+          </a>{' '}
+          within 30 days of first agreeing to these Terms, with your name and a clear statement
+          that you want to opt out of arbitration. If you opt out, disputes will be resolved in
+          court as described below instead.
+        </p>
+        <p>
+          <strong>Governing law.</strong> These Terms are governed by the laws of the United States
+          and the state in which Inspire operates, without regard to conflict-of-law principles.
+          For any dispute not subject to arbitration (or if you've opted out), you agree to the
+          exclusive jurisdiction of the courts located there.
         </p>
       </Section>
 
-      <Section title="13. Changes to these Terms">
+      <Section title="14. Changes to these Terms">
         <p>
           We may update these Terms from time to time. If we make material changes, we'll let you
           know in the app before they take effect. Continuing to use Inspire after changes take
@@ -159,7 +231,7 @@ export default function Terms() {
         </p>
       </Section>
 
-      <Section title="14. Contact">
+      <Section title="15. Contact">
         <p>
           Questions about these Terms? Reach us at{' '}
           <a href="mailto:support@inspirerealexperiences.com" className="text-indigo font-semibold hover:underline">
@@ -171,7 +243,9 @@ export default function Terms() {
       <p className="text-xs text-slate-light border-t border-line pt-5 mt-10">
         This document is a plain-language template intended to reasonably reflect how Inspire
         actually works. It hasn't been reviewed by an attorney and isn't a substitute for legal
-        advice specific to your business.
+        advice specific to your business — the arbitration clause and DMCA agent details above in
+        particular should be confirmed with a lawyer and the U.S. Copyright Office before you rely
+        on them.
       </p>
     </div>
   )
