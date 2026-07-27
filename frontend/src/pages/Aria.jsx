@@ -61,7 +61,15 @@ export default function Aria() {
     <div className="max-w-2xl mx-auto px-7 py-12 flex flex-col h-[calc(100vh-80px)]">
       <div className="mb-5">
         <h1 className="text-2xl font-bold mb-1">Aria</h1>
-        <p className="text-sm text-slate">A private place to think out loud. Not a replacement for professional care.</p>
+        <p className="text-sm text-slate">A private place to think out loud.</p>
+        <div className="bg-rose/50 border border-rose-ink/20 rounded-xl px-4 py-3 mt-3">
+          <p className="text-xs text-rose-ink leading-relaxed">
+            Aria is an AI companion, not a therapist or medical professional, and can make mistakes.
+            If you're in crisis or thinking about harming yourself, please reach out for real help right now —
+            in the US, call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline), or contact your local
+            emergency number.
+          </p>
+        </div>
         {usage && usage.daily_limit !== null && (
           <div className="mt-4">
             <div className="flex gap-1.5 mb-1.5">

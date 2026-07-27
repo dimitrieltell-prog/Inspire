@@ -254,3 +254,34 @@ class AriaMessageOut(BaseModel):
     messages_used_today: int
     daily_limit: Optional[int]  # null when unlimited (premium)
     limit_reached: bool
+
+
+REPORT_REASONS = [
+    "Spam",
+    "Harassment or bullying",
+    "Hate speech",
+    "Self-harm or suicide content",
+    "Illegal content",
+    "Nudity or sexual content",
+    "Something else",
+]
+
+
+class ReportCreate(BaseModel):
+    target_type: Literal["story", "comment", "user"]
+    target_id: str
+    reason: str = Field(min_length=1, max_length=60)
+    note: Optional[str] = Field(default=None, max_length=500)
+
+
+class ReportOut(BaseModel):
+    id: str
+    target_type: str
+    target_id: str
+    reason: str
+    note: Optional[str] = None
+    reporter_id: str
+    reporter_name: str
+    context: str = ""
+    status: str = "open"
+    created_at: float

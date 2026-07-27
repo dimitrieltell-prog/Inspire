@@ -99,6 +99,13 @@ export const api = {
   replyToStory: (storyId, body) => request('/ephemeral-stories/replies', { method: 'POST', body: { ephemeral_story_id: storyId, body } }),
   sendStory: (storyId, recipientId) => request(`/ephemeral-stories/${storyId}/send`, { method: 'POST', body: { recipient_id: recipientId } }),
   getStoryInbox: () => request('/me/story-inbox'),
+
+  // Reporting
+  getReportReasons: () => request('/reports/reasons', { auth: false }),
+  reportContent: (targetType, targetId, reason, note) =>
+    request('/reports', { method: 'POST', body: { target_type: targetType, target_id: targetId, reason, note } }),
+  adminListReports: (includeResolved) => request(`/admin/reports${includeResolved ? '?include_resolved=true' : ''}`),
+  adminResolveReport: (reportId) => request(`/admin/reports/${reportId}/resolve`, { method: 'POST' }),
 }
 
 export { getToken }

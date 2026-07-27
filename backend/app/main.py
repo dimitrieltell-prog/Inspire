@@ -9,6 +9,7 @@ from app.routers import (
     ephemeral_story_router,
     me_router,
     premium_router,
+    reports_router,
     search_router,
     stories_router,
     users_router,
@@ -33,6 +34,7 @@ app.include_router(users_router.router)
 app.include_router(search_router.router)
 app.include_router(ephemeral_story_router.router)
 app.include_router(me_router.router)
+app.include_router(reports_router.router)
 
 
 @app.get("/health")

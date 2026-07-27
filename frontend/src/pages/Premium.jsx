@@ -102,7 +102,8 @@ export default function Premium() {
           <p className="text-xs text-white/65 mb-5">Works out to $3.33/month — billed once a year.</p>
         )}
         <p className="text-xs font-semibold text-white/90 mb-6 mt-1">
-          🎁 7-day free trial. Cancel anytime, no lock-in.
+          🎁 7-day free trial, then {interval === 'month' ? '$4.99/month' : '$39.99/year'} — cancel anytime
+          before the trial ends and you won't be charged.
         </p>
 
         <ul className="flex flex-col gap-2.5 mb-7">

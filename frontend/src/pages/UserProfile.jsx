@@ -4,6 +4,7 @@ import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import StoryCard from '../components/StoryCard'
 import Avatar from '../components/Avatar'
+import ReportModal from '../components/ReportModal'
 
 function formatDate(ts) {
   if (!ts) return '—'
@@ -23,6 +24,7 @@ export default function UserProfile() {
   const [tab, setTab] = useState('posts')
   const [tabStories, setTabStories] = useState([])
   const [tabLoading, setTabLoading] = useState(true)
+  const [reportOpen, setReportOpen] = useState(false)
 
   useEffect(() => {
     // Viewing your own profile? Send to the editable one.
@@ -194,6 +196,14 @@ export default function UserProfile() {
               >
                 {profile.is_blocked ? 'Unblock' : 'Block'}
               </button>
+              {user && (
+                <button
+                  onClick={() => setReportOpen(true)}
+                  className="text-xs font-semibold text-slate-light hover:text-rose-ink transition-colors"
+                >
+                  Report
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -252,6 +262,8 @@ export default function UserProfile() {
         )}
       </div>
       )}
+
+      {reportOpen && <ReportModal targetType="user" targetId={profile.id} onClose={() => setReportOpen(false)} />}
     </div>
   )
 }

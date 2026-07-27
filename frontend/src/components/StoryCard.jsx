@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+import ReportModal from './ReportModal'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -17,6 +18,8 @@ export default function StoryCard({ story }) {
   const [saved, setSaved] = useState(story.is_saved)
   const [reposted, setReposted] = useState(story.is_reposted)
   const [repostCount, setRepostCount] = useState(story.repost_count || 0)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
 
   function promptSignIn() {
     navigate('/login', { state: { from: location } })
@@ -68,7 +71,7 @@ export default function StoryCard({ story }) {
   return (
     <div className="bg-white border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
       {/* header */}
-      <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
+      <div className="relative flex items-center gap-2.5 px-4 pt-4 pb-3">
         <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
           {story.author_name.charAt(0).toUpperCase()}
         </span>
@@ -87,7 +90,29 @@ export default function StoryCard({ story }) {
           </div>
           <span className="text-[10.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
         </div>
+        {user && story.author_id !== user.id && (
+          <div className="flex-shrink-0">
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="More options"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-light hover:text-navy hover:bg-bg transition-colors"
+            >
+              ⋯
+            </button>
+            {menuOpen && (
+              <div className="absolute top-10 right-4 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+                <button
+                  onClick={() => { setMenuOpen(false); setReportOpen(true) }}
+                  className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                >
+                  Report
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+      {reportOpen && <ReportModal targetType="story" targetId={story.id} onClose={() => setReportOpen(false)} />}
 
       {/* media */}
       {story.media_url && (

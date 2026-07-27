@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+import ReportModal from '../components/ReportModal'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -22,6 +23,9 @@ export default function StoryDetail() {
   const [commentBody, setCommentBody] = useState('')
   const [commentError, setCommentError] = useState('')
   const [posting, setPosting] = useState(false)
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [report, setReport] = useState(null) // { targetType, targetId } | null
 
   useEffect(() => {
     setLoading(true)
@@ -114,11 +118,11 @@ export default function StoryDetail() {
       <Link to="/stories" className="text-sm text-indigo font-semibold">← Back to stories</Link>
 
       <div className="bg-white border border-line rounded-xl2 overflow-hidden mt-6">
-        <div className="flex items-center gap-2.5 px-6 pt-6 pb-3">
+        <div className="relative flex items-center gap-2.5 px-6 pt-6 pb-3">
           <span className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
             {story.author_name.charAt(0).toUpperCase()}
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-grow">
             <div className="flex items-center gap-1.5 min-w-0">
               {story.author_id ? (
                 <Link to={`/users/${story.author_id}`} className="text-sm font-semibold text-navy hover:text-indigo transition-colors truncate">{story.author_name}</Link>
@@ -133,6 +137,27 @@ export default function StoryDetail() {
             </div>
             <span className="text-[10.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
           </div>
+          {user && story.author_id !== user.id && (
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label="More options"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-slate-light hover:text-navy hover:bg-bg transition-colors"
+              >
+                ⋯
+              </button>
+              {menuOpen && (
+                <div className="absolute top-11 right-6 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+                  <button
+                    onClick={() => { setMenuOpen(false); setReport({ targetType: 'story', targetId: story.id }) }}
+                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                  >
+                    Report
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {story.media_url && (
@@ -217,17 +242,31 @@ export default function StoryDetail() {
 
         <div className="flex flex-col gap-4">
           {comments.map((c) => (
-            <div key={c.id} className="border-b border-line pb-4">
-              {c.author_id ? (
-                <Link to={`/users/${c.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{c.author_name}</Link>
-              ) : (
-                <span className="text-xs font-semibold text-slate">{c.author_name}</span>
+            <div key={c.id} className="border-b border-line pb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                {c.author_id ? (
+                  <Link to={`/users/${c.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{c.author_name}</Link>
+                ) : (
+                  <span className="text-xs font-semibold text-slate">{c.author_name}</span>
+                )}
+                <p className="text-sm text-slate leading-relaxed mt-1 whitespace-pre-wrap">{c.body}</p>
+              </div>
+              {user && c.author_id !== user.id && (
+                <button
+                  onClick={() => setReport({ targetType: 'comment', targetId: c.id })}
+                  className="text-xs text-slate-light hover:text-rose-ink transition-colors flex-shrink-0"
+                >
+                  Report
+                </button>
               )}
-              <p className="text-sm text-slate leading-relaxed mt-1 whitespace-pre-wrap">{c.body}</p>
             </div>
           ))}
         </div>
       </div>
+
+      {report && (
+        <ReportModal targetType={report.targetType} targetId={report.targetId} onClose={() => setReport(null)} />
+      )}
     </div>
   )
 }

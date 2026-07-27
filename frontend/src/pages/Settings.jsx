@@ -115,6 +115,10 @@ export default function Settings() {
 
   const [busyId, setBusyId] = useState(null)
 
+  // Founder-only: reported content
+  const [reports, setReports] = useState(null)
+  const [showReports, setShowReports] = useState(false)
+
   useEffect(() => {
     if (!ready) return
     if (!user) { navigate('/login'); return }
@@ -294,6 +298,23 @@ export default function Settings() {
       setError(e.message)
     } finally {
       setExporting(false)
+    }
+  }
+
+  async function openReports() {
+    setShowReports((s) => !s)
+    if (!reports) {
+      api.adminListReports().then(setReports).catch(() => setReports([]))
+    }
+  }
+
+  async function resolveReport(id) {
+    setBusyId(id)
+    try {
+      await api.adminResolveReport(id)
+      setReports((r) => r.filter((rep) => rep.id !== id))
+    } finally {
+      setBusyId(null)
     }
   }
 
@@ -688,6 +709,56 @@ export default function Settings() {
           </div>
         </div>
       </Section>
+
+      {/* ============ FOUNDER: REPORTS ============ */}
+      {user.is_founder && (
+        <Section title="Reported content">
+          <Row
+            title="Open reports"
+            subtitle="Content flagged by users, awaiting review."
+            onClick={openReports}
+            expandable
+            expanded={showReports}
+          />
+          {showReports && (
+            <div className="p-4">
+              {!reports ? (
+                <p className="text-sm text-slate-light">Loading…</p>
+              ) : reports.length === 0 ? (
+                <p className="text-sm text-slate-light">No open reports — you're all caught up.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {reports.map((r) => (
+                    <div key={r.id} className="border border-line rounded-xl p-3.5">
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <span className="text-[10.5px] font-bold uppercase tracking-wide text-rose-ink">{r.reason}</span>
+                        <span className="text-[10.5px] text-slate-light uppercase tracking-wide flex-shrink-0">{r.target_type}</span>
+                      </div>
+                      {r.context && <p className="text-sm text-slate mb-1.5 line-clamp-3">"{r.context}"</p>}
+                      {r.note && <p className="text-xs text-slate-light mb-1.5">Reporter's note: {r.note}</p>}
+                      <p className="text-xs text-slate-light mb-3">Reported by {r.reporter_name}</p>
+                      <div className="flex gap-2">
+                        {r.target_type === 'user' ? (
+                          <Link to={`/users/${r.target_id}`} className="text-xs font-semibold text-indigo hover:underline">View account</Link>
+                        ) : r.target_type === 'story' ? (
+                          <Link to={`/stories/${r.target_id}`} className="text-xs font-semibold text-indigo hover:underline">View story</Link>
+                        ) : null}
+                        <button
+                          onClick={() => resolveReport(r.id)}
+                          disabled={busyId === r.id}
+                          className="ml-auto text-xs font-semibold text-slate hover:text-navy disabled:opacity-50"
+                        >
+                          {busyId === r.id ? 'Marking…' : 'Mark resolved'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </Section>
+      )}
     </div>
   )
 }
