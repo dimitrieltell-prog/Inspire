@@ -1,6 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #F3F6FA;
+  --color-navy: #131A33;
+  --color-indigo: #3B4A8C;
+  --color-indigo-deep: #2E3B72;
+  --color-slate: #5B6478;
+  --color-slate-light: #8890A0;
+  --color-line: #E4E8F0;
+  --color-lavender: #EDEFFB;
+  --color-rose: #F3E3E6;
+  --color-rose-ink: #B15C6E;
+  --color-sage: #E4F1E6;
+  --color-sage-ink: #4C8B5A;
+
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body: Inter, sans-serif;
+
+  --radius-xl2: 20px;
+}
 
 html {
   scroll-behavior: smooth;

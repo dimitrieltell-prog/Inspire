@@ -1,11 +1,23 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import SearchOverlay from './SearchOverlay'
 
+// React Router v7 wraps navigation updates in React.startTransition, which is
+// lower priority than the synchronous user=null update logout() triggers. On
+// a RequireAuth-protected page, that lets RequireAuth's own redirect to
+// /login win the race before a router navigate('/') call commits. This app
+// uses classic <BrowserRouter> (not a Data Router), where navigate's
+// { flushSync: true } option has no effect -- so a hard navigation is used
+// instead: it bypasses React Router's transition entirely, and by the time
+// the fresh page loads, logout() has already cleared the token.
+function signOut(logout) {
+  logout()
+  window.location.href = '/'
+}
+
 export default function Nav() {
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
   const location = useLocation()
   const hideSearch = ['/', '/login', '/register'].includes(location.pathname)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -51,8 +63,7 @@ export default function Nav() {
               <button
                 onClick={() => {
                   if (window.confirm('Sign out of Inspire?')) {
-                    logout()
-                    navigate('/')
+                    signOut(logout)
                   }
                 }}
                 className="px-5 py-2.5 rounded-full text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors"
@@ -93,7 +104,7 @@ export default function Nav() {
           {user && <Link to="/settings" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Settings</Link>}
           {user && (
             <button
-              onClick={() => { setMenuOpen(false); logout(); navigate('/') }}
+              onClick={() => { setMenuOpen(false); signOut(logout) }}
               className="text-left pt-3 mt-1 border-t border-line hover:text-navy transition-colors"
             >
               Sign out
