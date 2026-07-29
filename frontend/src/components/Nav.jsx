@@ -48,12 +48,17 @@ export default function Nav() {
                   <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
                 )}
               </Link>
-              <Link
-                to="/profile"
+              <button
+                onClick={() => {
+                  if (window.confirm('Sign out of Inspire?')) {
+                    logout()
+                    navigate('/')
+                  }
+                }}
                 className="px-5 py-2.5 rounded-full text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors"
               >
-                Profile
-              </Link>
+                Sign out
+              </button>
             </>
           ) : (
             <Link to="/login" className="px-5 py-2.5 rounded-full text-sm font-semibold bg-indigo text-white hover:bg-indigo-deep transition-colors whitespace-nowrap flex-shrink-0">
