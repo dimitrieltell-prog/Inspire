@@ -8,6 +8,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        // Match Inspire's page background (--color-bg: #F3F6FA) so the native
+        // status bar strip blends in instead of showing UIKit's default black
+        // window background before the web content is positioned.
+        let inspireBg = UIColor(red: 243/255, green: 246/255, blue: 250/255, alpha: 1)
+        window?.backgroundColor = inspireBg
+        window?.rootViewController?.view.backgroundColor = inspireBg
         return true
     }
 
