@@ -88,7 +88,11 @@ export default function Nav() {
       {menuOpen && (
         <div className="md:hidden border-t border-line bg-white px-7 py-4 flex flex-col gap-3 text-sm font-medium text-slate">
           {user && (
-            <div className="flex items-center gap-1.5 flex-wrap pb-3 border-b border-line">
+            <Link
+              to="/profile"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-1.5 flex-wrap pb-3 border-b border-line hover:text-navy transition-colors"
+            >
               <span className="text-navy font-semibold">{user.display_name}</span>
               {user.is_founder && (
                 <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
@@ -96,7 +100,7 @@ export default function Nav() {
               {user.is_premium && (
                 <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
               )}
-            </div>
+            </Link>
           )}
           <Link to="/premium" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Premium</Link>
           <Link to="/stories" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Stories</Link>
