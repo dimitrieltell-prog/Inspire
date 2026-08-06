@@ -19,7 +19,19 @@ export function AuthProvider({ children }) {
           localStorage.setItem('inspire_user', JSON.stringify(fresh))
           setUser(fresh)
         })
-        .catch(() => {}) // keep cached data on transient errors
+        .catch((err) => {
+          // 401 means the token itself is invalid/expired -- not a transient
+          // blip, so keeping the stale cached user around just leaves every
+          // real API call silently 401ing (e.g. the founder accounts list
+          // stuck on "Loading..." forever). Log out so the UI honestly shows
+          // signed-out instead of a session that only looks alive.
+          if (err.status === 401) {
+            localStorage.removeItem('inspire_token')
+            localStorage.removeItem('inspire_user')
+            setUser(null)
+          }
+          // Any other error (network blip, 500, etc.) -- keep cached data.
+        })
     }
   }, [])
 

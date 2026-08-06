@@ -30,6 +30,7 @@ export default function Profile() {
 
   // Founder-only accounts section
   const [accounts, setAccounts] = useState(null)
+  const [accountsError, setAccountsError] = useState('')
   const [hiddenTestCount, setHiddenTestCount] = useState(0)
   const [showTestAccounts, setShowTestAccounts] = useState(false)
   const [accountBusyId, setAccountBusyId] = useState(null)
@@ -54,9 +55,16 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user?.is_founder) return
+    setAccountsError('')
     api.listAccounts(showTestAccounts)
       .then((d) => { setAccounts(d.users || []); setHiddenTestCount(d.hidden_test_count || 0) })
-      .catch(() => {})
+      .catch((e) => {
+        setAccountsError(
+          e.status === 401
+            ? 'Your session expired — sign out and back in to see this.'
+            : e.message || 'Could not load accounts.'
+        )
+      })
   }, [user, showTestAccounts])
 
   async function toggleTestFlag(account) {
@@ -438,7 +446,9 @@ export default function Profile() {
               {showTestAccounts ? 'Hide test accounts' : `${hiddenTestCount} test account${hiddenTestCount === 1 ? '' : 's'} hidden — show`}
             </button>
           )}
-          {!accounts ? (
+          {accountsError ? (
+            <p className="text-sm text-rose-ink mt-3">{accountsError}</p>
+          ) : !accounts ? (
             <p className="text-sm text-slate-light mt-3">Loading…</p>
           ) : (
             <>
