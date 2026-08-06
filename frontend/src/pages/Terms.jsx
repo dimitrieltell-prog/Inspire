@@ -134,9 +134,9 @@ export default function Terms() {
           authorized to act on the copyright owner's behalf.
         </p>
         <p>
-          <strong>Designated DMCA agent:</strong> DMCA Agent, Inspire · 565 Belmont Ave, New York, NY 11207 · support@inspirerealexperiences.com
+          <strong>Designated DMCA agent:</strong> DMCA Agent, Inspire · support@inspirerealexperiences.com
           <br />
-          <span className="text-xs text-slate-light">(Registered with the U.S. Copyright Office's DMCA Designated Agent Directory, Registration No. DMCA-1076649.)</span>
+          <span className="text-xs text-slate-light">(Registered with the U.S. Copyright Office's DMCA Designated Agent Directory.)</span>
         </p>
         <p>
           <strong>Counter-notification:</strong> if content you posted was removed and you believe
@@ -243,9 +243,8 @@ export default function Terms() {
       <p className="text-xs text-slate-light border-t border-line pt-5 mt-10">
         This document is a plain-language template intended to reasonably reflect how Inspire
         actually works. It hasn't been reviewed by an attorney and isn't a substitute for legal
-        advice specific to your business — the arbitration clause and DMCA agent details above in
-        particular should be confirmed with a lawyer and the U.S. Copyright Office before you rely
-        on them.
+        advice specific to your business — the arbitration clause above in particular should be
+        confirmed with a lawyer before you rely on it.
       </p>
     </div>
   )
