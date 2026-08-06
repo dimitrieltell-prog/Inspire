@@ -45,6 +45,7 @@ async def list_users(include_test: bool = False, founder: dict = Depends(require
             "is_founder": founder_flag,
             "is_test_account": is_test,
             "created_at": u.get("created_at"),
+            "last_active": u.get("last_active"),
         })
     return {"users": result, "hidden_test_count": hidden_count}
 

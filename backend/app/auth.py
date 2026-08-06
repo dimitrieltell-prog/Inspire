@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -47,6 +48,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     user = await db.users.find_one({"_id": user_id})
     if not user:
         raise credentials_error
+
+    # Throttle to once a minute per user so the "active" signal doesn't turn
+    # every request on every page into a write.
+    now = time.time()
+    if now - (user.get("last_active") or 0) > 60:
+        await db.users.update_one({"_id": user_id}, {"$set": {"last_active": now}})
+        user["last_active"] = now
     return user
 
 

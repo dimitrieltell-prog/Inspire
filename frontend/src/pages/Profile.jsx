@@ -17,6 +17,15 @@ function formatDateTime(ts) {
   })
 }
 
+function formatActive(ts) {
+  if (!ts) return { label: 'Never', online: false }
+  const diffSec = Date.now() / 1000 - ts
+  if (diffSec < 180) return { label: 'Online now', online: true }
+  if (diffSec < 3600) return { label: `Active ${Math.floor(diffSec / 60)}m ago`, online: false }
+  if (diffSec < 86400) return { label: `Active ${Math.floor(diffSec / 3600)}h ago`, online: false }
+  return { label: `Active ${Math.floor(diffSec / 86400)}d ago`, online: false }
+}
+
 const emptyDraft = { display_name: '', username: '', bio: '', pronouns: '', links: [], schools: [] }
 
 export default function Profile() {
@@ -498,6 +507,7 @@ export default function Profile() {
                       <th className="font-semibold py-2 pr-4">Name</th>
                       <th className="font-semibold py-2 pr-4">{contactField === 'email' ? 'Email' : 'Username'}</th>
                       <th className="font-semibold py-2 pr-4">Plan</th>
+                      <th className="font-semibold py-2 pr-4">Active</th>
                       <th className="font-semibold py-2 pr-4">Joined</th>
                       <th className="font-semibold py-2"></th>
                     </tr>
@@ -525,6 +535,9 @@ export default function Profile() {
                           {contactField === 'email' ? a.email : (a.username ? `@${a.username}` : '—')}
                         </td>
                         <td className="py-2 pr-4 text-slate">{a.is_premium ? 'Premium' : 'Free'}</td>
+                        <td className={`py-2 pr-4 ${formatActive(a.last_active).online ? 'text-green-600 font-semibold' : 'text-slate'}`}>
+                          {formatActive(a.last_active).label}
+                        </td>
                         <td className="py-2 pr-4 text-slate">{formatDateTime(a.created_at)}</td>
                         <td className="py-2">
                           {!a.is_founder && (
