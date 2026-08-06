@@ -177,49 +177,11 @@ export default function Terms() {
         </p>
       </Section>
 
-      <Section title="13. Dispute resolution & arbitration">
+      <Section title="13. Governing law">
         <p>
-          <strong>Please read this section carefully — it affects your legal rights and how
-          disputes between you and Inspire get resolved.</strong>
-        </p>
-        <p>
-          <strong>Informal resolution first.</strong> Before filing a claim, you agree to contact
-          us at{' '}
-          <a href="mailto:support@inspirerealexperiences.com" className="text-indigo font-semibold hover:underline">
-            support@inspirerealexperiences.com
-          </a>{' '}
-          and give us 30 days to try to resolve the issue informally.
-        </p>
-        <p>
-          <strong>Binding arbitration.</strong> If we can't resolve a dispute informally, you and
-          Inspire agree that any dispute arising out of or relating to these Terms or the Service
-          will be resolved by binding individual arbitration, rather than in court, except that
-          either party may bring an individual claim in small-claims court if it qualifies.
-          Arbitration will be administered by a recognized arbitration provider under its rules for
-          consumer disputes then in effect.
-        </p>
-        <p>
-          <strong>Class action waiver.</strong> You and Inspire agree that any proceeding will be
-          conducted only on an individual basis and not as a class, consolidated, or
-          representative action. If this class-action waiver is found unenforceable as to a
-          particular claim, that claim (and only that claim) will proceed in court rather than in
-          arbitration.
-        </p>
-        <p>
-          <strong>Your right to opt out.</strong> You can opt out of this arbitration agreement by
-          emailing{' '}
-          <a href="mailto:support@inspirerealexperiences.com" className="text-indigo font-semibold hover:underline">
-            support@inspirerealexperiences.com
-          </a>{' '}
-          within 30 days of first agreeing to these Terms, with your name and a clear statement
-          that you want to opt out of arbitration. If you opt out, disputes will be resolved in
-          court as described below instead.
-        </p>
-        <p>
-          <strong>Governing law.</strong> These Terms are governed by the laws of the United States
-          and the state in which Inspire operates, without regard to conflict-of-law principles.
-          For any dispute not subject to arbitration (or if you've opted out), you agree to the
-          exclusive jurisdiction of the courts located there.
+          These Terms are governed by the laws of the United States and the state in which Inspire
+          operates, without regard to conflict-of-law principles. Any dispute relating to these
+          Terms or the Service will be resolved in the courts located there.
         </p>
       </Section>
 
@@ -243,8 +205,7 @@ export default function Terms() {
       <p className="text-xs text-slate-light border-t border-line pt-5 mt-10">
         This document is a plain-language template intended to reasonably reflect how Inspire
         actually works. It hasn't been reviewed by an attorney and isn't a substitute for legal
-        advice specific to your business — the arbitration clause above in particular should be
-        confirmed with a lawyer before you rely on it.
+        advice specific to your business.
       </p>
     </div>
   )
