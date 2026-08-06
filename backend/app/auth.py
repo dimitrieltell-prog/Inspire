@@ -10,6 +10,10 @@ from jose import JWTError, jwt
 from app.config import settings
 from app.database import get_db
 
+# How long someone can go without a request before we consider their
+# session over (used to measure how long their first session lasted).
+SESSION_GAP_SECONDS = 30 * 60
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 # Same, but doesn't 401 when no token is present -- for endpoints that work
 # logged-out but personalize when logged in.
@@ -49,12 +53,28 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     if not user:
         raise credentials_error
 
+    now = time.time()
+    prev_last_active = user.get("last_active") or 0
+    updates = {}
+
+    if not user.get("first_session_start"):
+        # First authenticated request we've ever seen from them -- the start
+        # of their first session.
+        updates["first_session_start"] = now
+    elif not user.get("first_session_end") and prev_last_active and now - prev_last_active > SESSION_GAP_SECONDS:
+        # They went quiet for a while after their first session -- lock in
+        # where it ended (their last known activity before the gap), so it
+        # doesn't keep growing every time they come back.
+        updates["first_session_end"] = prev_last_active
+
     # Throttle to once a minute per user so the "active" signal doesn't turn
     # every request on every page into a write.
-    now = time.time()
-    if now - (user.get("last_active") or 0) > 60:
-        await db.users.update_one({"_id": user_id}, {"$set": {"last_active": now}})
-        user["last_active"] = now
+    if now - prev_last_active > 60:
+        updates["last_active"] = now
+
+    if updates:
+        await db.users.update_one({"_id": user_id}, {"$set": updates})
+        user.update(updates)
     return user
 
 

@@ -17,6 +17,21 @@ function formatDateTime(ts) {
   })
 }
 
+function formatDuration(seconds) {
+  if (seconds < 60) return `${Math.round(seconds)}s`
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`
+  const hours = Math.floor(seconds / 3600)
+  const mins = Math.round((seconds % 3600) / 60)
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+}
+
+function formatFirstSession(a) {
+  if (!a.first_session_start) return '—'
+  if (a.first_session_end) return formatDuration(a.first_session_end - a.first_session_start)
+  const ongoingEnd = a.last_active || a.first_session_start
+  return `${formatDuration(ongoingEnd - a.first_session_start)} so far`
+}
+
 function formatActive(ts) {
   if (!ts) return { label: 'Never', online: false }
   const diffSec = Date.now() / 1000 - ts
@@ -508,6 +523,7 @@ export default function Profile() {
                       <th className="font-semibold py-2 pr-4">{contactField === 'email' ? 'Email' : 'Username'}</th>
                       <th className="font-semibold py-2 pr-4">Plan</th>
                       <th className="font-semibold py-2 pr-4">Active</th>
+                      <th className="font-semibold py-2 pr-4">First session</th>
                       <th className="font-semibold py-2 pr-4">Joined</th>
                       <th className="font-semibold py-2"></th>
                     </tr>
@@ -538,6 +554,7 @@ export default function Profile() {
                         <td className={`py-2 pr-4 ${formatActive(a.last_active).online ? 'text-green-600 font-semibold' : 'text-slate'}`}>
                           {formatActive(a.last_active).label}
                         </td>
+                        <td className="py-2 pr-4 text-slate">{formatFirstSession(a)}</td>
                         <td className="py-2 pr-4 text-slate">{formatDateTime(a.created_at)}</td>
                         <td className="py-2">
                           {!a.is_founder && (
