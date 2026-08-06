@@ -29,7 +29,7 @@ export default function Privacy() {
         <p><strong>Content you create:</strong> stories, comments, reactions, ephemeral Stories, direct sends, and any photos or videos you upload.</p>
         <p><strong>Profile details you choose to add:</strong> bio, pronouns, links, schools, and business info if you set up a business account.</p>
         <p><strong>Payment information:</strong> if you subscribe to Premium, our payment processor Stripe handles your card details directly — we never see or store your full card number.</p>
-        <p><strong>Usage information:</strong> basic technical data like device type and general activity (for example, what you've reacted to or saved) so features like your feed and activity history work.</p>
+        <p><strong>Usage information:</strong> general activity (for example, what you've reacted to, saved, or when you were last active) so features like your feed and activity history work.</p>
       </Section>
 
       <Section title="How we use your information">
