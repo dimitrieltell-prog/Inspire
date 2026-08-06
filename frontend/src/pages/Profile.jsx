@@ -10,6 +10,13 @@ function formatDate(ts) {
   return new Date(ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+function formatDateTime(ts) {
+  if (!ts) return '—'
+  return new Date(ts * 1000).toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  })
+}
+
 const emptyDraft = { display_name: '', username: '', bio: '', pronouns: '', links: [], schools: [] }
 
 export default function Profile() {
@@ -38,6 +45,7 @@ export default function Profile() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkBusy, setBulkBusy] = useState(false)
   const [piiHidden, setPiiHidden] = useState(false)
+  const [contactField, setContactField] = useState('email') // 'email' | 'username'
 
   // Posts / Reposts / Saved tabs
   const [tab, setTab] = useState('posts')
@@ -86,7 +94,7 @@ export default function Profile() {
   const filteredAccounts = (accounts || []).filter((a) => {
     const q = accountFilter.trim().toLowerCase()
     if (!q) return true
-    return a.display_name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q)
+    return a.display_name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q) || (a.username || '').toLowerCase().includes(q)
   })
   const selectableFiltered = filteredAccounts.filter((a) => !a.is_founder)
   const allFilteredSelected = selectableFiltered.length > 0 && selectableFiltered.every((a) => selectedIds.has(a.id))
@@ -431,6 +439,12 @@ export default function Profile() {
             <div className="flex items-center gap-3">
               {accounts && <span className="text-xs text-slate">{accounts.length} shown</span>}
               <button
+                onClick={() => setContactField((f) => (f === 'email' ? 'username' : 'email'))}
+                className="text-xs font-semibold text-slate hover:text-indigo flex items-center gap-1"
+              >
+                {contactField === 'email' ? '🔄 Show usernames' : '🔄 Show emails'}
+              </button>
+              <button
                 onClick={() => setPiiHidden((h) => !h)}
                 className="text-xs font-semibold text-slate hover:text-indigo flex items-center gap-1"
               >
@@ -482,7 +496,7 @@ export default function Profile() {
                         />
                       </th>
                       <th className="font-semibold py-2 pr-4">Name</th>
-                      <th className="font-semibold py-2 pr-4">Email</th>
+                      <th className="font-semibold py-2 pr-4">{contactField === 'email' ? 'Email' : 'Username'}</th>
                       <th className="font-semibold py-2 pr-4">Plan</th>
                       <th className="font-semibold py-2 pr-4">Joined</th>
                       <th className="font-semibold py-2"></th>
@@ -507,9 +521,11 @@ export default function Profile() {
                             <span className="ml-1.5 text-[9px] font-bold uppercase bg-rose text-rose-ink px-1.5 py-0.5 rounded-full">Test</span>
                           )}
                         </td>
-                        <td className={`py-2 pr-4 text-slate ${piiHidden ? 'blur-sm select-none' : ''}`}>{a.email}</td>
+                        <td className={`py-2 pr-4 text-slate ${piiHidden ? 'blur-sm select-none' : ''}`}>
+                          {contactField === 'email' ? a.email : (a.username ? `@${a.username}` : '—')}
+                        </td>
                         <td className="py-2 pr-4 text-slate">{a.is_premium ? 'Premium' : 'Free'}</td>
-                        <td className="py-2 pr-4 text-slate">{formatDate(a.created_at)}</td>
+                        <td className="py-2 pr-4 text-slate">{formatDateTime(a.created_at)}</td>
                         <td className="py-2">
                           {!a.is_founder && (
                             <button

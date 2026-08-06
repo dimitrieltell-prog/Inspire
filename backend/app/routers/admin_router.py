@@ -39,6 +39,7 @@ async def list_users(include_test: bool = False, founder: dict = Depends(require
         result.append({
             "id": str(u["_id"]),
             "email": u["email"],
+            "username": u.get("username"),
             "display_name": u["display_name"],
             "is_premium": u.get("is_premium", False) or founder_flag,
             "is_founder": founder_flag,
