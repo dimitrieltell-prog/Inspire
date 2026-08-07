@@ -4,11 +4,14 @@ rather than building emails themselves, so the "someone followed you" email
 sent from a public-account follow (users_router) and the one sent from an
 accepted private-account follow request (me_router) always look the same.
 """
+import logging
 import time
 
 from app.auth import create_unsubscribe_token
 from app.config import settings
 from app.email_client import send_email
+
+logger = logging.getLogger("inspire.notifications")
 
 FONT_STACK = "-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,Helvetica,Arial,sans-serif"
 COLOR_NAVY = "#131A33"
@@ -124,11 +127,10 @@ def _welcome_email_html(display_name: str) -> str:
 
 
 async def send_welcome_email(db, user: dict) -> None:
+    if user.get("email_notifications", True):
+        html = _welcome_email_html(user.get("display_name", ""))
+        send_email(user["email"], "Welcome to Inspire", html, reply_to="support@inspirerealexperiences.com")
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"intro_email_sent": True}})
-    if not user.get("email_notifications", True):
-        return
-    html = _welcome_email_html(user.get("display_name", ""))
-    send_email(user["email"], "Welcome to Inspire", html, reply_to="support@inspirerealexperiences.com")
 
 
 def _existing_user_intro_html(display_name: str) -> str:
@@ -176,11 +178,10 @@ def _existing_user_intro_html(display_name: str) -> str:
 
 
 async def send_existing_user_intro_email(db, user: dict) -> None:
+    if user.get("email_notifications", True):
+        html = _existing_user_intro_html(user.get("display_name", ""))
+        send_email(user["email"], "Hey — introducing myself", html, reply_to="support@inspirerealexperiences.com")
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"intro_email_sent": True}})
-    if not user.get("email_notifications", True):
-        return
-    html = _existing_user_intro_html(user.get("display_name", ""))
-    send_email(user["email"], "Hey — introducing myself", html, reply_to="support@inspirerealexperiences.com")
 
 
 async def notify_new_follower(followed: dict, follower: dict) -> None:
@@ -198,7 +199,10 @@ async def notify_new_follower(followed: dict, follower: dict) -> None:
         cta_url=f"{settings.frontend_url}/users/{follower['_id']}",
         unsubscribe_url=_unsubscribe_url(followed["_id"]),
     )
-    send_email(followed["email"], f"{follower_name} started following you on Inspire", html)
+    try:
+        send_email(followed["email"], f"{follower_name} started following you on Inspire", html)
+    except Exception:
+        logger.exception("Failed to send follow notification to %s", followed.get("email"))
 
 
 async def run_digest_emails(db) -> dict:
@@ -244,8 +248,11 @@ async def run_digest_emails(db) -> dict:
                     cta_url=f"{settings.frontend_url}/profile",
                     unsubscribe_url=_unsubscribe_url(uid),
                 )
-                send_email(u["email"], f"You got {summary} on Inspire", html)
-                sent += 1
+                try:
+                    send_email(u["email"], f"You got {summary} on Inspire", html)
+                    sent += 1
+                except Exception:
+                    logger.exception("Failed to send digest email to %s", u.get("email"))
 
         await db.users.update_one({"_id": uid}, {"$set": {"last_digest_sent_at": now}})
 

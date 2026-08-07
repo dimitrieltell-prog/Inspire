@@ -1,3 +1,4 @@
+import logging
 import re
 import time
 from datetime import date
@@ -26,6 +27,7 @@ from app.moderation import contains_hostility
 from app.notifications import send_welcome_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger("inspire.auth")
 
 USERNAME_RE = re.compile(r"^[a-z0-9_]{3,30}$")
 
@@ -294,7 +296,10 @@ async def register(payload: UserRegister):
         "is_founder": False,
         "created_at": time.time(),
     })
-    await send_welcome_email(db, user)
+    try:
+        await send_welcome_email(db, user)
+    except Exception:
+        logger.exception("Failed to send welcome email to %s", user["email"])
     token = create_access_token(user["_id"])
     return TokenOut(access_token=token, user=_to_user_out(user))
 
@@ -376,7 +381,10 @@ async def google_auth_finish(payload: GoogleSignupFinish):
             "is_founder": False,
             "created_at": time.time(),
         })
-        await send_welcome_email(db, user)
+        try:
+            await send_welcome_email(db, user)
+        except Exception:
+            logger.exception("Failed to send welcome email to %s", user["email"])
     elif not user.get("google_id"):
         user = await db.users.update_one({"_id": user["_id"]}, {"$set": {"google_id": idinfo.get("sub")}})
 

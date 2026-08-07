@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
@@ -6,6 +8,7 @@ from app.config import settings
 from app.database import get_db
 from app.notifications import send_existing_user_intro_email, send_welcome_email
 
+logger = logging.getLogger("inspire.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
@@ -87,6 +90,15 @@ async def bulk_mark_test_accounts(payload: BulkUserIds, founder: dict = Depends(
     return {"marked": marked, "skipped_founders": skipped_founders}
 
 
+@router.delete("/users/{user_id}/intro-email-sent", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_intro_email_sent(user_id: str, founder: dict = Depends(require_founder)):
+    # Recovery hatch: clears the "already emailed" flag on a user who got
+    # marked despite the send itself failing (e.g. a mid-batch crash), so
+    # the next bulk run picks them back up.
+    db = get_db()
+    await db.users.update_one({"_id": user_id}, {"$set": {"intro_email_sent": False}})
+
+
 @router.post("/preview-welcome-email")
 async def preview_welcome_email(founder: dict = Depends(require_founder)):
     # Sends the real new-user welcome template to the founder's own inbox,
@@ -112,9 +124,14 @@ async def send_intro_emails(founder: dict = Depends(require_founder)):
     db = get_db()
     users = await db.users.find({})
     sent = 0
+    failed = []
     for u in users:
         if u.get("is_test_account", False) or is_founder(u) or u.get("intro_email_sent", False):
             continue
-        await send_existing_user_intro_email(db, u)
-        sent += 1
-    return {"sent": sent}
+        try:
+            await send_existing_user_intro_email(db, u)
+            sent += 1
+        except Exception:
+            logger.exception("Failed to send intro email to %s", u.get("email"))
+            failed.append(u["email"])
+    return {"sent": sent, "failed": failed}
