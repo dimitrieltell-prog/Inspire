@@ -7,6 +7,7 @@ from app.auth import is_founder, require_founder
 from app.config import settings
 from app.database import get_db
 from app.notifications import send_existing_user_intro_email, send_welcome_email
+from app.routers.me_router import delete_account_cascade
 
 logger = logging.getLogger("inspire.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -90,6 +91,17 @@ async def bulk_mark_test_accounts(payload: BulkUserIds, founder: dict = Depends(
         await db.users.update_one({"_id": user_id}, {"$set": {"is_test_account": True}})
         marked += 1
     return {"marked": marked, "skipped_founders": skipped_founders}
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: str, founder: dict = Depends(require_founder)):
+    db = get_db()
+    target = await db.users.find_one({"_id": user_id})
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
+    if is_founder(target):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Can't delete a founder account.")
+    await delete_account_cascade(db, user_id)
 
 
 @router.delete("/users/{user_id}/intro-email-sent", status_code=status.HTTP_204_NO_CONTENT)

@@ -186,9 +186,13 @@ async def export_my_data(user: dict = Depends(get_current_user)):
 @router.delete("", status_code=204)
 async def delete_my_account(user: dict = Depends(get_current_user)):
     """Permanently delete this account and everything it created."""
-    db = get_db()
-    uid = user["_id"]
+    await delete_account_cascade(get_db(), user["_id"])
 
+
+async def delete_account_cascade(db, uid: str) -> None:
+    """Permanently deletes an account and everything it created. Shared by
+    the self-service delete above and the founder-only admin removal, so
+    both leave the same clean state behind."""
     # Reactions/comments this user left on other people's stories: remove and
     # fix the counters so nothing overcounts.
     for r in await db.reactions.find({"user_id": uid}):

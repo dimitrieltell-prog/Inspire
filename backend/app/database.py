@@ -62,6 +62,9 @@ class InMemoryCollection:
             del self._docs[_id]
         return len(matches)
 
+    async def create_index(self, *args, **kwargs) -> None:
+        pass
+
 
 def _matches(doc: dict, query: dict) -> bool:
     return all(doc.get(k) == v for k, v in query.items())
@@ -99,6 +102,9 @@ class MongoCollection:
     async def delete_many(self, query: dict) -> int:
         result = await self._c.delete_many(query)
         return result.deleted_count
+
+    async def create_index(self, *args, **kwargs) -> None:
+        await self._c.create_index(*args, **kwargs)
 
 
 class DB:
