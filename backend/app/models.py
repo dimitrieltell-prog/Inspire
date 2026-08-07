@@ -52,6 +52,7 @@ class UserOut(BaseModel):
     email: EmailStr
     display_name: str
     username: Optional[str] = None
+    username_confirmed: bool = False
     avatar_url: Optional[str] = None
     is_premium: bool
     is_founder: bool = False

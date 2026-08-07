@@ -102,6 +102,7 @@ def _to_user_out(user: dict) -> UserOut:
         email=user["email"],
         display_name=user["display_name"],
         username=user.get("username"),
+        username_confirmed=user.get("username_confirmed", False),
         avatar_url=user.get("avatar_url"),
         is_premium=is_premium,
         is_founder=is_founder,
@@ -144,6 +145,7 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
         if taken and taken["_id"] != user["_id"]:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
         updates["username"] = uname
+        updates["username_confirmed"] = True
 
     if payload.avatar_url is not None:
         url = payload.avatar_url.strip()
@@ -283,6 +285,7 @@ async def register(payload: UserRegister):
         "email": payload.email,
         "display_name": payload.display_name,
         "username": username,
+        "username_confirmed": True,
         "password_hash": hash_password(payload.password),
         "date_of_birth": date_of_birth,
         "accepted_terms_at": time.time(),
@@ -362,6 +365,7 @@ async def google_auth_finish(payload: GoogleSignupFinish):
             "email": email,
             "display_name": name,
             "username": username,
+            "username_confirmed": True,
             "password_hash": None,
             "google_id": idinfo.get("sub"),
             "date_of_birth": date_of_birth,

@@ -1,6 +1,8 @@
 import { Link, Route, Routes } from 'react-router-dom'
+import { useAuth } from './AuthContext'
 import Nav from './components/Nav'
 import RequireAuth from './components/RequireAuth'
+import ConfirmUsernameGate from './components/ConfirmUsernameGate'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -17,8 +19,10 @@ import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 
 export default function App() {
+  const { user, ready } = useAuth()
   return (
     <div className="min-h-screen flex flex-col">
+      {ready && user && !user.username_confirmed && <ConfirmUsernameGate />}
       <Nav />
       <main className="flex-grow">
         <Routes>
