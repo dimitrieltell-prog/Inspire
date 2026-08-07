@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app.auth import is_founder, require_founder
 from app.config import settings
 from app.database import get_db
+from app.notifications import send_existing_user_intro_email, send_welcome_email
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -84,3 +85,36 @@ async def bulk_mark_test_accounts(payload: BulkUserIds, founder: dict = Depends(
         await db.users.update_one({"_id": user_id}, {"$set": {"is_test_account": True}})
         marked += 1
     return {"marked": marked, "skipped_founders": skipped_founders}
+
+
+@router.post("/preview-welcome-email")
+async def preview_welcome_email(founder: dict = Depends(require_founder)):
+    # Sends the real new-user welcome template to the founder's own inbox,
+    # so it can be reviewed before it goes anywhere near a real user.
+    db = get_db()
+    await send_welcome_email(db, founder)
+    return {"sent_to": founder["email"]}
+
+
+@router.post("/preview-intro-email")
+async def preview_intro_email(founder: dict = Depends(require_founder)):
+    db = get_db()
+    await send_existing_user_intro_email(db, founder)
+    return {"sent_to": founder["email"]}
+
+
+@router.post("/send-intro-emails")
+async def send_intro_emails(founder: dict = Depends(require_founder)):
+    # One-time (but safely re-runnable) trigger: emails every account that
+    # predates the founder-intro email and hasn't received one yet. New
+    # signups already get it at registration, so intro_email_sent there
+    # naturally excludes them going forward.
+    db = get_db()
+    users = await db.users.find({})
+    sent = 0
+    for u in users:
+        if u.get("is_test_account", False) or is_founder(u) or u.get("intro_email_sent", False):
+            continue
+        await send_existing_user_intro_email(db, u)
+        sent += 1
+    return {"sent": sent}

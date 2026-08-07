@@ -106,7 +106,7 @@ def _welcome_email_html(display_name: str) -> str:
                   <li style="margin-bottom:8px;"><a href="{profile_url}" style="color:{COLOR_INDIGO};font-weight:600;text-decoration:none;">Set up your profile</a> — add a photo and a bit about yourself so people know it's you.</li>
                   <li style="margin-bottom:0;"><a href="{aria_url}" style="color:{COLOR_INDIGO};font-weight:600;text-decoration:none;">Say hi to Aria</a> — a reflective AI companion built into the app, there if you ever want to think something through.</li>
                 </ol>
-                <p style="margin:0 0 18px;">By the way, I'd genuinely love to know what brought you here. Just hit reply — I read every one.</p>
+                <p style="margin:0 0 18px;">By the way, I'd genuinely love to know what's brought you to Inspire. Just hit reply — I read every one.</p>
                 <p style="margin:0;">— Dimitri</p>
               </td>
             </tr>
@@ -123,11 +123,64 @@ def _welcome_email_html(display_name: str) -> str:
 </html>"""
 
 
-async def send_welcome_email(user: dict) -> None:
+async def send_welcome_email(db, user: dict) -> None:
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"intro_email_sent": True}})
     if not user.get("email_notifications", True):
         return
     html = _welcome_email_html(user.get("display_name", ""))
     send_email(user["email"], "Welcome to Inspire", html, reply_to="support@inspirerealexperiences.com")
+
+
+def _existing_user_intro_html(display_name: str) -> str:
+    """Same personal-letter styling as the new-user welcome email, but for
+    accounts that pre-date it -- a founder introduction they never got."""
+    first_name = (display_name or "there").split(" ")[0]
+    stories_url = f"{settings.frontend_url}/stories/new"
+    profile_url = f"{settings.frontend_url}/profile"
+    aria_url = f"{settings.frontend_url}/aria"
+    return f"""\
+<!DOCTYPE html>
+<html>
+  <head><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+  <body style="margin:0;padding:0;background:#ffffff;font-family:{FONT_STACK};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+      <tr>
+        <td align="center" style="padding:40px 20px;">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+            <tr>
+              <td style="font-family:{FONT_STACK};font-size:15px;line-height:1.7;color:{COLOR_NAVY};">
+                <p style="margin:0 0 18px;">Hey {first_name},</p>
+                <p style="margin:0 0 18px;">I'm Dimitri — I'm 18, and I'm the founder and CEO of Inspire. You've already been a part of the Inspire community, but with all my recent updates, I never actually introduced myself, so — hey.</p>
+                <p style="margin:0 0 18px;">I built Inspire myself, nights and weekends, because I wanted a space where sharing something real actually feels good — genuine, not performative. No pressure of likes, followers, or a perfect feed getting in the way of just being honest about how you're doing.</p>
+                <p style="margin:0 0 10px;">In case you haven't tried these yet:</p>
+                <ol style="margin:0 0 18px;padding-left:20px;">
+                  <li style="margin-bottom:8px;"><a href="{stories_url}" style="color:{COLOR_INDIGO};font-weight:600;text-decoration:none;">Share a story</a> — writing something real, even something small, is the best way to see what this is about.</li>
+                  <li style="margin-bottom:8px;"><a href="{profile_url}" style="color:{COLOR_INDIGO};font-weight:600;text-decoration:none;">Set up your profile</a> — add a photo and a bit about yourself so people know it's you.</li>
+                  <li style="margin-bottom:0;"><a href="{aria_url}" style="color:{COLOR_INDIGO};font-weight:600;text-decoration:none;">Say hi to Aria</a> — a reflective AI companion built into the app, there if you ever want to think something through.</li>
+                </ol>
+                <p style="margin:0 0 18px;">By the way, I'd genuinely love to know what's brought you to Inspire. Just hit reply — I read every one.</p>
+                <p style="margin:0;">— Dimitri</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top:36px;font-family:{FONT_STACK};font-size:12px;color:{COLOR_SLATE_LIGHT};">
+                Inspire · inspirerealexperiences.com
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>"""
+
+
+async def send_existing_user_intro_email(db, user: dict) -> None:
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"intro_email_sent": True}})
+    if not user.get("email_notifications", True):
+        return
+    html = _existing_user_intro_html(user.get("display_name", ""))
+    send_email(user["email"], "Hey — introducing myself", html, reply_to="support@inspirerealexperiences.com")
 
 
 async def notify_new_follower(followed: dict, follower: dict) -> None:

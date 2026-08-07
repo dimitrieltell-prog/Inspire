@@ -151,7 +151,7 @@ export default function Register() {
       </div>
       <GoogleSignInButton onCredential={onGoogleCredential} onError={(err) => setError(err.message)} />
       <p className="text-sm text-slate mt-6">
-        Already have an account? <Link to="/login" className="text-indigo font-semibold">Sign in</Link>
+        Already have an account? <Link to="/login" state={location.state} className="text-indigo font-semibold">Sign in</Link>
       </p>
 
       {pendingGoogleCredential && (
