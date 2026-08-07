@@ -542,7 +542,9 @@ export default function Profile() {
                           )}
                         </td>
                         <td className={`py-2 pr-4 font-medium ${piiHidden ? 'blur-sm select-none' : ''}`}>
-                          {a.display_name}
+                          <Link to={`/users/${a.id}`} className="hover:text-indigo hover:underline">
+                            {a.display_name}
+                          </Link>
                           {a.is_test_account && (
                             <span className="ml-1.5 text-[9px] font-bold uppercase bg-rose text-rose-ink px-1.5 py-0.5 rounded-full">Test</span>
                           )}
