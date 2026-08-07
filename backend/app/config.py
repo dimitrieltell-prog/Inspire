@@ -30,8 +30,12 @@ class Settings:
 
     cors_origins: list = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    backend_url: str = os.getenv("BACKEND_URL", "https://inspire-z4nn.onrender.com")
 
     admin_key: str = os.getenv("ADMIN_KEY", "")
+
+    resend_api_key: str = os.getenv("RESEND_API_KEY", "")
+    email_from: str = os.getenv("EMAIL_FROM", "Inspire <onboarding@resend.dev>")
 
     # Emails that always get founder status (and premium for free), regardless of
     # what's stored in the DB -- makes the owner's badges permanent. Comma-separated.

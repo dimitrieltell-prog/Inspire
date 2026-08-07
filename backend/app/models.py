@@ -61,6 +61,7 @@ class UserOut(BaseModel):
     comment_audience: str = "everyone"
     hide_support_counts: bool = False
     muted_words: list[str] = []
+    email_notifications: bool = True
 
 
 class TokenOut(BaseModel):
@@ -85,6 +86,7 @@ class ProfileUpdate(BaseModel):
     comment_audience: Optional[str] = None
     hide_support_counts: Optional[bool] = None
     muted_words: Optional[list[str]] = None
+    email_notifications: Optional[bool] = None
 
 
 class ProfileUser(BaseModel):

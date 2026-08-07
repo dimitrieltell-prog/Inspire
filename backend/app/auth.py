@@ -34,6 +34,25 @@ def create_access_token(user_id: str) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
+def create_unsubscribe_token(user_id: str) -> str:
+    """A no-login-required, one-purpose token for email unsubscribe links --
+    doesn't expire like a session token, but can't be used to do anything
+    other than unsubscribe (checked via the "purpose" claim)."""
+    payload = {"sub": user_id, "purpose": "unsubscribe"}
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def verify_unsubscribe_token(token: str) -> Optional[str]:
+    """Returns the user id if the token is a valid unsubscribe token, else None."""
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    except JWTError:
+        return None
+    if payload.get("purpose") != "unsubscribe":
+        return None
+    return payload.get("sub")
+
+
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     credentials_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

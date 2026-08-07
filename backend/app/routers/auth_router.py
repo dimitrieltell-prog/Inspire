@@ -112,6 +112,7 @@ def _to_user_out(user: dict) -> UserOut:
         comment_audience=user.get("comment_audience", "everyone"),
         hide_support_counts=user.get("hide_support_counts", False),
         muted_words=user.get("muted_words", []),
+        email_notifications=user.get("email_notifications", True),
     )
 
 
@@ -197,6 +198,9 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.hide_support_counts is not None:
         updates["hide_support_counts"] = payload.hide_support_counts
+
+    if payload.email_notifications is not None:
+        updates["email_notifications"] = payload.email_notifications
 
     if payload.muted_words is not None:
         words = [w.strip().lower() for w in payload.muted_words if w.strip()]

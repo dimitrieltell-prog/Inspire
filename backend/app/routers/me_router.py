@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import get_current_user, is_founder
 from app.database import get_db
 from app.models import ActivityItem, Insights, ProfileUser, StoryInboxItem
+from app.notifications import notify_new_follower
 from app.routers.ephemeral_story_router import _expire_ephemeral_stories, _serialize_ephemeral_story
 from app.routers.users_router import _profile_user
 
@@ -144,6 +145,9 @@ async def accept_follow_request(requester_id: str, user: dict = Depends(get_curr
     await db.follow_requests.delete_one({"requester_id": requester_id, "target_id": user["_id"]})
     existing = await db.follows.find_one({"follower_id": requester_id, "following_id": user["_id"]})
     if not existing:
+        requester = await db.users.find_one({"_id": requester_id})
+        if requester:
+            await notify_new_follower(user, requester)
         await db.follows.insert_one({
             "follower_id": requester_id,
             "following_id": user["_id"],
