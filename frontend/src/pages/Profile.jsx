@@ -4,6 +4,7 @@ import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import StoryCard from '../components/StoryCard'
 import Avatar from '../components/Avatar'
+import AvatarCropModal from '../components/AvatarCropModal'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -83,6 +84,7 @@ export default function Profile() {
   const avatarInputRef = useRef(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError, setAvatarError] = useState('')
+  const [cropImageSrc, setCropImageSrc] = useState(null)
 
   // Founder-only accounts section
   const [accounts, setAccounts] = useState(null)
@@ -191,7 +193,7 @@ export default function Profile() {
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
   }, [tab, user])
 
-  async function handleAvatarChange(e) {
+  function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
@@ -204,9 +206,15 @@ export default function Profile() {
       return
     }
     setAvatarError('')
+    setCropImageSrc(URL.createObjectURL(file))
+  }
+
+  async function handleCropConfirm(blob) {
+    URL.revokeObjectURL(cropImageSrc)
+    setCropImageSrc(null)
     setAvatarUploading(true)
     try {
-      const url = await uploadAvatarToCloudinary(file)
+      const url = await uploadAvatarToCloudinary(blob)
       const updated = await updateProfile({ avatar_url: url })
       setProfile((p) => ({ ...p, avatar_url: updated.avatar_url }))
     } catch (err) {
@@ -214,6 +222,11 @@ export default function Profile() {
     } finally {
       setAvatarUploading(false)
     }
+  }
+
+  function handleCropCancel() {
+    URL.revokeObjectURL(cropImageSrc)
+    setCropImageSrc(null)
   }
 
   function startEditing() {
@@ -401,6 +414,13 @@ export default function Profile() {
                 />
                 {avatarUploading && <p className="text-xs text-slate-light mt-1">Uploading…</p>}
                 {avatarError && <p className="text-xs text-rose-ink mt-1 max-w-[80px]">{avatarError}</p>}
+                {cropImageSrc && (
+                  <AvatarCropModal
+                    imageSrc={cropImageSrc}
+                    onCancel={handleCropCancel}
+                    onConfirm={handleCropConfirm}
+                  />
+                )}
               </div>
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
