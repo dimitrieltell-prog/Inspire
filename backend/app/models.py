@@ -51,6 +51,7 @@ class UserOut(BaseModel):
     email: EmailStr
     display_name: str
     username: Optional[str] = None
+    avatar_url: Optional[str] = None
     is_premium: bool
     is_founder: bool = False
     is_private: bool = False
@@ -74,6 +75,7 @@ class ProfileUpdate(BaseModel):
     # All optional -- only the provided fields are changed.
     display_name: Optional[str] = Field(default=None, min_length=1, max_length=35)
     username: Optional[str] = Field(default=None, min_length=3, max_length=30)
+    avatar_url: Optional[str] = Field(default=None, max_length=2000)
     bio: Optional[str] = Field(default=None, max_length=300)
     pronouns: Optional[str] = Field(default=None, max_length=40)
     links: Optional[list[str]] = None
@@ -102,6 +104,7 @@ class PublicProfile(BaseModel):
     id: str
     display_name: str
     username: Optional[str] = None
+    avatar_url: Optional[str] = None
     bio: str = ""
     pronouns: str = ""
     links: list[str] = []

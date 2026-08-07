@@ -102,6 +102,7 @@ def _to_user_out(user: dict) -> UserOut:
         email=user["email"],
         display_name=user["display_name"],
         username=user.get("username"),
+        avatar_url=user.get("avatar_url"),
         is_premium=is_premium,
         is_founder=is_founder,
         is_private=user.get("is_private", False),
@@ -143,6 +144,12 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
         if taken and taken["_id"] != user["_id"]:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
         updates["username"] = uname
+
+    if payload.avatar_url is not None:
+        url = payload.avatar_url.strip()
+        if url and not (url.startswith("http://") or url.startswith("https://")):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Avatar URL must start with http:// or https://")
+        updates["avatar_url"] = url or None
 
     if payload.bio is not None:
         bio = payload.bio.strip()

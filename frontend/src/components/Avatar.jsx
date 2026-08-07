@@ -3,7 +3,7 @@ import { api } from '../api'
 import StoryViewer from './StoryViewer'
 import StoryComposer from './StoryComposer'
 
-export default function Avatar({ userId, displayName, sizeClass = 'w-16 h-16 text-2xl', isSelf = false }) {
+export default function Avatar({ userId, displayName, avatarUrl, onChangePhoto, sizeClass = 'w-16 h-16 text-2xl', isSelf = false }) {
   const [stories, setStories] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [showViewer, setShowViewer] = useState(false)
@@ -36,11 +36,26 @@ export default function Avatar({ userId, displayName, sizeClass = 'w-16 h-16 tex
         className={`rounded-2xl ${sizeClass} ${hasStory ? 'p-[3px] bg-gradient-to-tr from-indigo via-lavender to-indigo' : ''} ${(hasStory || isSelf) ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className={`w-full h-full ${hasStory ? 'rounded-[13px] bg-white p-[2px]' : ''}`}>
-          <div className="w-full h-full rounded-2xl bg-indigo text-white flex items-center justify-center font-bold">
-            {displayName?.charAt(0).toUpperCase()}
-          </div>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-full h-full rounded-2xl object-cover" />
+          ) : (
+            <div className="w-full h-full rounded-2xl bg-indigo text-white flex items-center justify-center font-bold">
+              {displayName?.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
       </button>
+
+      {isSelf && onChangePhoto && (
+        <button
+          type="button"
+          onClick={onChangePhoto}
+          title="Change profile picture"
+          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-slate text-xs flex items-center justify-center border-2 border-line shadow-sm hover:text-indigo hover:border-indigo"
+        >
+          📷
+        </button>
+      )}
 
       {isSelf && loaded && (
         <button

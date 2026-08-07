@@ -60,6 +60,7 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         id=u["_id"],
         display_name=u["display_name"],
         username=u.get("username"),
+        avatar_url=u.get("avatar_url"),
         bio=u.get("bio", ""),
         pronouns=u.get("pronouns", "") if can_view else "",
         links=u.get("links", []) if can_view else [],

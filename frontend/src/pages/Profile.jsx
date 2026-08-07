@@ -1,9 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import StoryCard from '../components/StoryCard'
 import Avatar from '../components/Avatar'
+
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+const MAX_AVATAR_SIZE = 10 * 1024 * 1024 // 10MB
+
+async function uploadAvatarToCloudinary(file) {
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+    throw new Error('Image uploads are not configured yet.')
+  }
+  const form = new FormData()
+  form.append('file', file)
+  form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: form,
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error?.message || 'Upload failed. Please try a different image.')
+  return data.secure_url
+}
 
 function formatDate(ts) {
   if (!ts) return '—'
@@ -58,6 +79,10 @@ export default function Profile() {
 
   const [listMode, setListMode] = useState(null) // 'followers' | 'following' | null
   const [listUsers, setListUsers] = useState([])
+
+  const avatarInputRef = useRef(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
 
   // Founder-only accounts section
   const [accounts, setAccounts] = useState(null)
@@ -165,6 +190,31 @@ export default function Profile() {
       : api.getSavedStories(user.id)
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
   }, [tab, user])
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setAvatarError('Please choose an image file.')
+      return
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      setAvatarError('That image is too large — please choose one under 10MB.')
+      return
+    }
+    setAvatarError('')
+    setAvatarUploading(true)
+    try {
+      const url = await uploadAvatarToCloudinary(file)
+      const updated = await updateProfile({ avatar_url: url })
+      setProfile((p) => ({ ...p, avatar_url: updated.avatar_url }))
+    } catch (err) {
+      setAvatarError(err.message)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   function startEditing() {
     setDraft({
@@ -334,7 +384,24 @@ export default function Profile() {
         ) : (
           <>
             <div className="flex items-start gap-4">
-              <Avatar userId={profile.id} displayName={profile.display_name} isSelf />
+              <div className="flex-shrink-0">
+                <Avatar
+                  userId={profile.id}
+                  displayName={profile.display_name}
+                  avatarUrl={profile.avatar_url}
+                  onChangePhoto={() => avatarInputRef.current?.click()}
+                  isSelf
+                />
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                {avatarUploading && <p className="text-xs text-slate-light mt-1">Uploading…</p>}
+                {avatarError && <p className="text-xs text-rose-ink mt-1 max-w-[80px]">{avatarError}</p>}
+              </div>
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold">{profile.display_name}</h1>

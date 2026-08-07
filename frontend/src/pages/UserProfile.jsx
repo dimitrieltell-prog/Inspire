@@ -112,7 +112,7 @@ export default function UserProfile() {
 
       <div className="bg-white border border-line rounded-xl2 p-7 mt-6">
         <div className="flex items-start gap-4">
-          <Avatar userId={profile.id} displayName={profile.display_name} />
+          <Avatar userId={profile.id} displayName={profile.display_name} avatarUrl={profile.avatar_url} />
           <div className="flex-grow min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.display_name}</h1>
