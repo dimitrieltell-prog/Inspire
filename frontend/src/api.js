@@ -43,10 +43,10 @@ export const api = {
     return request('/auth/login', { method: 'POST', body: form, form: true, auth: false })
   },
   googleLogin: (credential) => request('/auth/google', { method: 'POST', body: { credential }, auth: false }),
-  finishGoogleSignup: (credential, dateOfBirth, acceptedTerms) =>
+  finishGoogleSignup: (credential, username, dateOfBirth, acceptedTerms) =>
     request('/auth/google/finish', {
       method: 'POST',
-      body: { credential, date_of_birth: dateOfBirth, accepted_terms: acceptedTerms },
+      body: { credential, username, date_of_birth: dateOfBirth, accepted_terms: acceptedTerms },
       auth: false,
     }),
   listStories: (category) => request(`/stories${category && category !== 'all' ? `?category=${encodeURIComponent(category)}` : ''}`),

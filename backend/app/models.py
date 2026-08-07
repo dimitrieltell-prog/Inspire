@@ -22,7 +22,7 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     display_name: str = Field(min_length=1, max_length=35)
-    username: Optional[str] = Field(default=None, min_length=3, max_length=30)
+    username: str = Field(min_length=3, max_length=30)
     date_of_birth: str = Field(description="YYYY-MM-DD")
     accepted_terms: bool
 
@@ -38,6 +38,7 @@ class GoogleAuthIn(BaseModel):
 
 class GoogleSignupFinish(BaseModel):
     credential: str = Field(min_length=1)
+    username: str = Field(min_length=3, max_length=30)
     date_of_birth: str = Field(description="YYYY-MM-DD")
     accepted_terms: bool
 

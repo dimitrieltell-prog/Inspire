@@ -70,8 +70,8 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  async function finishGoogleSignup(credential, dateOfBirth, acceptedTerms) {
-    const data = await api.finishGoogleSignup(credential, dateOfBirth, acceptedTerms)
+  async function finishGoogleSignup(credential, username, dateOfBirth, acceptedTerms) {
+    const data = await api.finishGoogleSignup(credential, username, dateOfBirth, acceptedTerms)
     saveSession(data)
     return data
   }

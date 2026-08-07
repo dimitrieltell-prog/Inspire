@@ -274,13 +274,10 @@ async def register(payload: UserRegister):
     if existing:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "An account with this email already exists.")
 
-    if payload.username:
-        username = payload.username.strip().lower()
-        _validate_username_format(username)
-        if await db.users.find_one({"username": username}):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
-    else:
-        username = await _generate_username(db, payload.display_name)
+    username = payload.username.strip().lower()
+    _validate_username_format(username)
+    if await db.users.find_one({"username": username}):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
 
     user = await db.users.insert_one({
         "email": payload.email,
@@ -357,7 +354,10 @@ async def google_auth_finish(payload: GoogleSignupFinish):
     user = await db.users.find_one({"email": email})
     if not user:
         name = (idinfo.get("name") or email.split("@")[0])[:35]
-        username = await _generate_username(db, name)
+        username = payload.username.strip().lower()
+        _validate_username_format(username)
+        if await db.users.find_one({"username": username}):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That username is already taken.")
         user = await db.users.insert_one({
             "email": email,
             "display_name": name,
