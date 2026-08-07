@@ -23,6 +23,7 @@ from app.models import (
     UserRegister,
 )
 from app.moderation import contains_hostility
+from app.notifications import send_welcome_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -293,6 +294,7 @@ async def register(payload: UserRegister):
         "is_founder": False,
         "created_at": time.time(),
     })
+    await send_welcome_email(user)
     token = create_access_token(user["_id"])
     return TokenOut(access_token=token, user=_to_user_out(user))
 
@@ -374,6 +376,7 @@ async def google_auth_finish(payload: GoogleSignupFinish):
             "is_founder": False,
             "created_at": time.time(),
         })
+        await send_welcome_email(user)
     elif not user.get("google_id"):
         user = await db.users.update_one({"_id": user["_id"]}, {"$set": {"google_id": idinfo.get("sub")}})
 

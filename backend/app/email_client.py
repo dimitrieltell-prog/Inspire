@@ -14,7 +14,7 @@ from app.config import settings
 logger = logging.getLogger("inspire.email")
 
 
-def send_email(to: str, subject: str, html: str) -> None:
+def send_email(to: str, subject: str, html: str, reply_to: str | None = None) -> None:
     if not settings.resend_api_key:
         logger.info("[email disabled] Would send to %s: %s", to, subject)
         return
@@ -22,9 +22,12 @@ def send_email(to: str, subject: str, html: str) -> None:
     import resend
 
     resend.api_key = settings.resend_api_key
-    resend.Emails.send({
+    payload = {
         "from": settings.email_from,
         "to": to,
         "subject": subject,
         "html": html,
-    })
+    }
+    if reply_to:
+        payload["reply_to"] = reply_to
+    resend.Emails.send(payload)
