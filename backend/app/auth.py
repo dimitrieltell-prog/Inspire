@@ -11,7 +11,7 @@ from app.config import settings
 from app.database import get_db
 
 # How long someone can go without a request before we consider their
-# session over (used to measure how long their first session lasted).
+# session over (used to measure how long their most recent session lasted).
 SESSION_GAP_SECONDS = 30 * 60
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -76,15 +76,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     prev_last_active = user.get("last_active") or 0
     updates = {}
 
-    if not user.get("first_session_start"):
-        # First authenticated request we've ever seen from them -- the start
-        # of their first session.
-        updates["first_session_start"] = now
-    elif not user.get("first_session_end") and prev_last_active and now - prev_last_active > SESSION_GAP_SECONDS:
-        # They went quiet for a while after their first session -- lock in
-        # where it ended (their last known activity before the gap), so it
-        # doesn't keep growing every time they come back.
-        updates["first_session_end"] = prev_last_active
+    if not user.get("current_session_start") or (prev_last_active and now - prev_last_active > SESSION_GAP_SECONDS):
+        # Either their very first request ever, or they went quiet long
+        # enough that this counts as the start of a new session. Their
+        # previous session's end is just their last recorded `last_active`,
+        # so nothing needs to be stored for it separately.
+        updates["current_session_start"] = now
 
     # Throttle to once a minute per user so the "active" signal doesn't turn
     # every request on every page into a write.

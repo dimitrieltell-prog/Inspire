@@ -51,8 +51,7 @@ async def list_users(include_test: bool = False, founder: dict = Depends(require
             "is_test_account": is_test,
             "created_at": u.get("created_at"),
             "last_active": u.get("last_active"),
-            "first_session_start": u.get("first_session_start"),
-            "first_session_end": u.get("first_session_end"),
+            "current_session_start": u.get("current_session_start"),
             "intro_email_sent": u.get("intro_email_sent", False),
             "email_notifications": u.get("email_notifications", True),
         })
