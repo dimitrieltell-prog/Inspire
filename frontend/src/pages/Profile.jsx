@@ -552,7 +552,7 @@ export default function Profile() {
       {user.is_founder && (
         <div className="bg-white border border-line rounded-xl2 p-6 mt-5">
           <div className="flex items-baseline justify-between mb-1">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">All accounts (founder only)</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">Activity Center (founder only)</h2>
             <div className="flex items-center gap-3">
               {accounts && <span className="text-xs text-slate">{accounts.length} shown</span>}
               <button
