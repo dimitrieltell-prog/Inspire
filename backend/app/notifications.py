@@ -129,7 +129,11 @@ def _welcome_email_html(display_name: str) -> str:
 async def send_welcome_email(db, user: dict) -> None:
     if user.get("email_notifications", True):
         html = _welcome_email_html(user.get("display_name", ""))
-        send_email(user["email"], "Welcome to Inspire", html, reply_to="support@inspirerealexperiences.com")
+        send_email(
+            user["email"], "Welcome to Inspire", html,
+            reply_to="support@inspirerealexperiences.com",
+            unsubscribe_url=_unsubscribe_url(user["_id"]),
+        )
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"intro_email_sent": True}})
 
 
@@ -180,7 +184,11 @@ def _existing_user_intro_html(display_name: str) -> str:
 async def send_existing_user_intro_email(db, user: dict) -> None:
     if user.get("email_notifications", True):
         html = _existing_user_intro_html(user.get("display_name", ""))
-        send_email(user["email"], "Hey — introducing myself", html, reply_to="support@inspirerealexperiences.com")
+        send_email(
+            user["email"], "Hey — introducing myself", html,
+            reply_to="support@inspirerealexperiences.com",
+            unsubscribe_url=_unsubscribe_url(user["_id"]),
+        )
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"intro_email_sent": True}})
 
 
@@ -192,15 +200,19 @@ async def notify_new_follower(followed: dict, follower: dict) -> None:
         f'<p style="margin:0 0 14px;">Hi {followed.get("display_name", "")},</p>'
         f'<p style="margin:0;"><strong>{_display_label(follower)}</strong> started following you on Inspire.</p>'
     )
+    unsub_url = _unsubscribe_url(followed["_id"])
     html = _email_shell(
         preheader=f"{follower_name} started following you on Inspire",
         body_html=body,
         cta_text="View their profile",
         cta_url=f"{settings.frontend_url}/users/{follower['_id']}",
-        unsubscribe_url=_unsubscribe_url(followed["_id"]),
+        unsubscribe_url=unsub_url,
     )
     try:
-        send_email(followed["email"], f"{follower_name} started following you on Inspire", html)
+        send_email(
+            followed["email"], f"{follower_name} started following you on Inspire", html,
+            unsubscribe_url=unsub_url,
+        )
     except Exception:
         logger.exception("Failed to send follow notification to %s", followed.get("email"))
 
@@ -241,15 +253,19 @@ async def run_digest_emails(db) -> dict:
                     f'<p style="margin:0 0 14px;">Hi {u.get("display_name", "")},</p>'
                     f'<p style="margin:0;">You got {summary} on your Inspire posts.</p>'
                 )
+                unsub_url = _unsubscribe_url(uid)
                 html = _email_shell(
                     preheader=f"You got {summary} on Inspire",
                     body_html=body,
                     cta_text="Open Inspire",
                     cta_url=f"{settings.frontend_url}/profile",
-                    unsubscribe_url=_unsubscribe_url(uid),
+                    unsubscribe_url=unsub_url,
                 )
                 try:
-                    send_email(u["email"], f"You got {summary} on Inspire", html)
+                    send_email(
+                        u["email"], f"You got {summary} on Inspire", html,
+                        unsubscribe_url=unsub_url,
+                    )
                     sent += 1
                 except Exception:
                     logger.exception("Failed to send digest email to %s", u.get("email"))
