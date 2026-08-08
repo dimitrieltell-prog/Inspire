@@ -211,6 +211,7 @@ async def notify_new_follower(followed: dict, follower: dict) -> None:
     try:
         send_email(
             followed["email"], f"{follower_name} started following you on Inspire", html,
+            reply_to="support@inspirerealexperiences.com",
             unsubscribe_url=unsub_url,
         )
     except Exception:
@@ -238,6 +239,7 @@ async def notify_new_message(recipient: dict, sender: dict) -> None:
     try:
         send_email(
             recipient["email"], f"{sender_name} sent you a message on Inspire", html,
+            reply_to="support@inspirerealexperiences.com",
             unsubscribe_url=unsub_url,
         )
     except Exception:
@@ -291,6 +293,7 @@ async def run_digest_emails(db) -> dict:
                 try:
                     send_email(
                         u["email"], f"You got {summary} on Inspire", html,
+                        reply_to="support@inspirerealexperiences.com",
                         unsubscribe_url=unsub_url,
                     )
                     sent += 1
