@@ -126,6 +126,7 @@ export const api = {
   recordFounderStoryView: (durationSeconds) => request('/me/founder-story-view', { method: 'POST', body: { duration_seconds: durationSeconds } }),
   getFounderStoryViews: () => request('/me/founder-story-views'),
   markOnboardingGuideSeen: () => request('/me/onboarding-guide-seen', { method: 'POST' }),
+  markStoryPremiumPitchSeen: () => request('/me/story-premium-pitch-seen', { method: 'POST' }),
   getOnboardingChecklist: () => request('/me/onboarding'),
 }
 

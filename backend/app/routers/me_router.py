@@ -60,6 +60,15 @@ async def mark_onboarding_guide_seen(user: dict = Depends(get_current_user)):
     await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"has_seen_onboarding_guide": True}})
 
 
+@router.post("/story-premium-pitch-seen", status_code=204)
+async def mark_story_premium_pitch_seen(user: dict = Depends(get_current_user)):
+    """One-time nudge shown right after the founder-story popup, before the
+    getting-started guide -- pointing free accounts at Premium as the way to
+    reopen the story later. Founder/Premium accounts skip this in the
+    gating chain since they already have permanent access."""
+    await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"has_seen_story_premium_pitch": True}})
+
+
 @router.get("/onboarding", response_model=OnboardingChecklist)
 async def my_onboarding_checklist(user: dict = Depends(get_current_user)):
     """Getting-started checklist -- every step reflects real usage, computed

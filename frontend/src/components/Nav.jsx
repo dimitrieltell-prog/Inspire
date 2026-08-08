@@ -49,7 +49,7 @@ export default function Nav() {
             Inspire
           </Link>
           <Link to="/premium" className="hidden md:inline text-sm font-medium text-slate hover:text-navy transition-colors">Premium</Link>
-          {user?.is_founder && (
+          {(user?.is_founder || user?.is_premium) && (
             <button
               onClick={() => setViewingStory(true)}
               className="hidden md:inline text-sm font-medium text-slate hover:text-navy transition-colors"
@@ -138,7 +138,7 @@ export default function Nav() {
             </Link>
           )}
           <Link to="/premium" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Premium</Link>
-          {user?.is_founder && (
+          {(user?.is_founder || user?.is_premium) && (
             <button
               onClick={() => { setMenuOpen(false); setViewingStory(true) }}
               className="text-left hover:text-navy transition-colors"

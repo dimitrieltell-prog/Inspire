@@ -10,6 +10,7 @@ const PERKS = [
   'Mute up to 100 words to protect your feed (free: 25)',
   'Write longer Story captions — up to 1000 characters (free: 500)',
   'A Premium badge on your name, everywhere on Inspire',
+  "Reopen the founder's welcome story anytime, from your own My Story tab",
 ]
 
 export default function Premium() {

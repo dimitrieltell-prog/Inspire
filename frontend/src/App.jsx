@@ -4,6 +4,7 @@ import Nav from './components/Nav'
 import RequireAuth from './components/RequireAuth'
 import ConfirmUsernameGate from './components/ConfirmUsernameGate'
 import FounderStoryModal from './components/FounderStoryModal'
+import StoryPremiumPitchModal from './components/StoryPremiumPitchModal'
 import OnboardingGuideModal from './components/OnboardingGuideModal'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -27,7 +28,8 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       {ready && user && !user.username_confirmed && <ConfirmUsernameGate />}
       {ready && user && user.username_confirmed && !user.has_seen_founder_story && <FounderStoryModal />}
-      {ready && user && user.username_confirmed && user.has_seen_founder_story && !user.has_seen_onboarding_guide && <OnboardingGuideModal />}
+      {ready && user && user.username_confirmed && user.has_seen_founder_story && !user.is_founder && !user.is_premium && !user.has_seen_story_premium_pitch && <StoryPremiumPitchModal />}
+      {ready && user && user.username_confirmed && user.has_seen_founder_story && (user.is_founder || user.is_premium || user.has_seen_story_premium_pitch) && !user.has_seen_onboarding_guide && <OnboardingGuideModal />}
       <Nav />
       <main className="flex-grow">
         <Routes>

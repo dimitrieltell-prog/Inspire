@@ -72,6 +72,7 @@ class UserOut(BaseModel):
     show_read_receipts: bool = True
     has_seen_founder_story: bool = False
     has_seen_onboarding_guide: bool = False
+    has_seen_story_premium_pitch: bool = False
 
 
 class TokenOut(BaseModel):

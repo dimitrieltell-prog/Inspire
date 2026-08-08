@@ -125,6 +125,7 @@ def _to_user_out(user: dict) -> UserOut:
         show_read_receipts=user.get("show_read_receipts", True),
         has_seen_founder_story=user.get("has_seen_founder_story", False),
         has_seen_onboarding_guide=user.get("has_seen_onboarding_guide", False),
+        has_seen_story_premium_pitch=user.get("has_seen_story_premium_pitch", False),
     )
 
 
