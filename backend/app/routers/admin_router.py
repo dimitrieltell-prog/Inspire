@@ -113,6 +113,14 @@ async def reset_intro_email_sent(user_id: str, founder: dict = Depends(require_f
     await db.users.update_one({"_id": user_id}, {"$set": {"intro_email_sent": False}})
 
 
+@router.delete("/users/{user_id}/founder-story-seen", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_founder_story_seen(user_id: str, founder: dict = Depends(require_founder)):
+    # Lets the founder-story popup (and its view tracking) show again for an
+    # account that already dismissed it before view-tracking existed.
+    db = get_db()
+    await db.users.update_one({"_id": user_id}, {"$set": {"has_seen_founder_story": False}})
+
+
 @router.post("/preview-welcome-email")
 async def preview_welcome_email(founder: dict = Depends(require_founder)):
     # Sends the real new-user welcome template to the founder's own inbox,
