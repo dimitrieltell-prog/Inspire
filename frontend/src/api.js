@@ -123,6 +123,9 @@ export const api = {
   acceptMessageRequest: (userId) => request(`/dms/${userId}/accept`, { method: 'POST' }),
   declineMessageRequest: (userId) => request(`/dms/${userId}/request`, { method: 'DELETE' }),
   markFounderStorySeen: () => request('/me/founder-story-seen', { method: 'POST' }),
+  recordFounderStoryView: (durationSeconds) => request('/me/founder-story-view', { method: 'POST', body: { duration_seconds: durationSeconds } }),
+  getFounderStoryViews: () => request('/me/founder-story-views'),
+  markOnboardingGuideSeen: () => request('/me/onboarding-guide-seen', { method: 'POST' }),
   getOnboardingChecklist: () => request('/me/onboarding'),
 }
 

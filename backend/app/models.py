@@ -71,6 +71,7 @@ class UserOut(BaseModel):
     dm_visibility: str = "followers"
     show_read_receipts: bool = True
     has_seen_founder_story: bool = False
+    has_seen_onboarding_guide: bool = False
 
 
 class TokenOut(BaseModel):
@@ -357,3 +358,13 @@ class OnboardingStep(BaseModel):
 class OnboardingChecklist(BaseModel):
     steps: list[OnboardingStep]
     complete: bool
+
+
+class FounderStoryViewCreate(BaseModel):
+    duration_seconds: float = Field(ge=0)
+
+
+class FounderStoryViewOut(BaseModel):
+    viewer_name: str
+    viewed_at: float
+    duration_seconds: float

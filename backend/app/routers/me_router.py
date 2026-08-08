@@ -1,8 +1,19 @@
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, is_founder
 from app.database import get_db
-from app.models import ActivityItem, Insights, OnboardingChecklist, OnboardingStep, ProfileUser, StoryInboxItem
+from app.models import (
+    ActivityItem,
+    FounderStoryViewCreate,
+    FounderStoryViewOut,
+    Insights,
+    OnboardingChecklist,
+    OnboardingStep,
+    ProfileUser,
+    StoryInboxItem,
+)
 from app.notifications import notify_new_follower
 from app.routers.ephemeral_story_router import _expire_ephemeral_stories, _serialize_ephemeral_story
 from app.routers.users_router import _profile_user
@@ -14,6 +25,39 @@ router = APIRouter(prefix="/me", tags=["me"])
 async def mark_founder_story_seen(user: dict = Depends(get_current_user)):
     """One-time popup shown after login/signup -- once dismissed, never again."""
     await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"has_seen_founder_story": True}})
+
+
+@router.post("/founder-story-view", status_code=204)
+async def record_founder_story_view(payload: FounderStoryViewCreate, user: dict = Depends(get_current_user)):
+    """Logged once per close of the founder-story popup, for the founder's
+    own read on who's actually reading it. Skips the founder's own views of
+    his own story -- nothing useful to learn from tracking those."""
+    if is_founder(user):
+        return
+    await get_db().founder_story_views.insert_one({
+        "viewer_id": user["_id"],
+        "viewer_name": user.get("display_name", "Someone"),
+        "viewed_at": time.time(),
+        "duration_seconds": payload.duration_seconds,
+    })
+
+
+@router.get("/founder-story-views", response_model=list[FounderStoryViewOut])
+async def list_founder_story_views(user: dict = Depends(get_current_user)):
+    if not is_founder(user):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Founder only.")
+    views = await get_db().founder_story_views.find({}, sort_key="viewed_at", reverse=True)
+    return [
+        FounderStoryViewOut(viewer_name=v["viewer_name"], viewed_at=v["viewed_at"], duration_seconds=v["duration_seconds"])
+        for v in views
+    ]
+
+
+@router.post("/onboarding-guide-seen", status_code=204)
+async def mark_onboarding_guide_seen(user: dict = Depends(get_current_user)):
+    """One-time popup version of the getting-started checklist -- shown once,
+    then the same steps only ever appear as the inline card on Stories."""
+    await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"has_seen_onboarding_guide": True}})
 
 
 @router.get("/onboarding", response_model=OnboardingChecklist)

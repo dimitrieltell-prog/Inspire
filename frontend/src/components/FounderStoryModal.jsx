@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+
+function formatDuration(seconds) {
+  if (seconds < 60) return `${Math.round(seconds)}s`
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.round(seconds % 60)
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
+}
 
 const PARAGRAPHS = [
   "Hello, my name is Dimitri Sanchez Eltell but up until February 2016 my name was Demetrius Marcel Garcia. Before that date, my life was filled with uncertainty and questions that didn't always have clear answers. I spent much of my early childhood living with my biological mother who did not take care of me well. A lot of what I know about my early childhood I know from my now mom Olga Sanchez Eltell and other family members.",
@@ -23,12 +30,22 @@ const PARAGRAPHS = [
 ]
 
 export default function FounderStoryModal({ onClose } = {}) {
-  const { refreshUser } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [closing, setClosing] = useState(false)
+  const [views, setViews] = useState(null)
+  const openedAtRef = useRef(Date.now())
+
+  useEffect(() => {
+    if (user?.is_founder) {
+      api.getFounderStoryViews().then(setViews).catch(() => {})
+    }
+  }, [user])
 
   async function dismiss() {
     if (closing) return
     setClosing(true)
+    const durationSeconds = (Date.now() - openedAtRef.current) / 1000
+    await api.recordFounderStoryView(durationSeconds).catch(() => {})
     try {
       await api.markFounderStorySeen()
     } catch (_) {
@@ -69,6 +86,27 @@ export default function FounderStoryModal({ onClose } = {}) {
           {PARAGRAPHS.map((p, i) => (
             <p key={i} className="whitespace-pre-wrap">{p}</p>
           ))}
+          {user?.is_founder && (
+            <div className="mt-2 pt-4 border-t border-line">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-slate-light mb-3">Who's read this</h3>
+              {!views ? (
+                <p className="text-xs text-slate-light">Loading…</p>
+              ) : views.length === 0 ? (
+                <p className="text-xs text-slate-light">No one's read it yet.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {views.map((v, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3 text-xs">
+                      <span className="font-semibold text-navy flex-shrink-0">{v.viewer_name}</span>
+                      <span className="text-slate-light text-right">
+                        {new Date(v.viewed_at * 1000).toLocaleString()} · {formatDuration(v.duration_seconds)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>,

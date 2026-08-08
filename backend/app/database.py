@@ -135,6 +135,7 @@ class DB:
             self.reports = MongoCollection(mongo_db["reports"])
             self.conversations = MongoCollection(mongo_db["conversations"])
             self.messages = MongoCollection(mongo_db["messages"])
+            self.founder_story_views = MongoCollection(mongo_db["founder_story_views"])
         else:
             self.users = InMemoryCollection()
             self.stories = InMemoryCollection()
@@ -155,6 +156,7 @@ class DB:
             self.reports = InMemoryCollection()
             self.conversations = InMemoryCollection()
             self.messages = InMemoryCollection()
+            self.founder_story_views = InMemoryCollection()
 
 
 _db_instance: Optional[DB] = None
