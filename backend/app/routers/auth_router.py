@@ -121,6 +121,8 @@ def _to_user_out(user: dict) -> UserOut:
         email_notifications=user.get("email_notifications", True),
         posts_visibility=user.get("posts_visibility", "everyone"),
         saves_visibility=user.get("saves_visibility", "followers"),
+        dm_visibility=user.get("dm_visibility", "followers"),
+        show_read_receipts=user.get("show_read_receipts", True),
     )
 
 
@@ -226,6 +228,14 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
         if payload.saves_visibility not in CONTENT_VISIBILITY_OPTIONS:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid saves visibility.")
         updates["saves_visibility"] = payload.saves_visibility
+
+    if payload.dm_visibility is not None:
+        if payload.dm_visibility not in CONTENT_VISIBILITY_OPTIONS:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid message visibility.")
+        updates["dm_visibility"] = payload.dm_visibility
+
+    if payload.show_read_receipts is not None:
+        updates["show_read_receipts"] = payload.show_read_receipts
 
     if payload.muted_words is not None:
         words = [w.strip().lower() for w in payload.muted_words if w.strip()]

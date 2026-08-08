@@ -217,6 +217,33 @@ async def notify_new_follower(followed: dict, follower: dict) -> None:
         logger.exception("Failed to send follow notification to %s", followed.get("email"))
 
 
+async def notify_new_message(recipient: dict, sender: dict) -> None:
+    """Sent once, when someone starts a new conversation -- not per message,
+    so an active back-and-forth doesn't spam an inbox."""
+    if not recipient.get("email_notifications", True):
+        return
+    sender_name = sender.get("display_name", "Someone")
+    body = (
+        f'<p style="margin:0 0 14px;">Hi {recipient.get("display_name", "")},</p>'
+        f'<p style="margin:0;"><strong>{_display_label(sender)}</strong> sent you a message on Inspire.</p>'
+    )
+    unsub_url = _unsubscribe_url(recipient["_id"])
+    html = _email_shell(
+        preheader=f"{sender_name} sent you a message on Inspire",
+        body_html=body,
+        cta_text="Open the conversation",
+        cta_url=f"{settings.frontend_url}/messages/{sender['_id']}",
+        unsubscribe_url=unsub_url,
+    )
+    try:
+        send_email(
+            recipient["email"], f"{sender_name} sent you a message on Inspire", html,
+            unsubscribe_url=unsub_url,
+        )
+    except Exception:
+        logger.exception("Failed to send message notification to %s", recipient.get("email"))
+
+
 async def run_digest_emails(db) -> dict:
     """Bundles likes + reposts since each user's last digest into one email.
     Called on a daily schedule, not per-action, so an active post doesn't

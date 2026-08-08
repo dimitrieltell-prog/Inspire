@@ -68,6 +68,8 @@ class UserOut(BaseModel):
     email_notifications: bool = True
     posts_visibility: str = "everyone"
     saves_visibility: str = "followers"
+    dm_visibility: str = "followers"
+    show_read_receipts: bool = True
 
 
 class TokenOut(BaseModel):
@@ -96,6 +98,8 @@ class ProfileUpdate(BaseModel):
     email_notifications: Optional[bool] = None
     posts_visibility: Optional[str] = None
     saves_visibility: Optional[str] = None
+    dm_visibility: Optional[str] = None
+    show_read_receipts: Optional[bool] = None
 
 
 class ProfileUser(BaseModel):
@@ -134,6 +138,7 @@ class PublicProfile(BaseModel):
     can_view: bool = True       # false when the account is private and viewer isn't a follower
     can_view_posts: bool = True   # false when posts are followers-only and viewer isn't one
     can_view_saves: bool = False  # false unless saves are open to this viewer
+    can_message: bool = False     # whether the current viewer is allowed to DM this user
     created_at: Optional[float] = None
 
 
@@ -307,3 +312,34 @@ class ReportOut(BaseModel):
     context: str = ""
     status: str = "open"
     created_at: float
+
+
+class DMParticipant(BaseModel):
+    """The other person in a conversation, as shown in the inbox/thread header."""
+    id: str
+    display_name: str
+    username: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_founder: bool = False
+
+
+class DMMessageCreate(BaseModel):
+    body: str = Field(min_length=1, max_length=2000)
+
+
+class MessageOut(BaseModel):
+    id: str
+    sender_id: str
+    body: str
+    created_at: float
+    read_at: Optional[float] = None  # null if unread, or if either side hides read receipts
+
+
+class ConversationOut(BaseModel):
+    other_user: DMParticipant
+    last_message: str
+    last_message_at: float
+    last_sender_id: str
+    unread_count: int = 0
+    accepted: bool = True
+    requested_by: Optional[str] = None  # who sent the first message, while still pending

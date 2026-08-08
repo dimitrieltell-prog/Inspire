@@ -14,6 +14,7 @@ import Premium from './pages/Premium'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import StoryInbox from './pages/StoryInbox'
+import Messages from './pages/Messages'
 import UserProfile from './pages/UserProfile'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
@@ -37,6 +38,8 @@ export default function App() {
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/story-inbox" element={<RequireAuth><StoryInbox /></RequireAuth>} />
+          <Route path="/messages" element={<RequireAuth><Messages /></RequireAuth>} />
+          <Route path="/messages/:userId" element={<RequireAuth><Messages /></RequireAuth>} />
           <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />

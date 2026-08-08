@@ -236,4 +236,10 @@ async def delete_account_cascade(db, uid: str) -> None:
     await db.story_sends.delete_many({"recipient_id": uid})
     await db.aria_usage.delete_many({"user_id": uid})
 
+    # DM conversations this user was part of, and everything in them.
+    for c in await db.conversations.find({}):
+        if uid in (c["user_a"], c["user_b"]):
+            await db.messages.delete_many({"conversation_id": c["_id"]})
+            await db.conversations.delete_one({"_id": c["_id"]})
+
     await db.users.delete_one({"_id": uid})

@@ -113,6 +113,15 @@ export const api = {
     request('/reports', { method: 'POST', body: { target_type: targetType, target_id: targetId, reason, note } }),
   adminListReports: (includeResolved) => request(`/admin/reports${includeResolved ? '?include_resolved=true' : ''}`),
   adminResolveReport: (reportId) => request(`/admin/reports/${reportId}/resolve`, { method: 'POST' }),
+
+  // Direct messages
+  listConversations: () => request('/dms'),
+  getUnreadDmCount: () => request('/dms/unread-count'),
+  getMessages: (userId) => request(`/dms/${userId}/messages`),
+  sendMessage: (userId, body) => request(`/dms/${userId}/messages`, { method: 'POST', body: { body } }),
+  markMessagesRead: (userId) => request(`/dms/${userId}/read`, { method: 'POST' }),
+  acceptMessageRequest: (userId) => request(`/dms/${userId}/accept`, { method: 'POST' }),
+  declineMessageRequest: (userId) => request(`/dms/${userId}/request`, { method: 'DELETE' }),
 }
 
 export { getToken }

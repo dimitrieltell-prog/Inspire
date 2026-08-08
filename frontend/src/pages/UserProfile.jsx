@@ -182,19 +182,29 @@ export default function UserProfile() {
             <p className="text-sm text-slate-light mt-2">Joined {formatDate(profile.created_at)}</p>
           </div>
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            {!profile.is_blocked && (
-              <button
-                onClick={toggleFollow}
-                disabled={busy}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
-                  profile.is_following || profile.has_requested
-                    ? 'border border-line bg-white hover:border-indigo'
-                    : 'bg-indigo text-white hover:bg-indigo-deep'
-                }`}
-              >
-                {profile.is_following ? 'Following' : profile.has_requested ? 'Requested' : 'Follow'}
-              </button>
-            )}
+            <div className="flex gap-2">
+              {!profile.is_blocked && (
+                <button
+                  onClick={toggleFollow}
+                  disabled={busy}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                    profile.is_following || profile.has_requested
+                      ? 'border border-line bg-white hover:border-indigo'
+                      : 'bg-indigo text-white hover:bg-indigo-deep'
+                  }`}
+                >
+                  {profile.is_following ? 'Following' : profile.has_requested ? 'Requested' : 'Follow'}
+                </button>
+              )}
+              {profile.can_message && (
+                <button
+                  onClick={() => navigate(`/messages/${profile.id}`)}
+                  className="rounded-full px-5 py-2 text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors"
+                >
+                  Message
+                </button>
+              )}
+            </div>
             <div className="flex gap-3">
               {!profile.is_blocked && (
                 <button

@@ -9,6 +9,7 @@ from app.routers import (
     admin_router,
     aria_router,
     auth_router,
+    dm_router,
     ephemeral_story_router,
     me_router,
     notifications_router,
@@ -40,6 +41,7 @@ app.include_router(ephemeral_story_router.router)
 app.include_router(me_router.router)
 app.include_router(reports_router.router)
 app.include_router(notifications_router.router)
+app.include_router(dm_router.router)
 
 logger = logging.getLogger("inspire.main")
 

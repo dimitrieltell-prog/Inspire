@@ -105,6 +105,7 @@ export default function Settings() {
   const [audienceOpen, setAudienceOpen] = useState(false)
   const [postsVisibilityOpen, setPostsVisibilityOpen] = useState(false)
   const [savesVisibilityOpen, setSavesVisibilityOpen] = useState(false)
+  const [dmVisibilityOpen, setDmVisibilityOpen] = useState(false)
 
   // Close circle
   const [circle, setCircle] = useState(null)
@@ -342,6 +343,7 @@ export default function Settings() {
   const audienceLabel = AUDIENCES.find((a) => a.value === (user.comment_audience || 'everyone'))?.label
   const postsVisibilityLabel = CONTENT_VISIBILITIES.find((a) => a.value === (user.posts_visibility || 'everyone'))?.label
   const savesVisibilityLabel = CONTENT_VISIBILITIES.find((a) => a.value === (user.saves_visibility || 'followers'))?.label
+  const dmVisibilityLabel = CONTENT_VISIBILITIES.find((a) => a.value === (user.dm_visibility || 'followers'))?.label
 
   return (
     <div className="max-w-2xl mx-auto px-7 py-16">
@@ -498,8 +500,36 @@ export default function Settings() {
                 ))}
               </div>
             )}
+            <Row
+              title="Who can message you"
+              subtitle={dmVisibilityLabel}
+              onClick={() => setDmVisibilityOpen((o) => !o)}
+              expandable
+              expanded={dmVisibilityOpen}
+            />
+            {dmVisibilityOpen && (
+              <div className="p-4 bg-bg/40 flex flex-col gap-1">
+                {CONTENT_VISIBILITIES.map((a) => (
+                  <button
+                    key={a.value}
+                    onClick={() => patch({ dm_visibility: a.value })}
+                    disabled={saving}
+                    className={`text-left text-sm px-3 py-2.5 rounded-lg transition-colors ${
+                      (user.dm_visibility || 'followers') === a.value ? 'bg-indigo text-white font-semibold' : 'hover:bg-lavender'
+                    }`}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
+        <Row
+          title="Read receipts"
+          subtitle={user.show_read_receipts ? "People you message can see when you've read their message — and you can see when they've read yours." : "You won't see when someone's read your messages, and they won't see when you've read theirs."}
+          right={<Toggle checked={user.show_read_receipts} onChange={() => patch({ show_read_receipts: !user.show_read_receipts })} disabled={saving} />}
+        />
         <Row
           title="Who can reply to your stories"
           subtitle={audienceLabel}

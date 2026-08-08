@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import SearchOverlay from './SearchOverlay'
+
+const UNREAD_POLL_MS = 15000
 
 // React Router v7 wraps navigation updates in React.startTransition, which is
 // lower priority than the synchronous user=null update logout() triggers. On
@@ -22,6 +25,18 @@ export default function Nav() {
   const hideSearch = ['/', '/login', '/register'].includes(location.pathname)
   const [searchOpen, setSearchOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [unreadDms, setUnreadDms] = useState(0)
+
+  useEffect(() => {
+    if (!user) { setUnreadDms(0); return }
+    let cancelled = false
+    function load() {
+      api.getUnreadDmCount().then((r) => { if (!cancelled) setUnreadDms(r.count) }).catch(() => {})
+    }
+    load()
+    const id = setInterval(load, UNREAD_POLL_MS)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [user])
 
   return (
     <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur border-b border-line pt-[env(safe-area-inset-top)]">
@@ -36,6 +51,16 @@ export default function Nav() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate">
           <Link to="/stories" className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" className="hover:text-navy transition-colors">Aria</Link>
+          {user && (
+            <Link to="/messages" className="relative hover:text-navy transition-colors">
+              Messages
+              {unreadDms > 0 && (
+                <span className="absolute -top-2 -right-3 w-4 h-4 rounded-full bg-rose-ink text-white text-[9px] font-bold flex items-center justify-center">
+                  {unreadDms > 9 ? '9+' : unreadDms}
+                </span>
+              )}
+            </Link>
+          )}
           {user && <Link to="/profile" className="hover:text-navy transition-colors">Profile</Link>}
           {user && <Link to="/settings" className="hover:text-navy transition-colors">Settings</Link>}
         </nav>
@@ -105,6 +130,11 @@ export default function Nav() {
           <Link to="/premium" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Premium</Link>
           <Link to="/stories" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Aria</Link>
+          {user && (
+            <Link to="/messages" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">
+              Messages{unreadDms > 0 ? ` (${unreadDms > 9 ? '9+' : unreadDms})` : ''}
+            </Link>
+          )}
           {user && <Link to="/settings" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Settings</Link>}
           {user && (
             <button

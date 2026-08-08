@@ -65,6 +65,37 @@ async def can_view_saves(db, target: dict, viewer: Optional[dict]) -> bool:
     return await _is_follower(db, viewer["_id"], target["_id"])
 
 
+async def is_blocked_either_way(db, a_id: str, b_id: str) -> bool:
+    return bool(
+        await db.blocks.find_one({"blocker_id": a_id, "blocked_id": b_id})
+        or await db.blocks.find_one({"blocker_id": b_id, "blocked_id": a_id})
+    )
+
+
+async def can_message(db, sender: dict, target: dict) -> bool:
+    """Whether `sender` may start a NEW DM conversation with `target`. Only
+    checked when there's no conversation yet -- once one exists, either side
+    can keep replying regardless of follow status or a later dm_visibility
+    change, same as any normal messaging app. Blocking is the only thing
+    that always applies. Private accounts always require an accepted follow
+    to start one, regardless of dm_visibility -- that setting only ever
+    loosens things for public accounts, never a private one's ceiling."""
+    if sender["_id"] == target["_id"]:
+        return False
+    if await is_blocked_either_way(db, sender["_id"], target["_id"]):
+        return False
+    if target.get("is_private", False):
+        return await _is_follower(db, sender["_id"], target["_id"])
+    if target.get("dm_visibility", "followers") == "everyone":
+        return True
+    return await _is_follower(db, sender["_id"], target["_id"])
+
+
+async def _has_conversation(db, a_id: str, b_id: str) -> bool:
+    lo, hi = sorted([a_id, b_id])
+    return bool(await db.conversations.find_one({"user_a": lo, "user_b": hi}))
+
+
 async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
     db = get_db()
     followers = await db.follows.find({"following_id": u["_id"]})
@@ -84,6 +115,9 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
     can_view = await can_view_account(db, u, viewer)
     can_view_posts_ = await can_view_posts(db, u, viewer)
     can_view_saves_ = await can_view_saves(db, u, viewer)
+    can_message_ = False
+    if viewer:
+        can_message_ = await can_message(db, viewer, u) or await _has_conversation(db, viewer["_id"], u["_id"])
     # Private accounts still show the simple stuff -- name, username, bio --
     # but hide everything else from non-followers.
     return PublicProfile(
@@ -113,6 +147,7 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         can_view=can_view,
         can_view_posts=can_view_posts_,
         can_view_saves=can_view_saves_,
+        can_message=can_message_,
         created_at=u.get("created_at"),
     )
 
