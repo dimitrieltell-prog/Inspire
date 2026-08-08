@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
@@ -39,7 +40,7 @@ export default function FounderStoryModal({ onClose } = {}) {
     }
   }
 
-  return (
+  return createPortal(
     <div className="founder-story-modal fixed inset-0 z-50 bg-navy/60 flex items-center justify-center p-4 print:hidden">
       {/* Belt-and-suspenders: Tailwind's print:hidden above should already
           cover this, but a plain @media print rule guarantees the essay
@@ -70,6 +71,7 @@ export default function FounderStoryModal({ onClose } = {}) {
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
