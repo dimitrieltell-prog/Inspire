@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext'
 import Nav from './components/Nav'
 import RequireAuth from './components/RequireAuth'
 import ConfirmUsernameGate from './components/ConfirmUsernameGate'
+import FounderStoryModal from './components/FounderStoryModal'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       {ready && user && !user.username_confirmed && <ConfirmUsernameGate />}
+      {ready && user && user.username_confirmed && !user.has_seen_founder_story && <FounderStoryModal />}
       <Nav />
       <main className="flex-grow">
         <Routes>

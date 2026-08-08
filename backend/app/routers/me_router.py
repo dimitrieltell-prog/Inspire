@@ -10,6 +10,12 @@ from app.routers.users_router import _profile_user
 router = APIRouter(prefix="/me", tags=["me"])
 
 
+@router.post("/founder-story-seen", status_code=204)
+async def mark_founder_story_seen(user: dict = Depends(get_current_user)):
+    """One-time popup shown after login/signup -- once dismissed, never again."""
+    await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"has_seen_founder_story": True}})
+
+
 @router.get("/story-inbox", response_model=list[StoryInboxItem])
 async def my_story_inbox(user: dict = Depends(get_current_user)):
     """Stories other people have sent directly to you."""

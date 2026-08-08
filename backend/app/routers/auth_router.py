@@ -123,6 +123,7 @@ def _to_user_out(user: dict) -> UserOut:
         saves_visibility=user.get("saves_visibility", "followers"),
         dm_visibility=user.get("dm_visibility", "followers"),
         show_read_receipts=user.get("show_read_receipts", True),
+        has_seen_founder_story=user.get("has_seen_founder_story", False),
     )
 
 

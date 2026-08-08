@@ -70,6 +70,7 @@ class UserOut(BaseModel):
     saves_visibility: str = "followers"
     dm_visibility: str = "followers"
     show_read_receipts: bool = True
+    has_seen_founder_story: bool = False
 
 
 class TokenOut(BaseModel):
