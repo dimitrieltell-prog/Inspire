@@ -21,7 +21,7 @@ const PARAGRAPHS = [
   "Thank you for taking the time to read my story — it means more to me than you know. Welcome to Inspire, I hope you enjoy it.",
 ]
 
-export default function FounderStoryModal() {
+export default function FounderStoryModal({ onClose } = {}) {
   const { refreshUser } = useAuth()
   const [closing, setClosing] = useState(false)
 
@@ -35,6 +35,7 @@ export default function FounderStoryModal() {
       // it'll just show again next time, which is a fine fallback.
     } finally {
       await refreshUser().catch(() => {})
+      onClose?.()
     }
   }
 

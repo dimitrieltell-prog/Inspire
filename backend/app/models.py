@@ -344,3 +344,16 @@ class ConversationOut(BaseModel):
     unread_count: int = 0
     accepted: bool = True
     requested_by: Optional[str] = None  # who sent the first message, while still pending
+
+
+class OnboardingStep(BaseModel):
+    key: str
+    title: str
+    subtitle: str
+    done: bool
+    cta_url: str
+
+
+class OnboardingChecklist(BaseModel):
+    steps: list[OnboardingStep]
+    complete: bool

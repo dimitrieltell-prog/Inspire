@@ -123,6 +123,7 @@ export const api = {
   acceptMessageRequest: (userId) => request(`/dms/${userId}/accept`, { method: 'POST' }),
   declineMessageRequest: (userId) => request(`/dms/${userId}/request`, { method: 'DELETE' }),
   markFounderStorySeen: () => request('/me/founder-story-seen', { method: 'POST' }),
+  getOnboardingChecklist: () => request('/me/onboarding'),
 }
 
 export { getToken }

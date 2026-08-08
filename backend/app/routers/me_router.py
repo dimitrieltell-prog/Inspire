@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, is_founder
 from app.database import get_db
-from app.models import ActivityItem, Insights, ProfileUser, StoryInboxItem
+from app.models import ActivityItem, Insights, OnboardingChecklist, OnboardingStep, ProfileUser, StoryInboxItem
 from app.notifications import notify_new_follower
 from app.routers.ephemeral_story_router import _expire_ephemeral_stories, _serialize_ephemeral_story
 from app.routers.users_router import _profile_user
@@ -14,6 +14,42 @@ router = APIRouter(prefix="/me", tags=["me"])
 async def mark_founder_story_seen(user: dict = Depends(get_current_user)):
     """One-time popup shown after login/signup -- once dismissed, never again."""
     await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"has_seen_founder_story": True}})
+
+
+@router.get("/onboarding", response_model=OnboardingChecklist)
+async def my_onboarding_checklist(user: dict = Depends(get_current_user)):
+    """Getting-started checklist -- every step reflects real usage, computed
+    live, so there's nothing to persist or reset: once all four are true
+    they'll stay true (short of the person undoing the underlying action)."""
+    db = get_db()
+    uid = user["_id"]
+    has_story = bool(await db.stories.find_one({"author_id": uid}))
+    has_profile = bool(user.get("avatar_url") or user.get("bio"))
+    has_follow = bool(await db.follows.find_one({"follower_id": uid}))
+    has_aria = bool(await db.aria_usage.find_one({"user_id": uid}))
+    steps = [
+        OnboardingStep(
+            key="story", title="Share your first story",
+            subtitle="Writing something real is the best way to see what Inspire's about.",
+            done=has_story, cta_url="/stories/new",
+        ),
+        OnboardingStep(
+            key="profile", title="Set up your profile",
+            subtitle="Add a photo or a bit about yourself.",
+            done=has_profile, cta_url="/profile",
+        ),
+        OnboardingStep(
+            key="follow", title="Follow someone",
+            subtitle="Find a friend or discover new stories.",
+            done=has_follow, cta_url="/stories",
+        ),
+        OnboardingStep(
+            key="aria", title="Say hi to Aria",
+            subtitle="A reflective AI companion, here if you want to think something through.",
+            done=has_aria, cta_url="/aria",
+        ),
+    ]
+    return OnboardingChecklist(steps=steps, complete=all(s.done for s in steps))
 
 
 @router.get("/story-inbox", response_model=list[StoryInboxItem])

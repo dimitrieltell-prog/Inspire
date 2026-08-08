@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import StoryCard from '../components/StoryCard'
+import OnboardingChecklist from '../components/OnboardingChecklist'
 
 const CATEGORIES = ['all', 'Mental Health', 'Relationships', 'Family', 'School', 'Growth', 'Life Challenges', 'Achievements', 'Advice']
 
@@ -29,6 +30,8 @@ export default function Stories() {
           Share your story
         </Link>
       </div>
+
+      <OnboardingChecklist />
 
       <div className="flex flex-wrap gap-2.5 justify-center mb-10">
         {CATEGORIES.map((c) => (

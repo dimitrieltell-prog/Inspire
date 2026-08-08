@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import SearchOverlay from './SearchOverlay'
+import FounderStoryModal from './FounderStoryModal'
 
 const UNREAD_POLL_MS = 15000
 
@@ -26,6 +27,7 @@ export default function Nav() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [unreadDms, setUnreadDms] = useState(0)
+  const [viewingStory, setViewingStory] = useState(false)
 
   useEffect(() => {
     if (!user) { setUnreadDms(0); return }
@@ -47,6 +49,14 @@ export default function Nav() {
             Inspire
           </Link>
           <Link to="/premium" className="hidden md:inline text-sm font-medium text-slate hover:text-navy transition-colors">Premium</Link>
+          {user?.is_founder && (
+            <button
+              onClick={() => setViewingStory(true)}
+              className="hidden md:inline text-sm font-medium text-slate hover:text-navy transition-colors"
+            >
+              My Story
+            </button>
+          )}
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate">
           <Link to="/stories" className="hover:text-navy transition-colors">Stories</Link>
@@ -128,6 +138,14 @@ export default function Nav() {
             </Link>
           )}
           <Link to="/premium" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Premium</Link>
+          {user?.is_founder && (
+            <button
+              onClick={() => { setMenuOpen(false); setViewingStory(true) }}
+              className="text-left hover:text-navy transition-colors"
+            >
+              My Story
+            </button>
+          )}
           <Link to="/stories" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Stories</Link>
           <Link to="/aria" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Aria</Link>
           {user && (
@@ -147,6 +165,7 @@ export default function Nav() {
         </div>
       )}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
+      {viewingStory && <FounderStoryModal onClose={() => setViewingStory(false)} />}
     </header>
   )
 }
