@@ -37,6 +37,34 @@ async def can_view_account(db, target: dict, viewer: Optional[dict]) -> bool:
     return await _is_follower(db, viewer["_id"], target["_id"])
 
 
+async def can_view_posts(db, target: dict, viewer: Optional[dict]) -> bool:
+    """On top of the account-level gate, posts can independently be set to
+    followers-only even on a public account."""
+    if not await can_view_account(db, target, viewer):
+        return False
+    if viewer and (viewer["_id"] == target["_id"] or is_founder(viewer)):
+        return True
+    if target.get("posts_visibility", "everyone") != "followers":
+        return True
+    if not viewer:
+        return False
+    return await _is_follower(db, viewer["_id"], target["_id"])
+
+
+async def can_view_saves(db, target: dict, viewer: Optional[dict]) -> bool:
+    """Saved posts default to followers-only and are never shown to a
+    private account's non-followers, regardless of the saves setting."""
+    if viewer and (viewer["_id"] == target["_id"] or is_founder(viewer)):
+        return True
+    if not await can_view_account(db, target, viewer):
+        return False
+    if target.get("saves_visibility", "followers") != "followers":
+        return True
+    if not viewer:
+        return False
+    return await _is_follower(db, viewer["_id"], target["_id"])
+
+
 async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
     db = get_db()
     followers = await db.follows.find({"following_id": u["_id"]})
@@ -54,6 +82,8 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         is_muted = bool(await db.mutes.find_one({"muter_id": viewer["_id"], "muted_id": u["_id"]}))
         has_requested = bool(await db.follow_requests.find_one({"requester_id": viewer["_id"], "target_id": u["_id"]}))
     can_view = await can_view_account(db, u, viewer)
+    can_view_posts_ = await can_view_posts(db, u, viewer)
+    can_view_saves_ = await can_view_saves(db, u, viewer)
     # Private accounts still show the simple stuff -- name, username, bio --
     # but hide everything else from non-followers.
     return PublicProfile(
@@ -81,6 +111,8 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         is_muted=is_muted,
         has_requested=has_requested,
         can_view=can_view,
+        can_view_posts=can_view_posts_,
+        can_view_saves=can_view_saves_,
         created_at=u.get("created_at"),
     )
 
@@ -269,13 +301,24 @@ async def user_stories(user_id: str, viewer: Optional[dict] = Depends(get_option
     target = await db.users.find_one({"_id": user_id})
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
-    if not await can_view_account(db, target, viewer):
+    if not await can_view_posts(db, target, viewer):
         return []
     stories = await db.stories.find({"author_id": user_id}, sort_key="created_at", reverse=True)
-    is_owner = bool(viewer and viewer["_id"] == user_id)
-    # Others only see non-anonymous posts; you see all of your own.
-    visible = [s for s in stories if is_owner or not s.get("is_anonymous")]
+    # Anonymous posts live in their own owner-only tab, never here.
+    visible = [s for s in stories if not s.get("is_anonymous")]
     return [await serialize_story(s, viewer, db) for s in visible]
+
+
+@router.get("/{user_id}/anonymous", response_model=list[StoryOut])
+async def user_anonymous_stories(user_id: str, viewer: dict = Depends(get_current_user)):
+    # Nobody but the author ever sees this, regardless of followers or
+    # account privacy -- that's the whole point of posting anonymously.
+    if viewer["_id"] != user_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found.")
+    db = get_db()
+    stories = await db.stories.find({"author_id": user_id}, sort_key="created_at", reverse=True)
+    anonymous = [s for s in stories if s.get("is_anonymous")]
+    return [await serialize_story(s, viewer, db) for s in anonymous]
 
 
 @router.get("/{user_id}/reposts", response_model=list[StoryOut])
@@ -296,11 +339,13 @@ async def user_reposts(user_id: str, viewer: Optional[dict] = Depends(get_option
 
 
 @router.get("/{user_id}/saved", response_model=list[StoryOut])
-async def user_saved(user_id: str, viewer: dict = Depends(get_current_user)):
-    # Saved is private -- only the owner can see their own saved stories.
-    if viewer["_id"] != user_id:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found.")
+async def user_saved(user_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
+    target = await db.users.find_one({"_id": user_id})
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
+    if not await can_view_saves(db, target, viewer):
+        return []
     saves = await db.saves.find({"user_id": user_id}, sort_key="created_at", reverse=True)
     result = []
     for sv in saves:

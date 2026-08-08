@@ -36,11 +36,31 @@ export default function UserProfile() {
       .finally(() => setLoading(false))
   }, [userId, user, navigate])
 
+  const visibleTabs = profile
+    ? [
+        ...(profile.can_view_posts ? ['posts'] : []),
+        'reposts',
+        ...(profile.can_view_saves ? ['saved'] : []),
+      ]
+    : []
+
   useEffect(() => {
+    // If the current tab isn't actually visible for this profile (e.g. the
+    // default 'posts' is followers-only and we're not one), fall back to
+    // the first tab that is.
+    if (profile && visibleTabs.length && !visibleTabs.includes(tab)) {
+      setTab(visibleTabs[0])
+    }
+  }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!profile || !visibleTabs.includes(tab)) return
     setTabLoading(true)
-    const load = tab === 'posts' ? api.getUserStories(userId) : api.getUserReposts(userId)
+    const load = tab === 'posts' ? api.getUserStories(userId)
+      : tab === 'saved' ? api.getSavedStories(userId)
+      : api.getUserReposts(userId)
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
-  }, [tab, userId])
+  }, [tab, userId, profile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function toggleFollow() {
     if (!user) { navigate('/login'); return }
@@ -232,11 +252,14 @@ export default function UserProfile() {
         </div>
       )}
 
-      {/* Posts / Reposts */}
+      {/* Posts / Reposts / Saved */}
       {profile.can_view && (
       <div className="mt-6">
+        {!profile.can_view_posts && (
+          <p className="text-xs text-slate-light mb-3">{profile.display_name}'s posts are visible to followers only.</p>
+        )}
         <div className="flex gap-2 border-b border-line mb-5">
-          {['posts', 'reposts'].map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -253,7 +276,9 @@ export default function UserProfile() {
           <p className="text-center text-slate py-8">Loading…</p>
         ) : tabStories.length === 0 ? (
           <p className="text-center text-slate-light py-8">
-            {tab === 'posts' ? `${profile.display_name} hasn't posted anything yet.` : `${profile.display_name} hasn't reposted anything yet.`}
+            {tab === 'posts' && `${profile.display_name} hasn't posted anything yet.`}
+            {tab === 'reposts' && `${profile.display_name} hasn't reposted anything yet.`}
+            {tab === 'saved' && `${profile.display_name} hasn't saved anything yet.`}
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-5">

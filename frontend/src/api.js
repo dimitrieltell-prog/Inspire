@@ -60,6 +60,7 @@ export const api = {
   getUserStories: (userId) => request(`/users/${userId}/stories`),
   getUserReposts: (userId) => request(`/users/${userId}/reposts`),
   getSavedStories: (userId) => request(`/users/${userId}/saved`),
+  getAnonymousStories: (userId) => request(`/users/${userId}/anonymous`),
   listComments: (storyId) => request(`/stories/${storyId}/comments`),
   createComment: (storyId, body) => request('/stories/comments', { method: 'POST', body: { story_id: storyId, body } }),
   ariaUsage: () => request('/aria/usage'),

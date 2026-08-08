@@ -98,7 +98,7 @@ export default function Profile() {
   const [piiHidden, setPiiHidden] = useState(false)
   const [contactField, setContactField] = useState('email') // 'email' | 'username'
 
-  // Posts / Reposts / Saved tabs
+  // Posts / Reposts / Saved / Anonymous tabs
   const [tab, setTab] = useState('posts')
   const [tabStories, setTabStories] = useState([])
   const [tabLoading, setTabLoading] = useState(true)
@@ -189,7 +189,8 @@ export default function Profile() {
     setTabLoading(true)
     const load = tab === 'posts' ? api.getUserStories(user.id)
       : tab === 'reposts' ? api.getUserReposts(user.id)
-      : api.getSavedStories(user.id)
+      : tab === 'saved' ? api.getSavedStories(user.id)
+      : api.getAnonymousStories(user.id)
     load.then(setTabStories).catch(() => setTabStories([])).finally(() => setTabLoading(false))
   }, [tab, user])
 
@@ -496,10 +497,10 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Posts / Reposts / Saved */}
+      {/* Posts / Reposts / Saved / Anonymous */}
       <div className="mt-6">
         <div className="flex gap-2 border-b border-line mb-5">
-          {['posts', 'reposts', 'saved'].map((t) => (
+          {['posts', 'reposts', 'saved', 'anonymous'].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -512,6 +513,10 @@ export default function Profile() {
           ))}
         </div>
 
+        {tab === 'anonymous' && (
+          <p className="text-xs text-slate-light mb-4">Only you can see this tab — your anonymous posts stay anonymous to everyone else.</p>
+        )}
+
         {tabLoading ? (
           <p className="text-center text-slate py-8">Loading…</p>
         ) : tabStories.length === 0 ? (
@@ -519,6 +524,7 @@ export default function Profile() {
             {tab === 'posts' && "You haven't posted anything yet."}
             {tab === 'reposts' && "You haven't reposted anything yet."}
             {tab === 'saved' && "You haven't saved anything yet."}
+            {tab === 'anonymous' && "You haven't posted anonymously yet."}
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-5">

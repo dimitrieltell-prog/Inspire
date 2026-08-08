@@ -9,6 +9,10 @@ const AUDIENCES = [
   { value: 'followers', label: 'People who follow you' },
   { value: 'no_one', label: 'No one' },
 ]
+const CONTENT_VISIBILITIES = [
+  { value: 'everyone', label: 'Everyone' },
+  { value: 'followers', label: 'People who follow you' },
+]
 
 function Toggle({ checked, onChange, disabled }) {
   return (
@@ -99,6 +103,8 @@ export default function Settings() {
 
   // Privacy
   const [audienceOpen, setAudienceOpen] = useState(false)
+  const [postsVisibilityOpen, setPostsVisibilityOpen] = useState(false)
+  const [savesVisibilityOpen, setSavesVisibilityOpen] = useState(false)
 
   // Close circle
   const [circle, setCircle] = useState(null)
@@ -334,6 +340,8 @@ export default function Settings() {
   const circleIds = new Set((circle || []).map((p) => p.id))
   const searchAddable = results.filter((p) => p.id !== user.id && !circleIds.has(p.id))
   const audienceLabel = AUDIENCES.find((a) => a.value === (user.comment_audience || 'everyone'))?.label
+  const postsVisibilityLabel = CONTENT_VISIBILITIES.find((a) => a.value === (user.posts_visibility || 'everyone'))?.label
+  const savesVisibilityLabel = CONTENT_VISIBILITIES.find((a) => a.value === (user.saves_visibility || 'followers'))?.label
 
   return (
     <div className="max-w-2xl mx-auto px-7 py-16">
@@ -442,6 +450,56 @@ export default function Settings() {
           subtitle="When your account is private, people can only see your name, username, and bio — the simple stuff. Your posts, reposts, pronouns, links, schools, and who you follow are only visible to your followers."
           right={<Toggle checked={user.is_private} onChange={() => patch({ is_private: !user.is_private })} disabled={saving} />}
         />
+        {!user.is_private && (
+          <>
+            <Row
+              title="Who can see your posts"
+              subtitle={postsVisibilityLabel}
+              onClick={() => setPostsVisibilityOpen((o) => !o)}
+              expandable
+              expanded={postsVisibilityOpen}
+            />
+            {postsVisibilityOpen && (
+              <div className="p-4 bg-bg/40 flex flex-col gap-1">
+                {CONTENT_VISIBILITIES.map((a) => (
+                  <button
+                    key={a.value}
+                    onClick={() => patch({ posts_visibility: a.value })}
+                    disabled={saving}
+                    className={`text-left text-sm px-3 py-2.5 rounded-lg transition-colors ${
+                      (user.posts_visibility || 'everyone') === a.value ? 'bg-indigo text-white font-semibold' : 'hover:bg-lavender'
+                    }`}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <Row
+              title="Who can see what you've saved"
+              subtitle={savesVisibilityLabel}
+              onClick={() => setSavesVisibilityOpen((o) => !o)}
+              expandable
+              expanded={savesVisibilityOpen}
+            />
+            {savesVisibilityOpen && (
+              <div className="p-4 bg-bg/40 flex flex-col gap-1">
+                {CONTENT_VISIBILITIES.map((a) => (
+                  <button
+                    key={a.value}
+                    onClick={() => patch({ saves_visibility: a.value })}
+                    disabled={saving}
+                    className={`text-left text-sm px-3 py-2.5 rounded-lg transition-colors ${
+                      (user.saves_visibility || 'followers') === a.value ? 'bg-indigo text-white font-semibold' : 'hover:bg-lavender'
+                    }`}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
         <Row
           title="Who can reply to your stories"
           subtitle={audienceLabel}

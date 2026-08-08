@@ -15,6 +15,7 @@ from app.database import get_db
 from app.models import (
     BUSINESS_CATEGORIES,
     COMMENT_AUDIENCES,
+    CONTENT_VISIBILITY_OPTIONS,
     GoogleAuthIn,
     GoogleSignupFinish,
     ProfileUpdate,
@@ -118,6 +119,8 @@ def _to_user_out(user: dict) -> UserOut:
         hide_support_counts=user.get("hide_support_counts", False),
         muted_words=user.get("muted_words", []),
         email_notifications=user.get("email_notifications", True),
+        posts_visibility=user.get("posts_visibility", "everyone"),
+        saves_visibility=user.get("saves_visibility", "followers"),
     )
 
 
@@ -213,6 +216,16 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.email_notifications is not None:
         updates["email_notifications"] = payload.email_notifications
+
+    if payload.posts_visibility is not None:
+        if payload.posts_visibility not in CONTENT_VISIBILITY_OPTIONS:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid posts visibility.")
+        updates["posts_visibility"] = payload.posts_visibility
+
+    if payload.saves_visibility is not None:
+        if payload.saves_visibility not in CONTENT_VISIBILITY_OPTIONS:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid saves visibility.")
+        updates["saves_visibility"] = payload.saves_visibility
 
     if payload.muted_words is not None:
         words = [w.strip().lower() for w in payload.muted_words if w.strip()]
