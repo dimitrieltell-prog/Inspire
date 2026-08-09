@@ -14,7 +14,7 @@ export default function Terms() {
     <div className="max-w-2xl mx-auto px-7 py-16">
       <span className="text-xs font-bold uppercase tracking-wide text-indigo">Legal</span>
       <h1 className="text-3xl font-bold mt-3 mb-2">Terms of Service</h1>
-      <p className="text-xs text-slate-light mb-10">Last updated: July 27, 2026</p>
+      <p className="text-xs text-slate-light mb-10">Last updated: August 8, 2026</p>
 
       <Section title="1. Agreement to these Terms">
         <p>
@@ -76,8 +76,10 @@ export default function Terms() {
 
       <Section title="5. Aria">
         <p>
-          Aria is an AI companion feature inside Inspire, powered in part by a third-party AI
-          provider. Aria is <strong>not a licensed therapist, counselor, or medical professional</strong>,
+          Aria is an AI companion feature inside Inspire. Aria currently responds using a set of
+          pre-written, reflective responses; we may in the future power Aria in part with a
+          third-party AI provider to generate more dynamic replies. Aria is{' '}
+          <strong>not a licensed therapist, counselor, or medical professional</strong>,
           and nothing Aria says is professional mental health advice, diagnosis, or treatment. Aria
           can make mistakes. If you're in crisis or thinking about harming yourself, please contact
           a crisis line or emergency services right away — in the US, call or text{' '}
@@ -103,9 +105,9 @@ export default function Terms() {
       <Section title="7. Third-party services">
         <p>
           Inspire relies on third-party services to operate — including Stripe for payments,
-          Cloudinary for storing photos and videos, Google for optional sign-in, and an AI
-          provider for Aria. Your use of those features is also subject to those providers' own
-          terms. See our <Link to="/privacy" className="text-indigo font-semibold hover:underline">Privacy Policy</Link> for details on what's shared with them.
+          Cloudinary for storing photos and videos, and Google for optional sign-in. If we enable
+          a third-party AI provider for Aria's replies, that provider would be added here too.
+          Your use of those features is also subject to those providers' own terms. See our <Link to="/privacy" className="text-indigo font-semibold hover:underline">Privacy Policy</Link> for details on what's shared with them.
         </p>
       </Section>
 

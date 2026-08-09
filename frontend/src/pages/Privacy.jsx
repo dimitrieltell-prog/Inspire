@@ -14,7 +14,7 @@ export default function Privacy() {
     <div className="max-w-2xl mx-auto px-7 py-16">
       <span className="text-xs font-bold uppercase tracking-wide text-indigo">Legal</span>
       <h1 className="text-3xl font-bold mt-3 mb-2">Privacy Policy</h1>
-      <p className="text-xs text-slate-light mb-10">Last updated: July 27, 2026</p>
+      <p className="text-xs text-slate-light mb-10">Last updated: August 8, 2026</p>
 
       <Section title="Overview">
         <p>
@@ -48,7 +48,7 @@ export default function Privacy() {
           <li><strong>Stripe</strong> — to process Premium payments</li>
           <li><strong>Cloudinary</strong> — to store and serve photos/videos you upload</li>
           <li><strong>Google</strong> — only if you choose to sign in with Google</li>
-          <li><strong>Our AI provider</strong> — to generate Aria's replies (see below)</li>
+          <li><strong>A third-party AI provider</strong> — only if and when we enable AI-generated replies for Aria (see below)</li>
           <li><strong>Law enforcement or regulators</strong> — only when legally required, or to report illegal content such as child sexual abuse material, which we're legally obligated to do</li>
         </ul>
         <p>
@@ -60,10 +60,14 @@ export default function Privacy() {
 
       <Section title="Aria (our AI feature)">
         <p>
-          When you message Aria, that message is sent to a third-party AI provider (OpenAI) to
-          generate a reply. Per that provider's standard API terms, conversation content sent
-          through their API is not used to train their models. Aria is not a therapist — please
-          see our <Link to="/terms" className="text-indigo font-semibold hover:underline">Terms of Service</Link> for more on Aria's limitations.
+          Aria currently generates replies using a small set of pre-written, reflective responses
+          — your messages to Aria are not sent to any third party to produce these replies. As
+          Inspire grows, we may switch Aria to use a third-party AI provider (such as OpenAI) to
+          generate more dynamic responses. If we do, your message would be sent to that provider
+          solely to generate a reply, and per that provider's standard API terms, conversation
+          content sent through their API would not be used to train their models — we'll update
+          this policy when that changes. Aria is not a therapist — please see our{' '}
+          <Link to="/terms" className="text-indigo font-semibold hover:underline">Terms of Service</Link> for more on Aria's limitations.
         </p>
       </Section>
 
