@@ -154,7 +154,10 @@ function Thread({ userId, currentUser, conversation, onRespond }) {
     return <p className="text-sm text-rose-ink p-6">{error}</p>
   }
 
-  const lastMine = messages && [...messages].reverse().find((m) => m.sender_id === currentUser.id)
+  // Only the actual last message in the thread can carry the "Seen" label --
+  // if they've replied since, your last message already implicitly landed.
+  const lastMessage = messages && messages[messages.length - 1]
+  const showSeen = lastMessage?.sender_id === currentUser.id && !!lastMessage.read_at
 
   return (
     <div className="flex flex-col h-full">
@@ -190,7 +193,7 @@ function Thread({ userId, currentUser, conversation, onRespond }) {
             )
           })
         )}
-        {lastMine && lastMine.read_at && (
+        {showSeen && (
           <p className="text-[11px] text-slate-light self-end pr-1">Seen</p>
         )}
         <div ref={bottomRef} />
