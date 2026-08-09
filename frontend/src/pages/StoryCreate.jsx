@@ -94,10 +94,10 @@ export default function StoryCreate() {
       <p className="text-sm text-slate mb-8">Text, photo, or video — post it however it actually happened.</p>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        <input required placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
+        <input required maxLength={120} placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
           className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
 
-        <textarea required rows={6} placeholder="What happened? Be as honest as you want to be." value={body} onChange={(e) => setBody(e.target.value)}
+        <textarea required maxLength={5000} rows={6} placeholder="What happened? Be as honest as you want to be." value={body} onChange={(e) => setBody(e.target.value)}
           className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo resize-none" />
 
         <select value={category} onChange={(e) => setCategory(e.target.value)}

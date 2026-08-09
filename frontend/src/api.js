@@ -22,7 +22,14 @@ async function request(path, { method = 'GET', body, form, auth = true } = {}) {
     let detail = 'Something went wrong.'
     try {
       const data = await res.json()
-      detail = data.detail || detail
+      // FastAPI's own request-validation errors (missing field, wrong type,
+      // over a length limit) return `detail` as a list of {msg, loc, ...}
+      // objects rather than a plain string -- unwrap those into readable text.
+      if (Array.isArray(data.detail)) {
+        detail = data.detail.map((d) => d.msg).filter(Boolean).join(' ') || detail
+      } else if (typeof data.detail === 'string') {
+        detail = data.detail
+      }
     } catch (_) {}
     const err = new Error(detail)
     err.status = res.status
