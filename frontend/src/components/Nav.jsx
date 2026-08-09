@@ -71,7 +71,6 @@ export default function Nav() {
               )}
             </Link>
           )}
-          {user && <Link to="/profile" className="hover:text-navy transition-colors">Profile</Link>}
           {user && <Link to="/settings" className="hover:text-navy transition-colors">Settings</Link>}
         </nav>
         <div className="flex-1 flex items-center justify-end gap-3">
