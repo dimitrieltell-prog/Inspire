@@ -730,7 +730,7 @@ export default function Settings() {
       {/* ============ YOUR ACTIVITY ============ */}
       <Section title="Your activity">
         <Row
-          title="Activity center"
+          title="Support & replies"
           subtitle="Support you've sent and replies you've left."
           onClick={openActivity}
           expandable
