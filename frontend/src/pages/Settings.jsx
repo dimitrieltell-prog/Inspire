@@ -362,7 +362,7 @@ export default function Settings() {
         />
         <Row
           title="Business account"
-          subtitle="Unlock insights on how your stories perform, a category label and contact options on your profile, and a business chip on your posts across Inspire."
+          subtitle="Add a category label and contact options on your profile, and a business chip on your posts across Inspire."
           right={<Toggle checked={user.is_business} onChange={() => patch({ is_business: !user.is_business })} disabled={saving} />}
         />
         {user.is_business && (
