@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from '../components/ReportModal'
+import BookmarkIcon from '../components/BookmarkIcon'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -202,8 +203,12 @@ export default function StoryDetail() {
               <span className="text-lg leading-none">🔁</span>
               <span>{story.repost_count}</span>
             </button>
-            <button onClick={toggleSave} className={`ml-auto text-lg leading-none transition-colors ${story.is_saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
-              🔖
+            <button
+              onClick={toggleSave}
+              aria-label={story.is_saved ? 'Unsave' : 'Save'}
+              className={`ml-auto transition-colors ${story.is_saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
+            >
+              <BookmarkIcon filled={story.is_saved} className="w-5 h-5" />
             </button>
           </div>
           {reactError && <p className="text-xs text-rose-ink mt-2">{reactError}</p>}

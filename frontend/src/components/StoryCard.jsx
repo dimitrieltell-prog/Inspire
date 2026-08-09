@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from './ReportModal'
+import BookmarkIcon from './BookmarkIcon'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -161,8 +162,12 @@ export default function StoryCard({ story }) {
             <span className="text-base leading-none">🔁</span>
             <span>{repostCount}</span>
           </button>
-          <button onClick={toggleSave} className={`ml-auto text-base leading-none transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
-            🔖
+          <button
+            onClick={toggleSave}
+            aria-label={saved ? 'Unsave' : 'Save'}
+            className={`ml-auto transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
+          >
+            <BookmarkIcon filled={saved} className="w-4 h-4" />
           </button>
         </div>
         {error && <p className="text-xs text-rose-ink mt-2">{error}</p>}
