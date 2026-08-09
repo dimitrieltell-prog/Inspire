@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
-from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, StoryCreate, StoryOut
+from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, ReactorOut, StoryCreate, StoryOut
 from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/stories", tags=["stories"])
@@ -15,9 +15,12 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
     reposts = await db.reposts.find({"story_id": story["_id"]})
     is_saved = False
     is_reposted = False
+    my_reaction = None
     if viewer:
         is_saved = bool(await db.saves.find_one({"user_id": viewer["_id"], "story_id": story["_id"]}))
         is_reposted = any(r["user_id"] == viewer["_id"] for r in reposts)
+        own_reaction = await db.reactions.find_one({"story_id": story["_id"], "user_id": viewer["_id"]})
+        my_reaction = own_reaction["reaction"] if own_reaction else None
 
     author = await db.users.find_one({"_id": story.get("author_id")}) if story.get("author_id") else None
     is_author = bool(viewer and story.get("author_id") == viewer["_id"])
@@ -41,6 +44,7 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         repost_count=len(reposts),
         is_saved=is_saved,
         is_reposted=is_reposted,
+        my_reaction=my_reaction,
         counts_hidden=counts_hidden,
         author_is_business=author_is_business,
         author_business_category=author.get("business_category") if author_is_business else None,
@@ -220,6 +224,32 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
             "created_at": time.time(),
         })
         await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"support_count": 1}})
+
+
+@router.delete("/{story_id}/react", status_code=status.HTTP_204_NO_CONTENT)
+async def unreact_from_story(story_id: str, user: dict = Depends(get_current_user)):
+    db = get_db()
+    existing = await db.reactions.find_one({"story_id": story_id, "user_id": user["_id"]})
+    if existing:
+        await db.reactions.delete_one({"story_id": story_id, "user_id": user["_id"]})
+        await db.stories.update_one({"_id": story_id}, {"$inc": {"support_count": -1}})
+
+
+@router.get("/{story_id}/reactions", response_model=list[ReactorOut])
+async def list_reactors(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
+    db = get_db()
+    story = await _require_visible_story(db, story_id, viewer)
+    author = await db.users.find_one({"_id": story.get("author_id")}) if story.get("author_id") else None
+    is_author_or_founder = bool(viewer and (viewer["_id"] == story.get("author_id") or is_founder(viewer)))
+    if author and author.get("hide_support_counts") and not is_author_or_founder:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This account hides its support counts.")
+    reactions = await db.reactions.find({"story_id": story_id}, sort_key="created_at", reverse=True)
+    result = []
+    for r in reactions:
+        u = await db.users.find_one({"_id": r["user_id"]})
+        if u:
+            result.append(ReactorOut(display_name=u["display_name"], username=u.get("username"), reaction=r["reaction"]))
+    return result
 
 
 @router.post("/{story_id}/repost", status_code=status.HTTP_204_NO_CONTENT)

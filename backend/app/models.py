@@ -190,10 +190,17 @@ class StoryOut(BaseModel):
     repost_count: int = 0
     is_saved: bool = False       # whether the current viewer saved it
     is_reposted: bool = False    # whether the current viewer reposted it
+    my_reaction: Optional[str] = None  # the current viewer's own reaction, if any
     counts_hidden: bool = False  # author hides support counts from others
     author_is_business: bool = False
     author_business_category: Optional[str] = None
     created_at: float
+
+
+class ReactorOut(BaseModel):
+    display_name: str
+    username: Optional[str] = None
+    reaction: str
 
 
 class SearchResults(BaseModel):

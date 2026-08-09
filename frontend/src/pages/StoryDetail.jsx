@@ -4,6 +4,7 @@ import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from '../components/ReportModal'
 import BookmarkIcon from '../components/BookmarkIcon'
+import ReactorsModal from '../components/ReactorsModal'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
@@ -20,6 +21,7 @@ export default function StoryDetail() {
   const [picked, setPicked] = useState(null)
   const [reactOpen, setReactOpen] = useState(false)
   const [reactError, setReactError] = useState('')
+  const [reactorsOpen, setReactorsOpen] = useState(false)
 
   const [commentBody, setCommentBody] = useState('')
   const [commentError, setCommentError] = useState('')
@@ -33,6 +35,7 @@ export default function StoryDetail() {
     Promise.all([api.getStory(storyId), api.listComments(storyId)])
       .then(([s, c]) => {
         setStory(s)
+        setPicked(s.my_reaction || null)
         setComments(c)
       })
       .catch((e) => setError(e.message))
@@ -45,6 +48,7 @@ export default function StoryDetail() {
 
   function openReactions() {
     if (!user) { promptSignIn(); return }
+    if (picked) { unreact(); return }
     setReactOpen((o) => !o)
   }
 
@@ -54,6 +58,17 @@ export default function StoryDetail() {
       if (!picked) setStory((s) => ({ ...s, support_count: s.support_count + 1 }))
       setPicked(reaction)
       setReactOpen(false)
+      setReactError('')
+    } catch (e) {
+      setReactError(e.message)
+    }
+  }
+
+  async function unreact() {
+    try {
+      await api.unreactToStory(story.id)
+      setStory((s) => ({ ...s, support_count: s.support_count - 1 }))
+      setPicked(null)
       setReactError('')
     } catch (e) {
       setReactError(e.message)
@@ -191,10 +206,17 @@ export default function StoryDetail() {
             </div>
           )}
           <div className="flex items-center gap-5 pt-4 border-t border-line">
-            <button onClick={openReactions} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${picked ? 'text-rose-ink' : 'text-slate-light hover:text-indigo'}`}>
-              <span className="text-lg leading-none">{picked ? '❤️' : '🤍'}</span>
-              {!story.counts_hidden && <span>{story.support_count}</span>}
-            </button>
+            <div className={`flex items-center gap-1.5 text-sm font-medium ${picked ? 'text-rose-ink' : 'text-slate-light'}`}>
+              <button onClick={openReactions} className="hover:text-indigo transition-colors">
+                <span className="text-lg leading-none">{picked ? '❤️' : '🤍'}</span>
+              </button>
+              {!story.counts_hidden && (
+                <button onClick={() => setReactorsOpen(true)} className="hover:underline hover:text-indigo transition-colors">
+                  {story.support_count}
+                </button>
+              )}
+            </div>
+            {reactorsOpen && <ReactorsModal storyId={story.id} onClose={() => setReactorsOpen(false)} />}
             <span className="flex items-center gap-1.5 text-sm font-medium text-slate-light">
               <span className="text-lg leading-none">💬</span>
               <span>{story.comment_count}</span>
