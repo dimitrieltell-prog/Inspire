@@ -163,6 +163,9 @@ function Thread({ userId, currentUser, conversation, onRespond }) {
     <div className="flex flex-col h-full">
       {profile && (
         <div className="flex items-center gap-3 p-4 border-b border-line flex-shrink-0">
+          <Link to="/messages" aria-label="Back to conversations" className="md:hidden text-slate-light hover:text-navy text-lg leading-none flex-shrink-0">
+            ←
+          </Link>
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="w-9 h-9 rounded-xl object-cover" />
           ) : (
