@@ -529,7 +529,7 @@ export default function Profile() {
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-5">
-            {tabStories.map((s) => <StoryCard key={s.id} story={s} />)}
+            {tabStories.map((s) => <StoryCard key={s.id} story={s} repostedBy={tab === 'reposts' ? 'You' : undefined} />)}
           </div>
         )}
       </div>

@@ -8,7 +8,7 @@ import ReactorsModal from './ReactorsModal'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
-export default function StoryCard({ story }) {
+export default function StoryCard({ story, repostedBy }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -85,6 +85,11 @@ export default function StoryCard({ story }) {
 
   return (
     <div className="bg-white border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
+      {repostedBy && (
+        <div className="flex items-center gap-1.5 px-4 pt-3 text-xs font-semibold text-slate-light">
+          <span className="text-sm leading-none">🔁</span> Reposted by {repostedBy}
+        </div>
+      )}
       {/* header */}
       <div className="relative flex items-center gap-2.5 px-4 pt-4 pb-3">
         <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
