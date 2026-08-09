@@ -186,6 +186,7 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }) {
           {!replySent ? (
             <form onSubmit={submitReply} className="flex-grow flex items-center gap-2">
               <input
+                maxLength={1000}
                 value={replyBody}
                 onChange={(e) => setReplyBody(e.target.value)}
                 placeholder="Reply…"

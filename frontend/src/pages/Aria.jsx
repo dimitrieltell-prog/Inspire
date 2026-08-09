@@ -133,6 +133,7 @@ export default function Aria() {
 
       <form onSubmit={send} className="flex gap-2.5">
         <input
+          maxLength={2000}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={limitReached || sending}

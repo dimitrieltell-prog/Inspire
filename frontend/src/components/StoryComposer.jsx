@@ -89,6 +89,7 @@ export default function StoryComposer({ onClose, onCreated }) {
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <textarea
             rows={3}
+            maxLength={user.is_premium ? 1000 : 500}
             placeholder="Say something (optional if you add media)…"
             value={body}
             onChange={(e) => setBody(e.target.value)}

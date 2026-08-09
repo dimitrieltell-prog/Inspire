@@ -384,6 +384,7 @@ export default function Settings() {
                 <div>
                   <label className="text-xs font-semibold text-slate-light block mb-1">Contact email (shown on your profile)</label>
                   <input
+                    maxLength={120}
                     value={bizDraft.contact_email}
                     onChange={(e) => setBizDraft((d) => ({ ...d, contact_email: e.target.value }))}
                     placeholder="hello@yourbusiness.com"
@@ -393,6 +394,7 @@ export default function Settings() {
                 <div>
                   <label className="text-xs font-semibold text-slate-light block mb-1">Website</label>
                   <input
+                    maxLength={200}
                     value={bizDraft.contact_website}
                     onChange={(e) => setBizDraft((d) => ({ ...d, contact_website: e.target.value }))}
                     placeholder="https://…"
