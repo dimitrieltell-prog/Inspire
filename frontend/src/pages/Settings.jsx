@@ -599,7 +599,7 @@ export default function Settings() {
       <Section title="Notifications">
         <Row
           title="Email notifications"
-          subtitle="Get an email when someone follows you, plus a daily summary of likes and reposts on your posts."
+          subtitle="Get an email when someone follows you or messages you for the first time, plus a daily summary of likes and reposts on your posts."
           right={<Toggle checked={user.email_notifications} onChange={() => patch({ email_notifications: !user.email_notifications })} disabled={saving} />}
         />
       </Section>
