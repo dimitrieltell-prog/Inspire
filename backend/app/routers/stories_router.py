@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
+from app.inapp_notifications import create_notification
 from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, ReactorOut, StoryCreate, StoryOut
 from app.moderation import contains_hostility
 
@@ -198,6 +199,7 @@ async def create_comment(payload: CommentCreate, user: dict = Depends(get_curren
         "created_at": time.time(),
     })
     await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"comment_count": 1}})
+    await create_notification(db, author_id, user, "comment", target_id=payload.story_id, preview=payload.body[:80])
     return _to_comment_out(comment)
 
 
@@ -224,6 +226,7 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
             "created_at": time.time(),
         })
         await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"support_count": 1}})
+        await create_notification(db, story.get("author_id"), user, "like", target_id=payload.story_id, preview=story.get("title"))
 
 
 @router.delete("/{story_id}/react", status_code=status.HTTP_204_NO_CONTENT)
@@ -255,10 +258,11 @@ async def list_reactors(story_id: str, viewer: Optional[dict] = Depends(get_opti
 @router.post("/{story_id}/repost", status_code=status.HTTP_204_NO_CONTENT)
 async def repost_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
-    await _require_visible_story(db, story_id, user)
+    story = await _require_visible_story(db, story_id, user)
     existing = await db.reposts.find_one({"story_id": story_id, "user_id": user["_id"]})
     if not existing:
         await db.reposts.insert_one({"story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
+        await create_notification(db, story.get("author_id"), user, "repost", target_id=story_id, preview=story.get("title"))
 
 
 @router.delete("/{story_id}/repost", status_code=status.HTTP_204_NO_CONTENT)

@@ -137,6 +137,11 @@ export const api = {
   markOnboardingGuideSeen: () => request('/me/onboarding-guide-seen', { method: 'POST' }),
   markStoryPremiumPitchSeen: () => request('/me/story-premium-pitch-seen', { method: 'POST' }),
   getOnboardingChecklist: () => request('/me/onboarding'),
+
+  // Notifications
+  getNotifications: () => request('/notifications'),
+  getUnreadNotificationCount: () => request('/notifications/unread-count'),
+  markNotificationsRead: () => request('/notifications/read', { method: 'POST' }),
 }
 
 export { getToken }

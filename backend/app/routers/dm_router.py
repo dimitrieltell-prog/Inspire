@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, is_founder
 from app.database import get_db
+from app.inapp_notifications import create_notification
 from app.models import ConversationOut, DMMessageCreate, DMParticipant, MessageOut
 from app.moderation import contains_hostility
 from app.notifications import notify_new_message
@@ -156,6 +157,7 @@ async def send_message(other_id: str, payload: DMMessageCreate, user: dict = Dep
 
     if is_new:
         await notify_new_message(other, user)
+        await create_notification(db, other_id, user, "message", target_id=user["_id"])
 
     return MessageOut(id=message["_id"], sender_id=message["sender_id"], body=message["body"], created_at=message["created_at"], read_at=None)
 

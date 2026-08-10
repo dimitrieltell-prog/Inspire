@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
+from app.inapp_notifications import create_notification
 from app.models import ProfileUser, PublicProfile, StoryOut
 from app.notifications import notify_new_follower
 from app.routers.stories_router import serialize_story
@@ -239,8 +240,10 @@ async def follow_user(user_id: str, user: dict = Depends(get_current_user)):
                 "target_id": user_id,
                 "created_at": time.time(),
             })
+            await create_notification(db, user_id, user, "follow_request")
         return
     await notify_new_follower(target, user)
+    await create_notification(db, user_id, user, "follow")
     await db.follows.insert_one({
         "follower_id": user["_id"],
         "following_id": user_id,

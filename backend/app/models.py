@@ -376,3 +376,14 @@ class FounderStoryViewOut(BaseModel):
     viewer_name: str
     viewed_at: float
     duration_seconds: float
+
+
+class NotificationOut(BaseModel):
+    id: str
+    type: Literal["follow", "follow_request", "like", "repost", "comment", "story_like", "story_reply", "message"]
+    actor_id: str
+    actor_name: str
+    target_id: Optional[str] = None  # story id, ephemeral story id, or the actor's own id (follow/message)
+    preview: Optional[str] = None  # story title or a comment/reply snippet
+    created_at: float
+    read: bool

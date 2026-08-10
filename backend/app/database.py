@@ -136,6 +136,7 @@ class DB:
             self.conversations = MongoCollection(mongo_db["conversations"])
             self.messages = MongoCollection(mongo_db["messages"])
             self.founder_story_views = MongoCollection(mongo_db["founder_story_views"])
+            self.notifications = MongoCollection(mongo_db["notifications"])
         else:
             self.users = InMemoryCollection()
             self.stories = InMemoryCollection()
@@ -157,6 +158,7 @@ class DB:
             self.conversations = InMemoryCollection()
             self.messages = InMemoryCollection()
             self.founder_story_views = InMemoryCollection()
+            self.notifications = InMemoryCollection()
 
 
 _db_instance: Optional[DB] = None

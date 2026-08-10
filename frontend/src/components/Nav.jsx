@@ -4,6 +4,7 @@ import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import SearchOverlay from './SearchOverlay'
 import FounderStoryModal from './FounderStoryModal'
+import NotificationsBell from './NotificationsBell'
 
 const UNREAD_POLL_MS = 15000
 
@@ -83,6 +84,7 @@ export default function Nav() {
               🔍
             </button>
           )}
+          {user && <NotificationsBell />}
           {user ? (
             <>
               <Link to="/profile" className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5 hover:text-navy transition-colors">

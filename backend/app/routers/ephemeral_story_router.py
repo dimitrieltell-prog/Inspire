@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
+from app.inapp_notifications import create_notification
 from app.models import (
     STORY_DURATIONS_FREE,
     STORY_DURATIONS_PREMIUM,
@@ -133,10 +134,11 @@ async def _require_visible_story(db, story_id: str, viewer: Optional[dict]) -> d
 async def like_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
     await _expire_ephemeral_stories(db)
-    await _require_visible_story(db, story_id, user)
+    story = await _require_visible_story(db, story_id, user)
     existing = await db.story_likes.find_one({"ephemeral_story_id": story_id, "user_id": user["_id"]})
     if not existing:
         await db.story_likes.insert_one({"ephemeral_story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
+        await create_notification(db, story.get("author_id"), user, "story_like", target_id=story_id)
 
 
 @router.delete("/{story_id}/like", status_code=status.HTTP_204_NO_CONTENT)
@@ -188,6 +190,7 @@ async def reply_to_story(payload: StoryReplyCreate, user: dict = Depends(get_cur
         "body": payload.body,
         "created_at": time.time(),
     })
+    await create_notification(db, author_id, user, "story_reply", target_id=payload.ephemeral_story_id, preview=payload.body[:80])
     return StoryReplyOut(
         id=reply["_id"], ephemeral_story_id=reply["ephemeral_story_id"],
         author_id=reply["author_id"], author_name=reply["author_display_name"],
