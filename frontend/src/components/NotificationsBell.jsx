@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 
 const POLL_MS = 15000
+const TOAST_MS = 2000
+
+const SUMMARY_ICONS = [
+  ['comments', '💬'],
+  ['likes', '❤️'],
+  ['follows', '👤'],
+  ['reposts', '🔁'],
+]
+
+function capped(n) {
+  return n > 99 ? '99+' : n
+}
 
 function timeAgo(ts) {
   const diff = Date.now() / 1000 - ts
@@ -63,17 +75,38 @@ export default function NotificationsBell() {
   const [open, setOpen] = useState(false)
   const [unread, setUnread] = useState(0)
   const [items, setItems] = useState(null)
+  const [toast, setToast] = useState(null)
   const navigate = useNavigate()
   const rootRef = useRef(null)
+  const prevUnreadRef = useRef(null)
+  const toastTimerRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
     function load() {
-      api.getUnreadNotificationCount().then((r) => { if (!cancelled) setUnread(r.count) }).catch(() => {})
+      api.getUnreadNotificationCount().then((r) => {
+        if (cancelled) return
+        const count = r.count
+        const prev = prevUnreadRef.current
+        setUnread(count)
+        // A rising count means there's something genuinely new to flag --
+        // pop the breakdown toast, then let it fade so the bell settles
+        // back to just its normal badge.
+        if (count > 0 && (prev === null || count > prev)) {
+          api.getUnreadNotificationSummary().then((summary) => {
+            if (cancelled) return
+            if (summary.comments + summary.likes + summary.follows + summary.reposts === 0) return
+            setToast(summary)
+            clearTimeout(toastTimerRef.current)
+            toastTimerRef.current = setTimeout(() => setToast(null), TOAST_MS)
+          }).catch(() => {})
+        }
+        prevUnreadRef.current = count
+      }).catch(() => {})
     }
     load()
     const id = setInterval(load, POLL_MS)
-    return () => { cancelled = true; clearInterval(id) }
+    return () => { cancelled = true; clearInterval(id); clearTimeout(toastTimerRef.current) }
   }, [])
 
   useEffect(() => {
@@ -88,6 +121,8 @@ export default function NotificationsBell() {
     const next = !open
     setOpen(next)
     if (next) {
+      setToast(null)
+      clearTimeout(toastTimerRef.current)
       api.getNotifications().then(setItems).catch(() => setItems([]))
       if (unread > 0) {
         api.markNotificationsRead().then(() => setUnread(0)).catch(() => {})
@@ -109,11 +144,22 @@ export default function NotificationsBell() {
       >
         🔔
         {unread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-ink text-white text-[9px] font-bold flex items-center justify-center">
-            {unread > 9 ? '9+' : unread}
+          <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-ink text-white text-[9px] font-bold flex items-center justify-center">
+            {capped(unread)}
           </span>
         )}
       </button>
+
+      {toast && !open && (
+        <div className="absolute right-0 top-11 z-40 flex items-center gap-2.5 bg-navy text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg whitespace-nowrap">
+          {SUMMARY_ICONS.filter(([key]) => toast[key] > 0).map(([key, icon]) => (
+            <span key={key} className="flex items-center gap-1">
+              <span>{icon}</span>
+              <span>{capped(toast[key])}</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {open && (
         <div className="absolute right-0 mt-2 w-80 max-w-[90vw] max-h-[70vh] overflow-y-auto bg-white border border-line rounded-xl2 shadow-lg z-50">

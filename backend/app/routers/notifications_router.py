@@ -36,6 +36,23 @@ async def unread_notification_count(user: dict = Depends(get_current_user)):
     return {"count": count}
 
 
+LIKE_TYPES = ("like", "story_like")
+COMMENT_TYPES = ("comment", "story_reply")
+FOLLOW_TYPES = ("follow", "follow_request")
+
+
+@router.get("/unread-summary")
+async def unread_notification_summary(user: dict = Depends(get_current_user)):
+    db = get_db()
+    unread = await db.notifications.find({"recipient_id": user["_id"], "read": False})
+    return {
+        "likes": sum(1 for n in unread if n["type"] in LIKE_TYPES),
+        "comments": sum(1 for n in unread if n["type"] in COMMENT_TYPES),
+        "follows": sum(1 for n in unread if n["type"] in FOLLOW_TYPES),
+        "reposts": sum(1 for n in unread if n["type"] == "repost"),
+    }
+
+
 @router.post("/read", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_notifications_read(user: dict = Depends(get_current_user)):
     db = get_db()

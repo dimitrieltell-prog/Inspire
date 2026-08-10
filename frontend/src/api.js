@@ -141,6 +141,7 @@ export const api = {
   // Notifications
   getNotifications: () => request('/notifications'),
   getUnreadNotificationCount: () => request('/notifications/unread-count'),
+  getUnreadNotificationSummary: () => request('/notifications/unread-summary'),
   markNotificationsRead: () => request('/notifications/read', { method: 'POST' }),
 }
 
