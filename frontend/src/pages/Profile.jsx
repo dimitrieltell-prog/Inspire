@@ -5,6 +5,8 @@ import { useAuth } from '../AuthContext'
 import StoryCard from '../components/StoryCard'
 import Avatar from '../components/Avatar'
 import AvatarCropModal from '../components/AvatarCropModal'
+import CrownIcon from '../components/CrownIcon'
+import VerifiedBadge from '../components/VerifiedBadge'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -427,12 +429,8 @@ export default function Profile() {
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-                  {profile.is_founder && (
-                    <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
-                  )}
-                  {profile.is_premium && (
-                    <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
-                  )}
+                  {profile.is_founder && <CrownIcon className="w-[18px] h-[18px] text-navy flex-shrink-0" />}
+                  {profile.is_premium && <VerifiedBadge className="w-[18px] h-[18px] flex-shrink-0" />}
                   <button onClick={startEditing} className="text-xs text-indigo font-semibold ml-1 hover:underline">
                     Edit
                   </button>
@@ -489,7 +487,7 @@ export default function Profile() {
                       {u.display_name.charAt(0).toUpperCase()}
                     </span>
                     {u.display_name}
-                    {u.is_founder && <span className="text-[9px] font-bold uppercase bg-navy text-white px-1.5 py-0.5 rounded-full">Founder</span>}
+                    {u.is_founder && <CrownIcon className="w-3.5 h-3.5 text-navy flex-shrink-0" />}
                   </Link>
                 ))}
               </div>

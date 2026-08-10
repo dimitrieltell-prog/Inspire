@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import VerifiedBadge from './VerifiedBadge'
 
 export default function SearchOverlay({ onClose }) {
   const navigate = useNavigate()
@@ -77,9 +78,7 @@ export default function SearchOverlay({ onClose }) {
                         {u.display_name}
                         {u.username && <span className="text-slate-light ml-1.5">@{u.username}</span>}
                       </span>
-                      {u.is_premium && (
-                        <span className="text-[10px] font-bold uppercase tracking-wide bg-lavender text-indigo px-1.5 py-0.5 rounded-full flex-shrink-0 ml-auto">Premium</span>
-                      )}
+                      {u.is_premium && <VerifiedBadge className="w-3.5 h-3.5 flex-shrink-0 ml-auto" />}
                     </button>
                   ))}
                 </div>

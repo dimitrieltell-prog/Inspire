@@ -5,6 +5,8 @@ import { useAuth } from '../AuthContext'
 import SearchOverlay from './SearchOverlay'
 import FounderStoryModal from './FounderStoryModal'
 import NotificationsBell from './NotificationsBell'
+import CrownIcon from './CrownIcon'
+import VerifiedBadge from './VerifiedBadge'
 
 const UNREAD_POLL_MS = 15000
 
@@ -89,12 +91,8 @@ export default function Nav() {
             <>
               <Link to="/profile" className="text-sm text-slate hidden sm:inline-flex items-center gap-1.5 hover:text-navy transition-colors">
                 {user.display_name}
-                {user.is_founder && (
-                  <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
-                )}
-                {user.is_premium && (
-                  <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
-                )}
+                {user.is_founder && <CrownIcon className="w-4 h-4 text-navy flex-shrink-0" />}
+                {user.is_premium && <VerifiedBadge className="w-4 h-4 flex-shrink-0" />}
               </Link>
               <button
                 onClick={() => {
@@ -130,12 +128,8 @@ export default function Nav() {
               className="flex items-center gap-1.5 flex-wrap pb-3 border-b border-line hover:text-navy transition-colors"
             >
               <span className="text-navy font-semibold">{user.display_name}</span>
-              {user.is_founder && (
-                <span className="text-[11px] font-bold uppercase tracking-wide bg-navy text-white px-2 py-0.5 rounded-full">Founder</span>
-              )}
-              {user.is_premium && (
-                <span className="text-[11px] font-bold uppercase tracking-wide bg-lavender text-indigo px-2 py-0.5 rounded-full">Premium</span>
-              )}
+              {user.is_founder && <CrownIcon className="w-4 h-4 text-navy flex-shrink-0" />}
+              {user.is_premium && <VerifiedBadge className="w-4 h-4 flex-shrink-0" />}
             </Link>
           )}
           <Link to="/premium" onClick={() => setMenuOpen(false)} className="hover:text-navy transition-colors">Premium</Link>
