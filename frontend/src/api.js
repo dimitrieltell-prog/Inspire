@@ -143,6 +143,12 @@ export const api = {
   getUnreadNotificationCount: () => request('/notifications/unread-count'),
   getUnreadNotificationSummary: () => request('/notifications/unread-summary'),
   markNotificationsRead: () => request('/notifications/read', { method: 'POST' }),
+
+  // Story drafts
+  listStoryDrafts: () => request('/story-drafts'),
+  createStoryDraft: (draft) => request('/story-drafts', { method: 'POST', body: draft }),
+  updateStoryDraft: (draftId, draft) => request(`/story-drafts/${draftId}`, { method: 'PUT', body: draft }),
+  deleteStoryDraft: (draftId) => request(`/story-drafts/${draftId}`, { method: 'DELETE' }),
 }
 
 export { getToken }

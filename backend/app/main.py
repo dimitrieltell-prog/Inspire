@@ -17,6 +17,7 @@ from app.routers import (
     reports_router,
     search_router,
     stories_router,
+    story_drafts_router,
     users_router,
 )
 
@@ -42,6 +43,7 @@ app.include_router(me_router.router)
 app.include_router(reports_router.router)
 app.include_router(notifications_router.router)
 app.include_router(dm_router.router)
+app.include_router(story_drafts_router.router)
 
 logger = logging.getLogger("inspire.main")
 

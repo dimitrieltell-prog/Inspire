@@ -174,6 +174,27 @@ class StoryCreate(BaseModel):
     tags: list[str] = []
 
 
+class StoryDraftSave(BaseModel):
+    title: str = Field(default="", max_length=120)
+    body: str = Field(default="", max_length=5000)
+    category: Optional[Category] = None
+    is_anonymous: bool = False
+    media_url: Optional[str] = Field(default=None, max_length=2000)
+    media_type: Optional[Literal["photo", "video"]] = None
+
+
+class StoryDraftOut(BaseModel):
+    id: str
+    title: str
+    body: str
+    category: Optional[str] = None
+    is_anonymous: bool
+    media_url: Optional[str] = None
+    media_type: Optional[str] = None
+    created_at: float
+    updated_at: float
+
+
 class StoryOut(BaseModel):
     id: str
     title: str
