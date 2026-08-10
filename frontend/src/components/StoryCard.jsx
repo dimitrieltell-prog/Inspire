@@ -108,7 +108,9 @@ export default function StoryCard({ story, repostedBy }) {
               </span>
             )}
           </div>
-          <span className="text-[10.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
+          {story.category && (
+            <span className="text-[10.5px] font-bold uppercase tracking-wide text-indigo">{story.category}</span>
+          )}
         </div>
         {user && story.author_id !== user.id && (
           <div className="flex-shrink-0">

@@ -167,7 +167,7 @@ class ActivityItem(BaseModel):
 class StoryCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(min_length=1, max_length=5000)
-    category: Category
+    category: Optional[Category] = None
     is_anonymous: bool = False
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
@@ -199,7 +199,7 @@ class StoryOut(BaseModel):
     id: str
     title: str
     body: str
-    category: str
+    category: Optional[str] = None
     author_name: str
     author_id: Optional[str] = None  # only set for non-anonymous stories
     is_anonymous: bool
