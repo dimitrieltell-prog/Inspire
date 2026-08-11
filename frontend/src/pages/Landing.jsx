@@ -1,9 +1,16 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import SearchOverlay from '../components/SearchOverlay'
+import { useAuth } from '../AuthContext'
 
 export default function Landing() {
+  const { user, ready } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
+
+  // The landing page is a pitch for people who aren't signed up yet --
+  // once you're logged in, you don't need to see it again, on any device.
+  if (!ready) return null
+  if (user) return <Navigate to="/stories" replace />
 
   return (
     <div>
