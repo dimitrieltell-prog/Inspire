@@ -188,9 +188,18 @@ export default function StoryDetail() {
           </div>
         )}
 
-        <div className="px-6 pt-5">
+        <div className="px-6 pt-5 mb-6">
           <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>
-          <p className="text-sm text-slate leading-relaxed mb-6 whitespace-pre-wrap">{story.body}</p>
+          <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>
+          {story.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-x-2.5 gap-y-1 mt-3">
+              {story.tags.map((t) => (
+                <Link key={t} to={`/stories?tag=${encodeURIComponent(t)}`} className="text-sm font-semibold text-indigo hover:underline">
+                  #{t}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="relative px-6 pb-6">

@@ -1,5 +1,17 @@
 from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+MAX_TAGS = 5
+MAX_TAG_LENGTH = 30
+
+
+def _clean_tags(tags: list[str]) -> list[str]:
+    cleaned = []
+    for t in tags:
+        t = t.strip().lstrip("#").lower()
+        if t and len(t) <= MAX_TAG_LENGTH and t not in cleaned:
+            cleaned.append(t)
+    return cleaned[:MAX_TAGS]
 
 Category = Literal[
     "Mental Health", "Relationships", "Family", "School",
@@ -173,6 +185,11 @@ class StoryCreate(BaseModel):
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
 
+    @field_validator("tags")
+    @classmethod
+    def _validate_tags(cls, v):
+        return _clean_tags(v)
+
 
 class StoryDraftSave(BaseModel):
     title: str = Field(default="", max_length=120)
@@ -181,6 +198,12 @@ class StoryDraftSave(BaseModel):
     is_anonymous: bool = False
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
+    tags: list[str] = []
+
+    @field_validator("tags")
+    @classmethod
+    def _validate_tags(cls, v):
+        return _clean_tags(v)
 
 
 class StoryDraftOut(BaseModel):
@@ -189,6 +212,7 @@ class StoryDraftOut(BaseModel):
     body: str
     category: Optional[str] = None
     is_anonymous: bool
+    tags: list[str] = []
     media_url: Optional[str] = None
     media_type: Optional[str] = None
     created_at: float

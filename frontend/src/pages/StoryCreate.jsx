@@ -26,6 +26,13 @@ async function uploadToCloudinary(file) {
   return data.secure_url
 }
 
+function parseTags(input) {
+  return input
+    .split(/[\s,]+/)
+    .map((t) => t.trim().replace(/^#/, '').toLowerCase())
+    .filter(Boolean)
+}
+
 function timeAgo(ts) {
   const diff = Date.now() / 1000 - ts
   if (diff < 60) return 'just now'
@@ -42,6 +49,7 @@ export default function StoryCreate() {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [category, setCategory] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [mediaFile, setMediaFile] = useState(null)
   const [mediaPreview, setMediaPreview] = useState(null)
@@ -71,7 +79,7 @@ export default function StoryCreate() {
     )
   }
 
-  const hasContent = title || body || mediaFile || existingMediaUrl || isAnonymous
+  const hasContent = title || body || mediaFile || existingMediaUrl || isAnonymous || tagsInput
 
   function onFileChange(e) {
     const file = e.target.files[0]
@@ -101,6 +109,7 @@ export default function StoryCreate() {
     setTitle('')
     setBody('')
     setCategory('')
+    setTagsInput('')
     setIsAnonymous(false)
     removeMedia()
     setDraftId(null)
@@ -111,6 +120,7 @@ export default function StoryCreate() {
     setTitle(d.title || '')
     setBody(d.body || '')
     setCategory(d.category || '')
+    setTagsInput(d.tags?.length ? d.tags.map((t) => `#${t}`).join(' ') : '')
     setIsAnonymous(d.is_anonymous || false)
     setMediaFile(null)
     setMediaType(d.media_type || null)
@@ -143,7 +153,7 @@ export default function StoryCreate() {
     setError('')
     try {
       const { media_url, media_type } = await resolveMediaUrl()
-      const payload = { title, body, category: category || null, is_anonymous: isAnonymous, media_url, media_type }
+      const payload = { title, body, category: category || null, tags: parseTags(tagsInput), is_anonymous: isAnonymous, media_url, media_type }
       if (draftId) {
         await api.updateStoryDraft(draftId, payload)
       } else {
@@ -172,10 +182,10 @@ export default function StoryCreate() {
         title,
         body,
         category: category || null,
+        tags: parseTags(tagsInput),
         is_anonymous: isAnonymous,
         media_url,
         media_type,
-        tags: [],
       })
       if (draftId) {
         api.deleteStoryDraft(draftId).catch(() => {})
@@ -246,6 +256,12 @@ export default function StoryCreate() {
             <option value="">No category — just a normal post</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+
+          <div>
+            <input maxLength={200} placeholder="#hashtags (optional)" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
+              className="w-full border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
+            <p className="text-xs text-slate-light mt-1.5">Up to 5 tags, separated by spaces — e.g. #anxiety #growth</p>
+          </div>
 
           <div>
             <label className="text-sm font-medium mb-2 block">Add a photo or video (optional)</label>

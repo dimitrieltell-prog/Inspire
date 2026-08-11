@@ -153,6 +153,20 @@ export default function StoryCard({ story, repostedBy }) {
           <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.title}</Link>
         </h3>
         <p className="text-sm text-slate leading-relaxed line-clamp-3 flex-grow">{story.body}</p>
+        {story.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2.5">
+            {story.tags.map((t) => (
+              <Link
+                key={t}
+                to={`/stories?tag=${encodeURIComponent(t)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs font-semibold text-indigo hover:underline"
+              >
+                #{t}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* action row */}
