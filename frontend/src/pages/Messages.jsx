@@ -77,6 +77,7 @@ function Thread({ userId, currentUser, conversation, onRespond }) {
   const [responding, setResponding] = useState(false)
   const bottomRef = useRef(null)
   const pollRef = useRef(null)
+  const prevCountRef = useRef(0)
 
   const incomingRequest = conversation ? isIncomingRequest(conversation, currentUser.id) : false
   const pendingOutgoing = conversation ? (!conversation.accepted && conversation.requested_by === currentUser.id) : false
@@ -85,6 +86,7 @@ function Thread({ userId, currentUser, conversation, onRespond }) {
     setProfile(null)
     setMessages(null)
     setError('')
+    prevCountRef.current = 0
     api.getProfile(userId).then(setProfile).catch((e) => setError(e.message))
 
     let cancelled = false
@@ -104,6 +106,11 @@ function Thread({ userId, currentUser, conversation, onRespond }) {
   }, [userId])
 
   useEffect(() => {
+    // Poll refreshes hand back a fresh array every 4s even when nothing
+    // changed -- only snap to the bottom when a message actually arrived,
+    // otherwise scrolling up to reread the thread gets yanked back down.
+    if (!messages || messages.length <= prevCountRef.current) return
+    prevCountRef.current = messages.length
     bottomRef.current?.scrollIntoView({ block: 'end' })
   }, [messages])
 
@@ -292,7 +299,7 @@ export default function Messages() {
       <h1 className="text-3xl font-bold mt-3 mb-8">Messages</h1>
 
       <div className="bg-white border border-line rounded-xl2 overflow-hidden grid md:grid-cols-[280px_1fr]" style={{ height: '65vh' }}>
-        <div className={`flex flex-col border-line ${userId ? 'hidden md:flex md:border-r' : 'border-r'}`}>
+        <div className={`flex flex-col min-h-0 border-line ${userId ? 'hidden md:flex md:border-r' : 'border-r'}`}>
           <div className="flex gap-1 p-2 border-b border-line flex-shrink-0">
             <button
               onClick={() => setTab('messages')}
@@ -311,7 +318,7 @@ export default function Messages() {
             <ConversationList conversations={conversations} activeUserId={userId} tab={tab} currentUserId={user.id} />
           </div>
         </div>
-        <div className={userId ? 'block' : 'hidden md:flex md:items-center md:justify-center'}>
+        <div className={userId ? 'min-h-0' : 'hidden md:flex md:items-center md:justify-center'}>
           {userId ? (
             <Thread userId={userId} currentUser={user} conversation={activeConversation} onRespond={refreshAfterRespond} />
           ) : (
