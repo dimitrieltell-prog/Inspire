@@ -32,6 +32,7 @@ const ICONS = {
   comment: '💬',
   story_like: '❤️',
   story_reply: '💬',
+  story_send: '📤',
   message: '✉️',
 }
 
@@ -44,6 +45,7 @@ function copyFor(n) {
     case 'comment': return `${n.actor_name} commented${n.preview ? `: "${n.preview}"` : ' on your story.'}`
     case 'story_like': return `${n.actor_name} liked your story.`
     case 'story_reply': return `${n.actor_name} replied${n.preview ? `: "${n.preview}"` : ' to your story.'}`
+    case 'story_send': return `${n.actor_name} sent you a story.`
     case 'message': return `${n.actor_name} sent you a message.`
     default: return `${n.actor_name} did something.`
   }
@@ -63,6 +65,8 @@ function linkFor(n) {
       // avatar's story ring -- there's no standalone route for one, so
       // send the recipient to their own profile to open it from there.
       return '/profile'
+    case 'story_send':
+      return '/story-inbox'
     case 'story_reply':
       // Replies to a Story are delivered as a real DM now, not a public
       // reply -- target_id is the replier's own id, same as "message".

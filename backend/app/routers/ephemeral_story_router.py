@@ -211,3 +211,4 @@ async def send_story(story_id: str, payload: StorySendCreate, user: dict = Depen
         "recipient_id": payload.recipient_id,
         "created_at": time.time(),
     })
+    await create_notification(db, payload.recipient_id, user, "story_send", target_id=story_id)

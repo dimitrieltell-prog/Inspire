@@ -416,7 +416,7 @@ class FounderStoryViewOut(BaseModel):
 
 class NotificationOut(BaseModel):
     id: str
-    type: Literal["follow", "follow_request", "like", "repost", "comment", "story_like", "story_reply", "message"]
+    type: Literal["follow", "follow_request", "like", "repost", "comment", "story_like", "story_reply", "story_send", "message"]
     actor_id: str
     actor_name: str
     target_id: Optional[str] = None  # story id, ephemeral story id, or the actor's own id (follow/message)
