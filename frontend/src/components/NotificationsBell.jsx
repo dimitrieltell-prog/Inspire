@@ -59,11 +59,13 @@ function linkFor(n) {
     case 'comment':
       return `/stories/${n.target_id}`
     case 'story_like':
-    case 'story_reply':
       // Ephemeral Stories only have a viewer reachable by tapping an
       // avatar's story ring -- there's no standalone route for one, so
       // send the recipient to their own profile to open it from there.
       return '/profile'
+    case 'story_reply':
+      // Replies to a Story are delivered as a real DM now, not a public
+      // reply -- target_id is the replier's own id, same as "message".
     case 'message':
       return `/messages/${n.target_id}`
     default:

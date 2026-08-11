@@ -117,7 +117,6 @@ export const api = {
   createEphemeralStory: (payload) => request('/ephemeral-stories', { method: 'POST', body: payload }),
   likeEphemeralStory: (storyId) => request(`/ephemeral-stories/${storyId}/like`, { method: 'POST' }),
   unlikeEphemeralStory: (storyId) => request(`/ephemeral-stories/${storyId}/like`, { method: 'DELETE' }),
-  getStoryReplies: (storyId) => request(`/ephemeral-stories/${storyId}/replies`, { auth: false }),
   replyToStory: (storyId, body) => request('/ephemeral-stories/replies', { method: 'POST', body: { ephemeral_story_id: storyId, body } }),
   sendStory: (storyId, recipientId) => request(`/ephemeral-stories/${storyId}/send`, { method: 'POST', body: { recipient_id: recipientId } }),
   getStoryInbox: () => request('/me/story-inbox'),

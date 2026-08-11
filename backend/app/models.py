@@ -297,7 +297,6 @@ class EphemeralStoryOut(BaseModel):
     audience: str = "everyone"
     like_count: int = 0
     is_liked: bool = False
-    reply_count: int = 0
     expires_at: float
     created_at: float
 
@@ -305,15 +304,6 @@ class EphemeralStoryOut(BaseModel):
 class StoryReplyCreate(BaseModel):
     ephemeral_story_id: str
     body: str = Field(min_length=1, max_length=1000)
-
-
-class StoryReplyOut(BaseModel):
-    id: str
-    ephemeral_story_id: str
-    author_id: str
-    author_name: str
-    body: str
-    created_at: float
 
 
 class StorySendCreate(BaseModel):
@@ -388,6 +378,7 @@ class MessageOut(BaseModel):
     body: str
     created_at: float
     read_at: Optional[float] = None  # null if unread, or if either side hides read receipts
+    story_reply_preview: Optional[str] = None  # set when this message is a reply to the recipient's ephemeral Story
 
 
 class ConversationOut(BaseModel):

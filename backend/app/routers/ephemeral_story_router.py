@@ -11,11 +11,12 @@ from app.models import (
     STORY_DURATIONS_PREMIUM,
     EphemeralStoryCreate,
     EphemeralStoryOut,
+    MessageOut,
     StoryReplyCreate,
-    StoryReplyOut,
     StorySendCreate,
 )
 from app.moderation import contains_hostility
+from app.routers.dm_router import _deliver_dm, _to_message_out
 from app.routers.stories_router import _hidden_author_ids
 
 router = APIRouter(prefix="/ephemeral-stories", tags=["ephemeral-stories"])
@@ -23,13 +24,14 @@ router = APIRouter(prefix="/ephemeral-stories", tags=["ephemeral-stories"])
 
 async def _expire_ephemeral_stories(db) -> None:
     """Stories are ephemeral by design -- sweep out anything past its expiry,
-    along with its likes, replies, and sends, so it's gone everywhere."""
+    along with its likes and sends, so it's gone everywhere. Replies are
+    delivered as real DMs, so they live on in the conversation independent
+    of the story's own lifecycle -- nothing to clean up there."""
     now = time.time()
     expired = [s for s in await db.ephemeral_stories.find({}) if s.get("expires_at", 0) < now]
     for s in expired:
         sid = s["_id"]
         await db.story_likes.delete_many({"ephemeral_story_id": sid})
-        await db.story_replies.delete_many({"ephemeral_story_id": sid})
         await db.story_sends.delete_many({"ephemeral_story_id": sid})
         await db.ephemeral_stories.delete_one({"_id": sid})
 
@@ -53,7 +55,6 @@ async def _can_view_ephemeral_story(db, story: dict, viewer: Optional[dict]) -> 
 async def _serialize_ephemeral_story(story: dict, viewer: Optional[dict], db) -> EphemeralStoryOut:
     likes = await db.story_likes.find({"ephemeral_story_id": story["_id"]})
     is_liked = bool(viewer and any(l["user_id"] == viewer["_id"] for l in likes))
-    reply_count = len(await db.story_replies.find({"ephemeral_story_id": story["_id"]}))
     return EphemeralStoryOut(
         id=story["_id"],
         author_id=story["author_id"],
@@ -64,7 +65,6 @@ async def _serialize_ephemeral_story(story: dict, viewer: Optional[dict], db) ->
         audience=story.get("audience", "everyone"),
         like_count=len(likes),
         is_liked=is_liked,
-        reply_count=reply_count,
         expires_at=story["expires_at"],
         created_at=story["created_at"],
     )
@@ -147,27 +147,10 @@ async def unlike_story(story_id: str, user: dict = Depends(get_current_user)):
     await db.story_likes.delete_one({"ephemeral_story_id": story_id, "user_id": user["_id"]})
 
 
-@router.get("/{story_id}/replies", response_model=list[StoryReplyOut])
-async def list_story_replies(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
-    db = get_db()
-    await _expire_ephemeral_stories(db)
-    await _require_visible_story(db, story_id, viewer)
-    replies = await db.story_replies.find({"ephemeral_story_id": story_id}, sort_key="created_at", reverse=False)
-    hidden = await _hidden_author_ids(db, viewer)
-    if hidden:
-        replies = [r for r in replies if r.get("author_id") not in hidden]
-    return [
-        StoryReplyOut(
-            id=r["_id"], ephemeral_story_id=r["ephemeral_story_id"],
-            author_id=r["author_id"], author_name=r["author_display_name"],
-            body=r["body"], created_at=r["created_at"],
-        )
-        for r in replies
-    ]
-
-
-@router.post("/replies", response_model=StoryReplyOut, status_code=status.HTTP_201_CREATED)
+@router.post("/replies", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
 async def reply_to_story(payload: StoryReplyCreate, user: dict = Depends(get_current_user)):
+    """Replying to a Story delivers a real DM to its author, the same way
+    Instagram/Snapchat do it -- never a publicly-visible comment thread."""
     if contains_hostility(payload.body):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -178,24 +161,16 @@ async def reply_to_story(payload: StoryReplyCreate, user: dict = Depends(get_cur
     story = await _require_visible_story(db, payload.ephemeral_story_id, user)
 
     author_id = story["author_id"]
-    if author_id != user["_id"]:
-        if await db.blocks.find_one({"blocker_id": author_id, "blocked_id": user["_id"]}) or \
-           await db.blocks.find_one({"blocker_id": user["_id"], "blocked_id": author_id}):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    if author_id == user["_id"]:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can't reply to your own story.")
+    author = await db.users.find_one({"_id": author_id})
+    if not author:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
 
-    reply = await db.story_replies.insert_one({
-        "ephemeral_story_id": payload.ephemeral_story_id,
-        "author_id": user["_id"],
-        "author_display_name": user["display_name"],
-        "body": payload.body,
-        "created_at": time.time(),
-    })
-    await create_notification(db, author_id, user, "story_reply", target_id=payload.ephemeral_story_id, preview=payload.body[:80])
-    return StoryReplyOut(
-        id=reply["_id"], ephemeral_story_id=reply["ephemeral_story_id"],
-        author_id=reply["author_id"], author_name=reply["author_display_name"],
-        body=reply["body"], created_at=reply["created_at"],
-    )
+    preview = (story.get("body") or ("🎥 a video" if story.get("media_type") == "video" else "📷 a photo"))[:80]
+    message, _ = await _deliver_dm(db, user, author, payload.body, extra={"story_reply_preview": preview})
+    await create_notification(db, author_id, user, "story_reply", target_id=user["_id"], preview=payload.body[:80])
+    return _to_message_out(message, None)
 
 
 @router.post("/{story_id}/send", status_code=status.HTTP_204_NO_CONTENT)

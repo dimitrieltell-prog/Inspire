@@ -308,7 +308,6 @@ async def delete_account_cascade(db, uid: str) -> None:
     # This user's own ephemeral Stories and everything attached to them.
     for es in await db.ephemeral_stories.find({"author_id": uid}):
         await db.story_likes.delete_many({"ephemeral_story_id": es["_id"]})
-        await db.story_replies.delete_many({"ephemeral_story_id": es["_id"]})
         await db.story_sends.delete_many({"ephemeral_story_id": es["_id"]})
     await db.ephemeral_stories.delete_many({"author_id": uid})
 
@@ -326,7 +325,6 @@ async def delete_account_cascade(db, uid: str) -> None:
     await db.follow_requests.delete_many({"requester_id": uid})
     await db.follow_requests.delete_many({"target_id": uid})
     await db.story_likes.delete_many({"user_id": uid})
-    await db.story_replies.delete_many({"author_id": uid})
     await db.story_sends.delete_many({"sender_id": uid})
     await db.story_sends.delete_many({"recipient_id": uid})
     await db.aria_usage.delete_many({"user_id": uid})
