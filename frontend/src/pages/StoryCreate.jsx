@@ -63,10 +63,12 @@ export default function StoryCreate() {
   const [savedMessage, setSavedMessage] = useState('')
 
   const [drafts, setDrafts] = useState(null)
+  const [draftsError, setDraftsError] = useState('')
 
   useEffect(() => {
     if (tab === 'drafts') {
-      api.listStoryDrafts().then(setDrafts).catch(() => setDrafts([]))
+      setDraftsError('')
+      api.listStoryDrafts().then(setDrafts).catch((e) => setDraftsError(e.message))
     }
   }, [tab])
 
@@ -79,7 +81,7 @@ export default function StoryCreate() {
     )
   }
 
-  const hasContent = title || body || mediaFile || existingMediaUrl || isAnonymous || tagsInput
+  const hasContent = title || body || category || mediaFile || existingMediaUrl || isAnonymous || tagsInput
 
   function onFileChange(e) {
     const file = e.target.files[0]
@@ -136,7 +138,17 @@ export default function StoryCreate() {
     try {
       await api.deleteStoryDraft(id)
       setDrafts((ds) => ds.filter((d) => d.id !== id))
-      if (draftId === id) setDraftId(null)
+      // If this draft is loaded into the compose form, clear it too --
+      // otherwise "Save draft" would silently recreate what was just deleted.
+      if (draftId === id) {
+        setTitle('')
+        setBody('')
+        setCategory('')
+        setTagsInput('')
+        setIsAnonymous(false)
+        removeMedia()
+        setDraftId(null)
+      }
     } catch (err) {
       setError(err.message)
     }
@@ -219,7 +231,9 @@ export default function StoryCreate() {
       </div>
 
       {tab === 'drafts' ? (
-        !drafts ? (
+        draftsError ? (
+          <p className="text-sm text-rose-ink">{draftsError}</p>
+        ) : !drafts ? (
           <p className="text-sm text-slate-light">Loading…</p>
         ) : drafts.length === 0 ? (
           <p className="text-sm text-slate-light">No drafts yet — anything you save without posting will show up here.</p>
@@ -229,7 +243,9 @@ export default function StoryCreate() {
               <div key={d.id} className="border border-line rounded-xl p-4 flex items-start justify-between gap-3">
                 <button onClick={() => openDraft(d)} className="text-left min-w-0 flex-1">
                   <p className="font-semibold truncate">{d.title || 'Untitled draft'}</p>
-                  <p className="text-sm text-slate-light truncate mt-0.5">{d.body || 'No text yet.'}</p>
+                  <p className="text-sm text-slate-light truncate mt-0.5">
+                    {d.body || (d.media_url ? `${d.media_type === 'video' ? '🎥' : '📷'} Photo/video attached, no text yet.` : 'No text yet.')}
+                  </p>
                   <p className="text-xs text-slate-light mt-1">{timeAgo(d.updated_at)}</p>
                 </button>
                 <button
