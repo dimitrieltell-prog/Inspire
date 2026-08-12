@@ -82,7 +82,13 @@ export default function Aria() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-7 py-12 flex flex-col h-[calc(100vh-80px)]">
+    // Nothing to subtract on desktop -- the sidebar is a left column now,
+    // not a top bar. On mobile, subtract the real top bar + bottom tab bar
+    // heights (frontend/src/components/navMetrics.js MOBILE_TOPBAR_H=56 /
+    // MOBILE_TABBAR_H=64, keep in sync) plus safe-area insets, using 100dvh
+    // instead of 100vh since Capacitor's WKWebView needs the dynamic-viewport
+    // unit to avoid overshooting the real visible area.
+    <div className="max-w-2xl mx-auto px-7 py-12 flex flex-col h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen">
       <div className="mb-5">
         <h1 className="text-2xl font-bold mb-1">Aria</h1>
         <p className="text-sm text-slate">A private place to think out loud.</p>

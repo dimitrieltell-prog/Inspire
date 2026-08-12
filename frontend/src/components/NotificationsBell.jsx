@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import BellIcon from './BellIcon'
 
 const POLL_MS = 15000
 const TOAST_MS = 2000
@@ -77,7 +78,7 @@ function linkFor(n) {
   }
 }
 
-export default function NotificationsBell() {
+export default function NotificationsBell({ anchor = 'right' }) {
   const [open, setOpen] = useState(false)
   const [unread, setUnread] = useState(0)
   const [items, setItems] = useState(null)
@@ -141,6 +142,13 @@ export default function NotificationsBell() {
     navigate(linkFor(n))
   }
 
+  // "left" is for the desktop sidebar (76px wide) -- right-0 would render
+  // the panel almost entirely off the left edge of the viewport there, so
+  // it opens rightward from the icon instead. "right" (default) keeps the
+  // original behavior for the mobile top bar, near the right edge.
+  const panelPosition = anchor === 'left' ? 'absolute left-full ml-2 top-0' : 'absolute right-0 mt-2'
+  const toastPosition = anchor === 'left' ? 'absolute left-full ml-2 top-0' : 'absolute right-0 top-11'
+
   return (
     <div className="relative" ref={rootRef}>
       <button
@@ -148,7 +156,7 @@ export default function NotificationsBell() {
         aria-label="Notifications"
         className="relative w-9 h-9 rounded-full border border-line bg-white hover:border-indigo transition-colors flex items-center justify-center text-sm flex-shrink-0"
       >
-        🔔
+        <BellIcon className="w-[18px] h-[18px] text-slate" />
         {unread > 0 && (
           <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-ink text-white text-[9px] font-bold flex items-center justify-center">
             {capped(unread)}
@@ -157,7 +165,7 @@ export default function NotificationsBell() {
       </button>
 
       {toast && !open && (
-        <div className="absolute right-0 top-11 z-40 flex items-center gap-2.5 bg-navy text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg whitespace-nowrap">
+        <div className={`${toastPosition} z-40 flex items-center gap-2.5 bg-navy text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg whitespace-nowrap`}>
           {SUMMARY_ICONS.filter(([key]) => toast[key] > 0).map(([key, icon]) => (
             <span key={key} className="flex items-center gap-1">
               <span>{icon}</span>
@@ -168,7 +176,7 @@ export default function NotificationsBell() {
       )}
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-w-[90vw] max-h-[70vh] overflow-y-auto bg-white border border-line rounded-xl2 shadow-lg z-50">
+        <div className={`${panelPosition} w-80 max-w-[90vw] max-h-[70vh] overflow-y-auto bg-white border border-line rounded-xl2 shadow-lg z-50`}>
           <div className="px-4 py-3 border-b border-line font-bold text-sm">Notifications</div>
           {!items ? (
             <p className="text-sm text-slate-light px-4 py-6">Loading…</p>
