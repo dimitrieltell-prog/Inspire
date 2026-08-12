@@ -129,10 +129,9 @@ async def _require_visible_story(db, story_id: str, viewer: Optional[dict]) -> d
 
 
 @router.get("", response_model=list[StoryOut])
-async def list_stories(category: Optional[str] = None, tag: Optional[str] = None, limit: int = 30, viewer: Optional[dict] = Depends(get_optional_user)):
+async def list_stories(tag: Optional[str] = None, limit: int = 30, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
-    query = {"category": category} if category and category != "all" else {}
-    stories = await db.stories.find(query, sort_key="created_at", reverse=True)
+    stories = await db.stories.find({}, sort_key="created_at", reverse=True)
     if tag:
         norm_tag = tag.strip().lstrip("#").lower()
         stories = [s for s in stories if norm_tag in [t.lower() for t in s.get("tags", [])]]

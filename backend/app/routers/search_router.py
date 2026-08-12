@@ -43,7 +43,7 @@ async def search(q: str = "", viewer: Optional[dict] = Depends(get_optional_user
 
     def matches(s: dict) -> bool:
         haystack = " ".join([
-            s.get("title", ""), s.get("body", ""), s.get("category", ""), " ".join(s.get("tags", [])),
+            s.get("title") or "", s.get("body") or "", s.get("category") or "", " ".join(s.get("tags") or []),
         ]).lower()
         return q in haystack
 

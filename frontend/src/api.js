@@ -56,9 +56,8 @@ export const api = {
       body: { credential, username, date_of_birth: dateOfBirth, accepted_terms: acceptedTerms },
       auth: false,
     }),
-  listStories: (category, tag) => {
+  listStories: (tag) => {
     const params = new URLSearchParams()
-    if (category && category !== 'all') params.set('category', category)
     if (tag) params.set('tag', tag)
     const qs = params.toString()
     return request(`/stories${qs ? `?${qs}` : ''}`)

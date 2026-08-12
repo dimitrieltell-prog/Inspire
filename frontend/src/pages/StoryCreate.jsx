@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
-const CATEGORIES = ['Mental Health', 'Relationships', 'Family', 'School', 'Growth', 'Life Challenges', 'Achievements', 'Advice']
-
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
@@ -49,7 +47,6 @@ export default function StoryCreate() {
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [category, setCategory] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [mediaFile, setMediaFile] = useState(null)
@@ -82,7 +79,7 @@ export default function StoryCreate() {
     )
   }
 
-  const hasContent = title || body || category || mediaFile || existingMediaUrl || isAnonymous || tagsInput
+  const hasContent = title || body || mediaFile || existingMediaUrl || isAnonymous || tagsInput
 
   function onFileChange(e) {
     const file = e.target.files[0]
@@ -111,7 +108,6 @@ export default function StoryCreate() {
     if (hasContent && !window.confirm("Clear everything you've added and start over?")) return
     setTitle('')
     setBody('')
-    setCategory('')
     setTagsInput('')
     setIsAnonymous(false)
     removeMedia()
@@ -128,7 +124,6 @@ export default function StoryCreate() {
   function openDraft(d) {
     setTitle(d.title || '')
     setBody(d.body || '')
-    setCategory(d.category || '')
     setTagsInput(d.tags?.length ? d.tags.map((t) => `#${t}`).join(' ') : '')
     setIsAnonymous(d.is_anonymous || false)
     setMediaFile(null)
@@ -151,7 +146,6 @@ export default function StoryCreate() {
       if (draftId === id) {
         setTitle('')
         setBody('')
-        setCategory('')
         setTagsInput('')
         setIsAnonymous(false)
         removeMedia()
@@ -174,7 +168,7 @@ export default function StoryCreate() {
     setError('')
     try {
       const { media_url, media_type } = await resolveMediaUrl()
-      const payload = { title, body, category: category || null, tags: parseTags(tagsInput), is_anonymous: isAnonymous, media_url, media_type }
+      const payload = { title, body, tags: parseTags(tagsInput), is_anonymous: isAnonymous, media_url, media_type }
       if (draftId) {
         await api.updateStoryDraft(draftId, payload)
       } else {
@@ -206,7 +200,6 @@ export default function StoryCreate() {
       await api.createStory({
         title,
         body,
-        category: category || null,
         tags: parseTags(tagsInput),
         is_anonymous: isAnonymous,
         media_url,
@@ -302,12 +295,6 @@ export default function StoryCreate() {
 
           <textarea required maxLength={5000} rows={6} placeholder="What happened? Be as honest as you want to be." value={body} onChange={(e) => setBody(e.target.value)}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo resize-none" />
-
-          <select value={category} onChange={(e) => setCategory(e.target.value)}
-            className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo bg-white">
-            <option value="">No category — just a normal post</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
 
           <div>
             <input maxLength={200} placeholder="#hashtags (optional)" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}

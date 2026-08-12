@@ -92,7 +92,6 @@ export default function SearchOverlay({ onClose }) {
                       onClick={() => go(`/stories/${s.id}`)}
                       className="w-full text-left px-2 py-2.5 rounded-lg hover:bg-bg transition-colors"
                     >
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-indigo">{s.category}</span>
                       <p className="text-sm font-semibold truncate">{s.title}</p>
                       <p className="text-xs text-slate-light truncate">{s.body}</p>
                     </button>
