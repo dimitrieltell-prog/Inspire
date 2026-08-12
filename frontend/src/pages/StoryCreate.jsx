@@ -45,6 +45,7 @@ export default function StoryCreate() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState('new')
+  const [mode, setMode] = useState(null) // 'media' | 'text' | null (not chosen yet)
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -115,7 +116,13 @@ export default function StoryCreate() {
     setIsAnonymous(false)
     removeMedia()
     setDraftId(null)
+    setMode(null)
     setError('')
+  }
+
+  function chooseMode(next) {
+    if (next === 'text') removeMedia()
+    setMode(next)
   }
 
   function openDraft(d) {
@@ -129,6 +136,7 @@ export default function StoryCreate() {
     setMediaPreview(d.media_url || null)
     setExistingMediaUrl(d.media_url || null)
     setDraftId(d.id)
+    setMode(d.media_url ? 'media' : 'text')
     setError('')
     setTab('new')
   }
@@ -148,6 +156,7 @@ export default function StoryCreate() {
         setIsAnonymous(false)
         removeMedia()
         setDraftId(null)
+        setMode(null)
       }
     } catch (err) {
       setError(err.message)
@@ -185,6 +194,10 @@ export default function StoryCreate() {
 
   async function onSubmit(e) {
     e.preventDefault()
+    if (mode === 'media' && !mediaFile && !existingMediaUrl) {
+      setError('Add a photo or video, or switch to a text-only post.')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
@@ -259,8 +272,31 @@ export default function StoryCreate() {
             ))}
           </div>
         )
+      ) : mode === null ? (
+        <div className="flex flex-col gap-3">
+          <button type="button" onClick={() => chooseMode('media')}
+            className="flex items-center gap-4 text-left border border-line rounded-xl2 p-5 hover:border-indigo transition-colors">
+            <span className="text-2xl">📷</span>
+            <span>
+              <span className="block font-semibold">Photo or video</span>
+              <span className="block text-sm text-slate mt-0.5">Share a moment, with a caption if you want one.</span>
+            </span>
+          </button>
+          <button type="button" onClick={() => chooseMode('text')}
+            className="flex items-center gap-4 text-left border border-line rounded-xl2 p-5 hover:border-indigo transition-colors">
+            <span className="text-2xl">✍️</span>
+            <span>
+              <span className="block font-semibold">Text only</span>
+              <span className="block text-sm text-slate mt-0.5">Just words — no photo or video needed.</span>
+            </span>
+          </button>
+        </div>
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <button type="button" onClick={() => setMode(null)} className="text-xs font-semibold text-slate-light hover:text-indigo transition-colors self-start">
+            ← {mode === 'media' ? 'Photo or video' : 'Text only'} · change
+          </button>
+
           <input required maxLength={120} placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
 
@@ -279,26 +315,28 @@ export default function StoryCreate() {
             <p className="text-xs text-slate-light mt-1.5">Up to 5 tags, separated by spaces — e.g. #anxiety #growth</p>
           </div>
 
-          <div>
-            <label className="text-sm font-medium mb-2 block">Add a photo or video (optional)</label>
-            <input type="file" accept="image/*,video/*" onChange={onFileChange}
-              className="text-sm file:mr-3 file:px-4 file:py-2 file:rounded-full file:border-0 file:bg-lavender file:text-indigo file:font-semibold file:cursor-pointer" />
-            {mediaPreview && (
-              <div className="relative mt-3 inline-block">
-                {mediaType === 'video'
-                  ? <video src={mediaPreview} controls className="rounded-xl max-h-64" />
-                  : <img src={mediaPreview} alt="Preview" className="rounded-xl max-h-64 object-cover" />}
-                <button
-                  type="button"
-                  onClick={removeMedia}
-                  aria-label="Remove media"
-                  className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-navy text-white text-sm flex items-center justify-center shadow"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-          </div>
+          {mode === 'media' && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Add a photo or video</label>
+              <input type="file" accept="image/*,video/*" onChange={onFileChange}
+                className="text-sm file:mr-3 file:px-4 file:py-2 file:rounded-full file:border-0 file:bg-lavender file:text-indigo file:font-semibold file:cursor-pointer" />
+              {mediaPreview && (
+                <div className="relative mt-3 inline-block">
+                  {mediaType === 'video'
+                    ? <video src={mediaPreview} controls className="rounded-xl max-h-64" />
+                    : <img src={mediaPreview} alt="Preview" className="rounded-xl max-h-64 object-cover" />}
+                  <button
+                    type="button"
+                    onClick={removeMedia}
+                    aria-label="Remove media"
+                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-navy text-white text-sm flex items-center justify-center shadow"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <label className="flex items-center justify-between border border-line rounded-xl px-4 py-3">
             <span className="text-sm font-medium">Post anonymously</span>
