@@ -291,6 +291,7 @@ export default function StoryCreate() {
           </button>
 
           <input required maxLength={120} placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
 
           <textarea required maxLength={5000} rows={6} placeholder="What happened? Be as honest as you want to be." value={body} onChange={(e) => setBody(e.target.value)}
@@ -298,6 +299,7 @@ export default function StoryCreate() {
 
           <div>
             <input maxLength={200} placeholder="#hashtags (optional)" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
               className="w-full border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
             <p className="text-xs text-slate-light mt-1.5">Up to 5 tags, separated by spaces — e.g. #anxiety #growth</p>
           </div>
@@ -337,11 +339,11 @@ export default function StoryCreate() {
             <button type="button" onClick={clearForm} className="text-sm font-semibold text-slate-light hover:text-rose-ink transition-colors">
               Clear / start over
             </button>
-            <button type="button" onClick={saveDraft} disabled={savingDraft || !hasContent}
+            <button type="button" onClick={saveDraft} disabled={savingDraft || submitting || !hasContent}
               className="ml-auto px-5 py-2.5 rounded-full text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors disabled:opacity-50">
               {savingDraft ? 'Saving…' : 'Save draft'}
             </button>
-            <button disabled={submitting} className="bg-indigo text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60">
+            <button disabled={submitting || savingDraft} className="bg-indigo text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60">
               {submitting ? 'Sharing…' : 'Share your story'}
             </button>
           </div>

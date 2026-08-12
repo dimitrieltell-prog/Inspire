@@ -304,6 +304,7 @@ async def delete_account_cascade(db, uid: str) -> None:
         await db.reposts.delete_many({"story_id": s["_id"]})
         await db.saves.delete_many({"story_id": s["_id"]})
     await db.stories.delete_many({"author_id": uid})
+    await db.story_drafts.delete_many({"author_id": uid})
 
     # This user's own ephemeral Stories and everything attached to them.
     for es in await db.ephemeral_stories.find({"author_id": uid}):
