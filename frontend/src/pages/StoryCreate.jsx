@@ -31,6 +31,13 @@ function parseTags(input) {
     .filter(Boolean)
 }
 
+// The hashtag someone's actively mid-typing -- the last whitespace-separated
+// token in the tags field -- used to drive the live suggestion dropdown.
+function activeTagToken(input) {
+  const parts = input.split(/\s+/)
+  return (parts[parts.length - 1] || '').replace(/^#/, '')
+}
+
 function timeAgo(ts) {
   const diff = Date.now() / 1000 - ts
   if (diff < 60) return 'just now'
@@ -63,12 +70,27 @@ export default function StoryCreate() {
   const [drafts, setDrafts] = useState(null)
   const [draftsError, setDraftsError] = useState('')
 
+  const [tagSuggestions, setTagSuggestions] = useState([])
+  const [tagsFocused, setTagsFocused] = useState(false)
+
   useEffect(() => {
     if (tab === 'drafts') {
       setDraftsError('')
       api.listStoryDrafts().then(setDrafts).catch((e) => setDraftsError(e.message))
     }
   }, [tab])
+
+  useEffect(() => {
+    const token = activeTagToken(tagsInput)
+    if (!token) {
+      setTagSuggestions([])
+      return
+    }
+    const handle = setTimeout(() => {
+      api.searchTags(token).then(setTagSuggestions).catch(() => setTagSuggestions([]))
+    }, 200)
+    return () => clearTimeout(handle)
+  }, [tagsInput])
 
   if (!user) {
     return (
@@ -114,6 +136,13 @@ export default function StoryCreate() {
     setDraftId(null)
     setMode(null)
     setError('')
+  }
+
+  function selectTagSuggestion(tag) {
+    const parts = tagsInput.split(/\s+/)
+    parts[parts.length - 1] = `#${tag}`
+    setTagsInput(parts.join(' ') + ' ')
+    setTagSuggestions([])
   }
 
   function chooseMode(next) {
@@ -297,11 +326,32 @@ export default function StoryCreate() {
           <textarea required maxLength={5000} rows={6} placeholder="What happened? Be as honest as you want to be." value={body} onChange={(e) => setBody(e.target.value)}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo resize-none" />
 
-          <div>
+          <div className="relative">
             <input maxLength={200} placeholder="#hashtags (optional)" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+              onFocus={() => setTagsFocused(true)}
+              onBlur={() => { setTagsFocused(false); setTagSuggestions([]) }}
+              autoComplete="off"
               className="w-full border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
             <p className="text-xs text-slate-light mt-1.5">Up to 5 tags, separated by spaces — e.g. #anxiety #growth</p>
+            {tagsFocused && tagSuggestions.length > 0 && (
+              <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-line rounded-xl shadow-lg overflow-hidden">
+                {tagSuggestions.map((s) => (
+                  <button
+                    type="button"
+                    key={s.tag}
+                    onMouseDown={(e) => { e.preventDefault(); selectTagSuggestion(s.tag) }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-bg transition-colors"
+                  >
+                    <span className="w-8 h-8 rounded-full border border-line flex items-center justify-center text-slate flex-shrink-0">#</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold truncate">#{s.tag}</span>
+                      <span className="block text-xs text-slate-light">{s.count} post{s.count === 1 ? '' : 's'}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {mode === 'media' && (

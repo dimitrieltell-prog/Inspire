@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
 from app.inapp_notifications import create_notification
-from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, ReactorOut, StoryCreate, StoryOut
+from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, ReactorOut, StoryCreate, StoryOut, TagSuggestion
 from app.moderation import contains_hostility
 
 router = APIRouter(prefix="/stories", tags=["stories"])
@@ -143,6 +143,23 @@ async def list_stories(tag: Optional[str] = None, limit: int = 30, viewer: Optio
         stories = [s for s in stories if not _contains_muted_word(s["title"] + " " + s["body"], muted_words)]
     stories = [s for s in stories if await _can_view_story(db, s, viewer)]
     return [await serialize_story(s, viewer, db) for s in stories[:limit]]
+
+
+@router.get("/tags/search", response_model=list[TagSuggestion])
+async def search_tags(q: str = "", limit: int = 6):
+    q_norm = q.strip().lstrip("#").lower()
+    if not q_norm:
+        return []
+    db = get_db()
+    stories = await db.stories.find({})
+    counts: dict[str, int] = {}
+    for s in stories:
+        for t in s.get("tags") or []:
+            tl = t.lower()
+            if tl.startswith(q_norm):
+                counts[tl] = counts.get(tl, 0) + 1
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:limit]
+    return [TagSuggestion(tag=t, count=c) for t, c in ranked]
 
 
 @router.get("/{story_id}", response_model=StoryOut)

@@ -176,6 +176,11 @@ class ActivityItem(BaseModel):
     created_at: float
 
 
+class TagSuggestion(BaseModel):
+    tag: str
+    count: int
+
+
 class StoryCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(min_length=1, max_length=5000)

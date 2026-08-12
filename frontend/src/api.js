@@ -62,6 +62,7 @@ export const api = {
     const qs = params.toString()
     return request(`/stories${qs ? `?${qs}` : ''}`)
   },
+  searchTags: (q) => request(`/stories/tags/search?q=${encodeURIComponent(q)}`),
   getStory: (storyId) => request(`/stories/${storyId}`),
   createStory: (payload) => request('/stories', { method: 'POST', body: payload }),
   reactToStory: (storyId, reaction) => request('/stories/react', { method: 'POST', body: { story_id: storyId, reaction } }),
