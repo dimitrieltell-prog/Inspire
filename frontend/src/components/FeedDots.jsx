@@ -7,7 +7,7 @@ export default function FeedDots({ count, activeIndex }) {
       {Array.from({ length: count }).map((_, i) => (
         <span
           key={i}
-          className={`w-1.5 h-1.5 rounded-full transition-colors ${i === activeIndex ? 'bg-indigo' : 'bg-white/60'}`}
+          className={`w-1.5 rounded-full transition-all ${i === activeIndex ? 'h-3.5 bg-indigo' : 'h-1.5 bg-navy/15'}`}
         />
       ))}
     </div>

@@ -6,8 +6,11 @@ import CommentsPanel from '../components/CommentsPanel'
 import FeedDots from '../components/FeedDots'
 import OnboardingChecklist from '../components/OnboardingChecklist'
 
-// Full-screen, one-post-at-a-time scroll-snap feed. The h-[calc(...)] here
-// mirrors the pattern established in Aria.jsx: 56px/64px are
+// A scroll-snap feed of content-sized cards (not full-viewport Reels-style
+// slides) -- cards sit close together with a gap, and a gentle proximity
+// snap settles on whichever card is nearest center when scrolling stops,
+// matching the approved demo mockup. The h-[calc(...)] on the scroll
+// container mirrors the pattern established in Aria.jsx: 56px/64px are
 // frontend/src/components/navMetrics.js's MOBILE_TOPBAR_H/MOBILE_TABBAR_H,
 // hardcoded as literals (not imported) because Tailwind v4's JIT scanner
 // needs a complete, statically-greppable class string -- interpolating an
@@ -70,7 +73,7 @@ export default function Stories() {
     <>
       <div
         ref={containerRef}
-        className="relative w-full snap-y snap-mandatory overflow-y-auto overscroll-contain h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen"
+        className="relative w-full snap-y snap-proximity overflow-y-auto overscroll-contain bg-gradient-to-b from-white to-bg h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen"
       >
         {loading && (
           <div className="h-full w-full flex items-center justify-center">
@@ -97,14 +100,14 @@ export default function Stories() {
                 footprint, not counted for the IntersectionObserver). */}
             <section
               data-slide-index={showOnboarding ? slideIndex++ : undefined}
-              className={showOnboarding ? 'h-full w-full flex-shrink-0 snap-start snap-always flex items-center justify-center px-6 bg-bg' : 'hidden'}
+              className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
             >
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-[380px]">
                 <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
               </div>
             </section>
             {stories.map((s) => (
-              <div key={s.id} data-slide-index={slideIndex++} className="h-full w-full flex-shrink-0 snap-start snap-always">
+              <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
                 <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} />
               </div>
             ))}

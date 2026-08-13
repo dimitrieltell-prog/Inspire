@@ -8,11 +8,13 @@ import { useStoryInteractions } from './useStoryInteractions'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
-// One full-viewport slide of the Stories scroll-snap feed. Same interaction
-// set as StoryCard.jsx's compact grid tile, but stretched to fill the slot
-// -- and unlike StoryCard.jsx, media/title are not links: the post is
-// already fully shown, so only the comment button navigates (opens the
-// panel via onOpenComments) instead of routing to /stories/:id.
+// One card in the Stories scroll-snap feed -- sized to its content (like
+// StoryCard.jsx's grid tile), not stretched to fill the viewport. Matches
+// the approved demo mockup: a centered card with a gap above/below, not a
+// full-bleed Reels-style slide. Unlike StoryCard.jsx, media/title are not
+// links -- the post is already fully shown, so only the comment button
+// navigates (opens the panel via onOpenComments) instead of routing to
+// /stories/:id.
 export default function FeedStoryCard({ story, onOpenComments }) {
   const { user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -26,9 +28,9 @@ export default function FeedStoryCard({ story, onOpenComments }) {
   } = useStoryInteractions(story)
 
   return (
-    <section className="relative h-full w-full flex-shrink-0 snap-start snap-always bg-white overflow-hidden flex flex-col">
-      <div className="relative flex items-center gap-2.5 px-5 pt-5 pb-3 flex-shrink-0">
-        <span className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+    <div className="w-full bg-white border border-line rounded-xl2 overflow-hidden flex flex-col shadow-[0_30px_60px_-30px_rgba(19,26,51,0.25)]">
+      <div className="relative flex items-center gap-2.5 px-4 pt-4 pb-3">
+        <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
           {story.author_name.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0 flex-grow">
@@ -55,7 +57,7 @@ export default function FeedStoryCard({ story, onOpenComments }) {
               ⋯
             </button>
             {menuOpen && (
-              <div className="absolute top-10 right-5 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+              <div className="absolute top-10 right-4 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
                 <button
                   onClick={() => { setMenuOpen(false); setReportOpen(true) }}
                   className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
@@ -69,25 +71,21 @@ export default function FeedStoryCard({ story, onOpenComments }) {
       </div>
       {reportOpen && <ReportModal targetType="story" targetId={story.id} onClose={() => setReportOpen(false)} />}
 
-      {story.media_url ? (
-        <div className="flex-grow min-h-0 bg-navy overflow-hidden">
+      {story.media_url && (
+        <div className="w-full aspect-[4/5] bg-navy overflow-hidden">
           {story.media_type === 'video' ? (
             <video src={story.media_url} controls className="w-full h-full object-cover" />
           ) : (
             <img src={story.media_url} alt="" className="w-full h-full object-cover" />
           )}
         </div>
-      ) : (
-        <div className="flex-grow min-h-0 bg-lavender flex items-center justify-center px-8">
-          <p className="text-lg font-display font-semibold text-navy text-center leading-snug">{story.title}</p>
-        </div>
       )}
 
-      <div className="px-5 pt-4 max-h-[35%] overflow-y-auto flex-shrink-0">
-        {story.media_url && <h3 className="text-[17px] font-bold mb-1.5 leading-snug">{story.title}</h3>}
+      <div className="px-4 pt-4 flex flex-col gap-1.5">
+        <h3 className="text-[17px] font-bold leading-snug">{story.title}</h3>
         <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>
         {story.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2.5">
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
             {story.tags.map((t) => (
               <Link
                 key={t}
@@ -101,9 +99,9 @@ export default function FeedStoryCard({ story, onOpenComments }) {
         )}
       </div>
 
-      <div className="relative px-5 pt-3 pb-5 flex-shrink-0">
+      <div className="relative px-4 pt-3 pb-4 mt-2">
         {reactOpen && (
-          <div className="absolute bottom-full mb-2 left-5 right-5 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
+          <div className="absolute bottom-full mb-2 left-4 right-4 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
             {REACTIONS.map((r) => (
               <button
                 key={r}
@@ -145,6 +143,6 @@ export default function FeedStoryCard({ story, onOpenComments }) {
         </div>
         {error && <p className="text-xs text-rose-ink mt-2">{error}</p>}
       </div>
-    </section>
+    </div>
   )
 }
