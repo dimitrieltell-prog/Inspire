@@ -17,10 +17,11 @@ export default function DesktopSidebar({ user, unreadDms, hideSearch, onSearchCl
         <img src="/logo.svg" alt="" className="w-9 h-9" />
       </Link>
 
-      {/* Spreads the nav icons across the full space between the logo and
-          the avatar (justify-between), instead of clustering them together
-          -- centered or not -- and leaving unused space on tall screens. */}
-      <div className="flex flex-col items-center flex-grow justify-between py-2">
+      {/* A generous fixed gap between icons, centered as a group in the
+          space between the logo and the avatar -- more breathing room than
+          the original tightly-packed cluster, without stretching all the
+          way to fill the rail edge-to-edge (which read as too spread out). */}
+      <div className="flex flex-col items-center flex-grow justify-center gap-7">
         <NavLink to="/stories" className={({ isActive }) => `${iconBase} ${isActive ? iconActive : ''}`} aria-label="Stories">
           <HomeIcon className="w-5 h-5" />
         </NavLink>
