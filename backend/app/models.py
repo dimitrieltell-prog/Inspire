@@ -306,6 +306,17 @@ class EphemeralStoryOut(BaseModel):
     created_at: float
 
 
+class StoryTrayEntry(BaseModel):
+    """One author's bubble in the Stories tray -- their active Stories
+    grouped together, with a per-viewer seen/unseen ring state."""
+    author_id: str
+    author_name: str
+    author_avatar_url: Optional[str] = None
+    is_self: bool
+    has_unseen: bool
+    stories: list[EphemeralStoryOut]
+
+
 class StoryReplyCreate(BaseModel):
     ephemeral_story_id: str
     body: str = Field(min_length=1, max_length=1000)

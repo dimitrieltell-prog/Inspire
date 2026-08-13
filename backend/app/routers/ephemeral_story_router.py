@@ -14,6 +14,7 @@ from app.models import (
     MessageOut,
     StoryReplyCreate,
     StorySendCreate,
+    StoryTrayEntry,
 )
 from app.moderation import contains_hostility
 from app.routers.dm_router import _deliver_dm, _to_message_out
@@ -24,15 +25,16 @@ router = APIRouter(prefix="/ephemeral-stories", tags=["ephemeral-stories"])
 
 async def _expire_ephemeral_stories(db) -> None:
     """Stories are ephemeral by design -- sweep out anything past its expiry,
-    along with its likes and sends, so it's gone everywhere. Replies are
-    delivered as real DMs, so they live on in the conversation independent
-    of the story's own lifecycle -- nothing to clean up there."""
+    along with its likes, sends, and views, so it's gone everywhere. Replies
+    are delivered as real DMs, so they live on in the conversation
+    independent of the story's own lifecycle -- nothing to clean up there."""
     now = time.time()
     expired = [s for s in await db.ephemeral_stories.find({}) if s.get("expires_at", 0) < now]
     for s in expired:
         sid = s["_id"]
         await db.story_likes.delete_many({"ephemeral_story_id": sid})
         await db.story_sends.delete_many({"ephemeral_story_id": sid})
+        await db.story_views.delete_many({"ephemeral_story_id": sid})
         await db.ephemeral_stories.delete_one({"_id": sid})
 
 
@@ -113,6 +115,54 @@ async def list_user_stories(user_id: str, viewer: Optional[dict] = Depends(get_o
     return [await _serialize_ephemeral_story(s, viewer, db) for s in visible]
 
 
+@router.get("/tray", response_model=list[StoryTrayEntry])
+async def get_story_tray(user: dict = Depends(get_current_user)):
+    """Active Stories from everyone the viewer follows, plus their own,
+    grouped by author -- what populates the horizontal tray above the feed.
+    Own bubble first, then unseen authors before already-seen ones."""
+    db = get_db()
+    await _expire_ephemeral_stories(db)
+
+    following_ids = {f["following_id"] for f in await db.follows.find({"follower_id": user["_id"]})}
+    hidden = await _hidden_author_ids(db, user)
+
+    # InMemoryCollection.find() only supports equality matches (no $in), so
+    # fetch everything active and filter in Python -- consistent with how
+    # me_router.py's repost-count lookup already handles the same limitation.
+    all_active = await db.ephemeral_stories.find({})
+    by_author: dict[str, list[dict]] = {}
+    for s in all_active:
+        author_id = s["author_id"]
+        if author_id != user["_id"] and author_id not in following_ids:
+            continue
+        if author_id in hidden:
+            continue
+        if not await _can_view_ephemeral_story(db, s, user):
+            continue
+        by_author.setdefault(author_id, []).append(s)
+
+    views = await db.story_views.find({"user_id": user["_id"]})
+    viewed_story_ids = {v["ephemeral_story_id"] for v in views}
+
+    entries = []
+    for author_id, stories in by_author.items():
+        stories.sort(key=lambda s: s["created_at"])
+        author = await db.users.find_one({"_id": author_id})
+        serialized = [await _serialize_ephemeral_story(s, user, db) for s in stories]
+        has_unseen = any(s["_id"] not in viewed_story_ids for s in stories)
+        entries.append(StoryTrayEntry(
+            author_id=author_id,
+            author_name=author["display_name"] if author else stories[0]["author_display_name"],
+            author_avatar_url=author.get("avatar_url") if author else None,
+            is_self=author_id == user["_id"],
+            has_unseen=has_unseen,
+            stories=serialized,
+        ))
+
+    entries.sort(key=lambda e: (not e.is_self, not e.has_unseen))
+    return entries
+
+
 @router.get("/{story_id}", response_model=EphemeralStoryOut)
 async def get_ephemeral_story(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()
@@ -145,6 +195,19 @@ async def like_story(story_id: str, user: dict = Depends(get_current_user)):
 async def unlike_story(story_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
     await db.story_likes.delete_one({"ephemeral_story_id": story_id, "user_id": user["_id"]})
+
+
+@router.post("/{story_id}/view", status_code=status.HTTP_204_NO_CONTENT)
+async def view_story(story_id: str, user: dict = Depends(get_current_user)):
+    """Marks a story as seen by the current viewer -- drives the tray's
+    gradient-vs-gray ring. No notification: unlike a like/reply/send, a
+    view isn't an author-facing signal worth pinging them about."""
+    db = get_db()
+    await _expire_ephemeral_stories(db)
+    await _require_visible_story(db, story_id, user)
+    existing = await db.story_views.find_one({"ephemeral_story_id": story_id, "user_id": user["_id"]})
+    if not existing:
+        await db.story_views.insert_one({"ephemeral_story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
 
 
 @router.post("/replies", response_model=MessageOut, status_code=status.HTTP_201_CREATED)

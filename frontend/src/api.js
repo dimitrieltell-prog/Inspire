@@ -120,6 +120,8 @@ export const api = {
   replyToStory: (storyId, body) => request('/ephemeral-stories/replies', { method: 'POST', body: { ephemeral_story_id: storyId, body } }),
   sendStory: (storyId, recipientId) => request(`/ephemeral-stories/${storyId}/send`, { method: 'POST', body: { recipient_id: recipientId } }),
   getStoryInbox: () => request('/me/story-inbox'),
+  getStoryTray: () => request('/ephemeral-stories/tray'),
+  markStoryViewed: (storyId) => request(`/ephemeral-stories/${storyId}/view`, { method: 'POST' }),
 
   // Reporting
   getReportReasons: () => request('/reports/reasons', { auth: false }),

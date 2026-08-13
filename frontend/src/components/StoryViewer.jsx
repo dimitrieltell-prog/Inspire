@@ -75,7 +75,7 @@ function SendSheet({ story, onClose }) {
   )
 }
 
-export default function StoryViewer({ stories, startIndex = 0, onClose }) {
+export default function StoryViewer({ stories, startIndex = 0, onClose, onViewed }) {
   const { user } = useAuth()
   const [index, setIndex] = useState(startIndex)
   const [items, setItems] = useState(stories)
@@ -102,6 +102,12 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }) {
     setReplyBody('')
     setReplySent(false)
     setError('')
+    const current = items[index]
+    if (current) {
+      api.markStoryViewed(current.id).catch(() => {})
+      onViewed?.(current.id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index])
 
   if (!story) return null
