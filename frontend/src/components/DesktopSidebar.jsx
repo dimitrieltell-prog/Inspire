@@ -17,10 +17,10 @@ export default function DesktopSidebar({ user, unreadDms, hideSearch, onSearchCl
         <img src="/logo.svg" alt="" className="w-9 h-9" />
       </Link>
 
-      {/* Vertically centers the nav icons in the space between the logo and
-          the avatar, instead of clustering them at the top and leaving one
-          large empty gap above the avatar on tall screens. */}
-      <div className="flex flex-col items-center gap-1.5 flex-grow justify-center">
+      {/* Spreads the nav icons across the full space between the logo and
+          the avatar (justify-between), instead of clustering them together
+          -- centered or not -- and leaving unused space on tall screens. */}
+      <div className="flex flex-col items-center flex-grow justify-between py-2">
         <NavLink to="/stories" className={({ isActive }) => `${iconBase} ${isActive ? iconActive : ''}`} aria-label="Stories">
           <HomeIcon className="w-5 h-5" />
         </NavLink>
