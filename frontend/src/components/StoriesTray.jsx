@@ -46,8 +46,12 @@ export default function StoriesTray() {
     })
   }
 
+  // md:px-[max(2rem,calc(50%-240px))] lines the first bubble up with the
+  // feed's own max-w-[480px] centered card below (240px = half of 480px) --
+  // matching where the content column actually starts, instead of a fixed
+  // padding guess -- while the row can still scroll right past that point.
   return (
-    <div className="flex gap-3.5 px-4 py-2.5 md:px-8 md:py-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-line bg-white flex-shrink-0">
+    <div className="flex gap-3.5 px-4 py-2.5 md:px-[max(2rem,calc(50%-240px))] md:py-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-line bg-white flex-shrink-0">
       <StoryBubble
         name="Your story"
         avatarUrl={user.avatar_url}
