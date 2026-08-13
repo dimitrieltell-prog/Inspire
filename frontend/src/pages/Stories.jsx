@@ -102,13 +102,15 @@ export default function Stories() {
               data-slide-index={showOnboarding ? slideIndex++ : undefined}
               className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
             >
-              <div className="w-full max-w-[380px]">
+              <div className="w-full max-w-[480px]">
                 <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
               </div>
             </section>
             {stories.map((s) => (
               <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
-                <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} />
+                <div className="w-full max-w-[480px]">
+                  <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} />
+                </div>
               </div>
             ))}
           </>
