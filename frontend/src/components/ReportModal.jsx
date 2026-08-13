@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api'
 
 const REASONS = [
@@ -33,7 +34,11 @@ export default function ReportModal({ targetType, targetId, onClose }) {
     }
   }
 
-  return (
+  // Portaled to document.body -- otherwise, if this is opened from inside a
+  // transformed ancestor (e.g. CommentsPanel's slide-up/slide-in sheet), a
+  // plain `fixed` div would position itself relative to that ancestor's
+  // containing block instead of the real viewport.
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-navy/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
         className="bg-white rounded-t-2xl sm:rounded-xl2 w-full sm:max-w-sm p-6 max-h-[85vh] overflow-y-auto"
@@ -94,6 +99,7 @@ export default function ReportModal({ targetType, targetId, onClose }) {
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -1,120 +1,32 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from '../components/ReportModal'
 import BookmarkIcon from '../components/BookmarkIcon'
 import ReactorsModal from '../components/ReactorsModal'
+import Comments from '../components/Comments'
+import { useStoryInteractions } from '../components/useStoryInteractions'
 
 const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
 export default function StoryDetail() {
   const { storyId } = useParams()
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [story, setStory] = useState(null)
-  const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [picked, setPicked] = useState(null)
-  const [reactOpen, setReactOpen] = useState(false)
-  const [reactError, setReactError] = useState('')
-  const [reactorsOpen, setReactorsOpen] = useState(false)
-
-  const [commentBody, setCommentBody] = useState('')
-  const [commentError, setCommentError] = useState('')
-  const [posting, setPosting] = useState(false)
-
   const [menuOpen, setMenuOpen] = useState(false)
-  const [report, setReport] = useState(null) // { targetType, targetId } | null
+  const [report, setReport] = useState(null) // { targetType: 'story', targetId } | null
 
   useEffect(() => {
     setLoading(true)
-    Promise.all([api.getStory(storyId), api.listComments(storyId)])
-      .then(([s, c]) => {
-        setStory(s)
-        setPicked(s.my_reaction || null)
-        setComments(c)
-      })
+    api.getStory(storyId)
+      .then(setStory)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [storyId])
-
-  function promptSignIn() {
-    navigate('/login', { state: { from: location } })
-  }
-
-  function openReactions() {
-    if (!user) { promptSignIn(); return }
-    if (picked) { unreact(); return }
-    setReactOpen((o) => !o)
-  }
-
-  async function react(reaction) {
-    try {
-      await api.reactToStory(story.id, reaction)
-      if (!picked) setStory((s) => ({ ...s, support_count: s.support_count + 1 }))
-      setPicked(reaction)
-      setReactOpen(false)
-      setReactError('')
-    } catch (e) {
-      setReactError(e.message)
-    }
-  }
-
-  async function unreact() {
-    try {
-      await api.unreactToStory(story.id)
-      setStory((s) => ({ ...s, support_count: s.support_count - 1 }))
-      setPicked(null)
-      setReactError('')
-    } catch (e) {
-      setReactError(e.message)
-    }
-  }
-
-  async function toggleSave() {
-    if (!user) { promptSignIn(); return }
-    const next = !story.is_saved
-    setStory((s) => ({ ...s, is_saved: next }))
-    try {
-      next ? await api.saveStory(story.id) : await api.unsaveStory(story.id)
-    } catch (e) {
-      setStory((s) => ({ ...s, is_saved: !next }))
-      setReactError(e.message)
-    }
-  }
-
-  async function toggleRepost() {
-    if (!user) { promptSignIn(); return }
-    const next = !story.is_reposted
-    setStory((s) => ({ ...s, is_reposted: next, repost_count: s.repost_count + (next ? 1 : -1) }))
-    try {
-      next ? await api.repostStory(story.id) : await api.unrepostStory(story.id)
-    } catch (e) {
-      setStory((s) => ({ ...s, is_reposted: !next, repost_count: s.repost_count + (next ? -1 : 1) }))
-      setReactError(e.message)
-    }
-  }
-
-  async function submitComment(e) {
-    e.preventDefault()
-    if (!user) { setCommentError('Sign in to leave a reply.'); return }
-    setPosting(true)
-    setCommentError('')
-    try {
-      const comment = await api.createComment(storyId, commentBody)
-      setComments((c) => [...c, comment])
-      setStory((s) => ({ ...s, comment_count: s.comment_count + 1 }))
-      setCommentBody('')
-    } catch (e) {
-      setCommentError(e.message)
-    } finally {
-      setPosting(false)
-    }
-  }
 
   if (loading) return <p className="text-center text-slate py-16">Loading…</p>
   if (error) return (
@@ -128,6 +40,17 @@ export default function StoryDetail() {
     </div>
   )
   if (!story) return null
+
+  return <StoryDetailBody story={story} setStory={setStory} user={user} menuOpen={menuOpen} setMenuOpen={setMenuOpen} report={report} setReport={setReport} />
+}
+
+function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report, setReport }) {
+  const {
+    supportCount, picked, reactOpen, setReactOpen, error: reactError,
+    reactorsOpen, setReactorsOpen,
+    saved, reposted, repostCount,
+    openReactions, react, unreact, toggleSave, toggleRepost,
+  } = useStoryInteractions(story)
 
   return (
     <div className="max-w-2xl mx-auto px-7 py-16">
@@ -220,7 +143,7 @@ export default function StoryDetail() {
               </button>
               {!story.counts_hidden && (
                 <button onClick={() => setReactorsOpen(true)} className="hover:underline hover:text-indigo transition-colors">
-                  {story.support_count}
+                  {supportCount}
                 </button>
               )}
             </div>
@@ -229,16 +152,16 @@ export default function StoryDetail() {
               <span className="text-lg leading-none">💬</span>
               <span>{story.comment_count}</span>
             </span>
-            <button onClick={toggleRepost} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${story.is_reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
+            <button onClick={toggleRepost} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
               <span className="text-lg leading-none">🔁</span>
-              <span>{story.repost_count}</span>
+              <span>{repostCount}</span>
             </button>
             <button
               onClick={toggleSave}
-              aria-label={story.is_saved ? 'Unsave' : 'Save'}
-              className={`ml-auto transition-colors ${story.is_saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
+              aria-label={saved ? 'Unsave' : 'Save'}
+              className={`ml-auto transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
             >
-              <BookmarkIcon filled={story.is_saved} className="w-5 h-5" />
+              <BookmarkIcon filled={saved} className="w-5 h-5" />
             </button>
           </div>
           {reactError && <p className="text-xs text-rose-ink mt-2">{reactError}</p>}
@@ -247,56 +170,11 @@ export default function StoryDetail() {
 
       <div className="mt-5">
         <h2 className="text-lg font-bold mb-3">Replies</h2>
-
-        {user ? (
-          <form onSubmit={submitComment} className="flex flex-col gap-3 mb-6">
-            <textarea
-              required
-              maxLength={1000}
-              placeholder="Share a supportive reply…"
-              value={commentBody}
-              onChange={(e) => setCommentBody(e.target.value)}
-              className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo resize-none"
-              rows={3}
-            />
-            {commentError && <p className="text-sm text-rose-ink">{commentError}</p>}
-            <button
-              disabled={posting}
-              className="self-start bg-indigo text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60"
-            >
-              {posting ? 'Posting…' : 'Post reply'}
-            </button>
-          </form>
-        ) : (
-          <p className="text-sm text-slate mb-6">
-            <Link to="/login" className="text-indigo font-semibold">Sign in</Link> to leave a reply.
-          </p>
-        )}
-
-        {comments.length === 0 && <p className="text-sm text-slate-light">No replies yet — be the first.</p>}
-
-        <div className="flex flex-col gap-4">
-          {comments.map((c) => (
-            <div key={c.id} className="border-b border-line pb-4 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                {c.author_id ? (
-                  <Link to={`/users/${c.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{c.author_name}</Link>
-                ) : (
-                  <span className="text-xs font-semibold text-slate">{c.author_name}</span>
-                )}
-                <p className="text-sm text-slate leading-relaxed mt-1 whitespace-pre-wrap">{c.body}</p>
-              </div>
-              {user && c.author_id !== user.id && (
-                <button
-                  onClick={() => setReport({ targetType: 'comment', targetId: c.id })}
-                  className="text-xs text-slate-light hover:text-rose-ink transition-colors flex-shrink-0"
-                >
-                  Report
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
+        <Comments
+          storyId={story.id}
+          initialCommentCount={story.comment_count}
+          onCountChange={(n) => setStory((s) => ({ ...s, comment_count: n }))}
+        />
       </div>
 
       {report && (

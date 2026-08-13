@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react'
 import { api } from '../api'
 import OnboardingSteps from './OnboardingSteps'
 
-export default function OnboardingChecklist() {
+export default function OnboardingChecklist({ onVisibilityChange } = {}) {
   const [checklist, setChecklist] = useState(null)
 
   useEffect(() => {
     api.getOnboardingChecklist().then(setChecklist).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    onVisibilityChange?.(!!checklist && !checklist.complete)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checklist])
 
   if (!checklist || checklist.complete) return null
 

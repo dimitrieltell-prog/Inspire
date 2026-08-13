@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api'
 
 export default function ReactorsModal({ storyId, onClose }) {
@@ -9,7 +10,9 @@ export default function ReactorsModal({ storyId, onClose }) {
     api.getStoryReactors(storyId).then(setReactors).catch((e) => setError(e.message))
   }, [storyId])
 
-  return (
+  // Portaled to document.body -- see ReportModal.jsx for why (avoids being
+  // mispositioned relative to a transformed ancestor like CommentsPanel).
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-navy/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
         className="bg-white rounded-t-2xl sm:rounded-xl2 w-full sm:max-w-sm p-6 max-h-[70vh] overflow-y-auto"
@@ -39,6 +42,7 @@ export default function ReactorsModal({ storyId, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
