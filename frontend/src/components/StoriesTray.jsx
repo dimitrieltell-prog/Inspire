@@ -46,12 +46,11 @@ export default function StoriesTray() {
     })
   }
 
-  // md:px-[max(2rem,calc(50%-280px))] sits a bit left of where the feed's
-  // own max-w-[480px] centered card starts (which would be calc(50%-240px)
-  // -- half of 480px) -- close to the same column but not pinned exactly
-  // to its edge -- while the row can still scroll right past that point.
+  // md:px-[max(2rem,calc(50%-340px))] sits left of where the feed's own
+  // max-w-[480px] centered card starts (which would be calc(50%-240px) --
+  // half of 480px) -- while the row can still scroll right past that point.
   return (
-    <div className="flex gap-3.5 px-4 py-2.5 md:px-[max(2rem,calc(50%-280px))] md:py-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-line bg-white flex-shrink-0">
+    <div className="flex gap-3.5 px-4 py-2.5 md:px-[max(2rem,calc(50%-340px))] md:py-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-line bg-white flex-shrink-0">
       <StoryBubble
         name="Your story"
         avatarUrl={user.avatar_url}
