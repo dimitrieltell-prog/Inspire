@@ -75,13 +75,33 @@ export default function Stories() {
 
   // Coming back to this tab via the browser/OS back-forward cache (e.g.
   // backgrounding Safari on a phone and reopening it) restores the page
-  // exactly as it was -- including whatever the snap engine last settled
-  // on -- without re-running any mount effects, so the fix above never
+  // exactly as it was -- including whatever scroll offset it was frozen
+  // at -- without re-running any mount effects, so the fix above never
   // fires for that path. `pageshow`'s `persisted` flag is true specifically
-  // for a bfcache restore; redo the same settle-then-correct dance there.
+  // for a bfcache restore. Unlike a fresh mount, there's no competing
+  // browser snap-settle pass to out-wait here, and waiting for one is
+  // actively wrong: `pageshow` can fire while the tab is still
+  // backgrounded (visibilityState "hidden"), and browsers suspend
+  // requestAnimationFrame entirely for hidden tabs -- a rAF-based
+  // correction would simply never run. Set the scroll position directly
+  // and synchronously instead.
   useEffect(() => {
     function onPageShow(e) {
-      if (e.persisted) resetScrollNextFrame(containerRef)
+      if (!e.persisted) return
+      containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+      // Belt-and-suspenders: if the restore happened while still
+      // backgrounded, redo it once the tab is actually visible again, in
+      // case becoming visible triggers the browser's own layout/snap
+      // recalculation and undoes the direct set above. rAF is safe here
+      // since by definition the tab is visible by the time this fires.
+      if (document.visibilityState === 'hidden') {
+        const onVisible = () => {
+          if (document.visibilityState !== 'visible') return
+          document.removeEventListener('visibilitychange', onVisible)
+          resetScrollNextFrame(containerRef)
+        }
+        document.addEventListener('visibilitychange', onVisible)
+      }
     }
     window.addEventListener('pageshow', onPageShow)
     return () => window.removeEventListener('pageshow', onPageShow)
