@@ -195,7 +195,7 @@ export default function Stories() {
             )}
           </div>
         </div>
-        <aside className="hidden lg:flex flex-shrink-0 w-[360px] px-8 pt-8 overflow-y-auto">
+        <aside className="hidden lg:flex flex-shrink-0 w-[360px] px-8 pt-8 overflow-y-auto bg-white">
           <SuggestedAccounts />
         </aside>
       </div>

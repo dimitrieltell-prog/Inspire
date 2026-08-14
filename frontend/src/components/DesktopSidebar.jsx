@@ -12,7 +12,7 @@ const iconActive = 'bg-lavender text-indigo'
 
 export default function DesktopSidebar({ user, unreadDms, hideSearch, onSearchClick }) {
   return (
-    <aside className="hidden md:flex md:h-screen md:w-[76px] md:flex-shrink-0 md:flex-col md:items-center bg-bg border-r border-line py-4">
+    <aside className="hidden md:flex md:h-screen md:w-[76px] md:flex-shrink-0 md:flex-col md:items-center bg-bg py-4">
       <Link to="/" className="mb-4 flex-shrink-0">
         <img src="/logo.svg" alt="" className="w-9 h-9" />
       </Link>
