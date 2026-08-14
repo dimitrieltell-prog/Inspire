@@ -5,26 +5,40 @@ import { useAuth } from '../AuthContext'
 import CrownIcon from './CrownIcon'
 import VerifiedBadge from './VerifiedBadge'
 
+const PAGE_SIZE = 5
+
+function shuffle(arr) {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
 // Right-column widget on the Stories feed -- the viewer's own profile card
 // plus a short list of accounts to follow. No "followed by X" mutual-
 // connection text (Inspire's user base is still small enough that it would
 // mostly be empty), and no "See all" link (no dedicated suggestions page
-// exists to send people to).
+// exists to send people to). Fetches a larger pool once, then reveals 5 at
+// a time ("Show more") or reshuffles that same pool ("Refresh") without a
+// new network request for either action.
 export default function SuggestedAccounts() {
   const { user } = useAuth()
-  const [suggestions, setSuggestions] = useState([])
+  const [pool, setPool] = useState([])
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [loaded, setLoaded] = useState(false)
   const [busyId, setBusyId] = useState(null)
 
   useEffect(() => {
-    api.getSuggestedUsers().then(setSuggestions).catch(() => {}).finally(() => setLoaded(true))
+    api.getSuggestedUsers().then(setPool).catch(() => {}).finally(() => setLoaded(true))
   }, [])
 
   async function follow(person) {
     setBusyId(person.id)
     try {
       await api.followUser(person.id)
-      setSuggestions((arr) => arr.filter((p) => p.id !== person.id))
+      setPool((arr) => arr.filter((p) => p.id !== person.id))
     } catch (_) {
       // Leave them in the list -- a stale suggestion is better than
       // silently pretending the follow succeeded when it didn't.
@@ -33,7 +47,14 @@ export default function SuggestedAccounts() {
     }
   }
 
+  function refresh() {
+    setPool((arr) => shuffle(arr))
+    setVisibleCount(PAGE_SIZE)
+  }
+
   if (!user) return null
+
+  const visible = pool.slice(0, visibleCount)
 
   return (
     <div className="w-full max-w-[320px] flex flex-col gap-5">
@@ -55,11 +76,18 @@ export default function SuggestedAccounts() {
         </div>
       </Link>
 
-      {loaded && suggestions.length > 0 && (
+      {loaded && pool.length > 0 && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wide text-slate-light mb-3">Suggested for you</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-slate-light">Suggested for you</h2>
+            {pool.length > PAGE_SIZE && (
+              <button onClick={refresh} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">
+                Refresh
+              </button>
+            )}
+          </div>
           <div className="flex flex-col gap-3.5">
-            {suggestions.map((p) => (
+            {visible.map((p) => (
               <div key={p.id} className="flex items-center gap-3">
                 <Link to={`/users/${p.id}`} className="flex items-center gap-3 min-w-0 flex-grow">
                   {p.avatar_url ? (
@@ -88,6 +116,14 @@ export default function SuggestedAccounts() {
               </div>
             ))}
           </div>
+          {visibleCount < pool.length && (
+            <button
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="text-xs font-semibold text-slate hover:text-indigo transition-colors mt-3.5"
+            >
+              Show more
+            </button>
+          )}
         </div>
       )}
     </div>

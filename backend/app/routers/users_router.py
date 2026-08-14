@@ -185,10 +185,13 @@ async def search_users(q: str = "", viewer: Optional[dict] = Depends(get_optiona
 
 @router.get("/suggested", response_model=list[SuggestedUser])
 async def suggested_users(user: dict = Depends(get_current_user)):
-    """Accounts the viewer might want to follow -- recently joined, public,
-    not already followed, not blocked/muted. No mutual-connection data
-    (e.g. "followed by X") since the user base is still small enough that
-    it would mostly be empty or misleading."""
+    """A pool of accounts the viewer might want to follow -- recently
+    joined, public, real (not marked is_test_account), not already
+    followed, not blocked/muted. No mutual-connection data (e.g. "followed
+    by X") since the user base is still small enough that it would mostly
+    be empty or misleading. Returns a larger pool than what's shown at once
+    (the frontend reveals 5 at a time and shuffles for "refresh") so the
+    widget doesn't need a new request for either action."""
     db = get_db()
     following_ids = {f["following_id"] for f in await db.follows.find({"follower_id": user["_id"]})}
     hidden = await _hidden_author_ids(db, user)
@@ -197,10 +200,10 @@ async def suggested_users(user: dict = Depends(get_current_user)):
     for u in all_users:
         if u["_id"] == user["_id"] or u["_id"] in following_ids or u["_id"] in hidden:
             continue
-        if u.get("is_private", False):
+        if u.get("is_private", False) or u.get("is_test_account", False):
             continue
         suggestions.append(_suggested_user(u))
-        if len(suggestions) >= 5:
+        if len(suggestions) >= 30:
             break
     return suggestions
 
