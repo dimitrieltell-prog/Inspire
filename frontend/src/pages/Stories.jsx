@@ -45,14 +45,25 @@ export default function Stories() {
       .finally(() => setLoading(false))
   }, [tag])
 
-  // Each slide uses snap-center (matching the approved mockup), but the
-  // first slide is usually shorter than the container -- scrollTop=0 isn't
-  // technically its "centered" position, so the browser's scroll-snap
-  // engine can nudge the page down slightly on initial load/reload to line
-  // it up. Force it back to a real 0 once the slides have rendered.
+  // The browser's own scroll-snap engine runs its initial "settle" pass
+  // (aligning to whichever slide it considers nearest) asynchronously,
+  // after the slides first paint -- a scrollTo(0) issued synchronously in
+  // this effect loses that race and gets silently overridden a moment
+  // later. Waiting two animation frames pushes our correction after the
+  // browser's own settle pass instead of before it, so ours wins and
+  // sticks.
   useEffect(() => {
     if (loading) return
-    containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+      })
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+    }
   }, [loading, tag])
 
   const slideCount = (showOnboarding ? 1 : 0) + stories.length
