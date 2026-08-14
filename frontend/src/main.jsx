@@ -19,6 +19,15 @@ if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Light })
 }
 
+// The browser's own scroll restoration (default "auto") tries to replay a
+// tab's previous scroll offset -- including for inner scrollable regions
+// like the Stories feed -- on reload, which fights with pages (like
+// Stories.jsx) that intentionally reset their own scroll position on load.
+// Disabling it hands that decision entirely to the app instead.
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual'
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
