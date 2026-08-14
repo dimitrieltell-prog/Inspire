@@ -45,6 +45,16 @@ export default function Stories() {
       .finally(() => setLoading(false))
   }, [tag])
 
+  // Each slide uses snap-center (matching the approved mockup), but the
+  // first slide is usually shorter than the container -- scrollTop=0 isn't
+  // technically its "centered" position, so the browser's scroll-snap
+  // engine can nudge the page down slightly on initial load/reload to line
+  // it up. Force it back to a real 0 once the slides have rendered.
+  useEffect(() => {
+    if (loading) return
+    containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [loading, tag])
+
   const slideCount = (showOnboarding ? 1 : 0) + stories.length
 
   useEffect(() => {
