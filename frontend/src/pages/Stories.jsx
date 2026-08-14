@@ -8,6 +8,22 @@ import OnboardingChecklist from '../components/OnboardingChecklist'
 import StoriesTray from '../components/StoriesTray'
 import SuggestedAccounts from '../components/SuggestedAccounts'
 
+// Waits two animation frames -- past the browser's own scroll-snap "settle"
+// pass -- then forces the feed back to the top. Shared by the two places
+// that need it: the normal load-finished effect, and a bfcache restore.
+function resetScrollNextFrame(containerRef) {
+  let raf2 = 0
+  const raf1 = requestAnimationFrame(() => {
+    raf2 = requestAnimationFrame(() => {
+      containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+    })
+  })
+  return () => {
+    cancelAnimationFrame(raf1)
+    cancelAnimationFrame(raf2)
+  }
+}
+
 // The Stories tray + a scroll-snap feed of content-sized cards (not
 // full-viewport Reels-style slides) -- cards sit close together with a gap,
 // and a gentle proximity snap settles on whichever card is nearest center
@@ -54,17 +70,22 @@ export default function Stories() {
   // sticks.
   useEffect(() => {
     if (loading) return
-    let raf2 = 0
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
-      })
-    })
-    return () => {
-      cancelAnimationFrame(raf1)
-      cancelAnimationFrame(raf2)
-    }
+    return resetScrollNextFrame(containerRef)
   }, [loading, tag])
+
+  // Coming back to this tab via the browser/OS back-forward cache (e.g.
+  // backgrounding Safari on a phone and reopening it) restores the page
+  // exactly as it was -- including whatever the snap engine last settled
+  // on -- without re-running any mount effects, so the fix above never
+  // fires for that path. `pageshow`'s `persisted` flag is true specifically
+  // for a bfcache restore; redo the same settle-then-correct dance there.
+  useEffect(() => {
+    function onPageShow(e) {
+      if (e.persisted) resetScrollNextFrame(containerRef)
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   const slideCount = (showOnboarding ? 1 : 0) + stories.length
 
