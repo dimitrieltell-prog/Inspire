@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
 from app.inapp_notifications import create_notification
-from app.models import ProfileUser, PublicProfile, StoryOut
+from app.models import ProfileUser, PublicProfile, StoryOut, SuggestedUser
 from app.notifications import notify_new_follower
-from app.routers.stories_router import serialize_story
+from app.routers.stories_router import _hidden_author_ids, serialize_story
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -18,6 +18,17 @@ def _profile_user(u: dict) -> ProfileUser:
         id=u["_id"],
         display_name=u["display_name"],
         username=u.get("username"),
+        is_premium=u.get("is_premium", False) or is_founder(u),
+        is_founder=is_founder(u),
+    )
+
+
+def _suggested_user(u: dict) -> SuggestedUser:
+    return SuggestedUser(
+        id=u["_id"],
+        display_name=u["display_name"],
+        username=u.get("username"),
+        avatar_url=u.get("avatar_url"),
         is_premium=u.get("is_premium", False) or is_founder(u),
         is_founder=is_founder(u),
     )
@@ -170,6 +181,28 @@ async def search_users(q: str = "", viewer: Optional[dict] = Depends(get_optiona
         hidden = {b["blocker_id"] for b in await db.blocks.find({"blocked_id": viewer["_id"]})}
         matches = [u for u in matches if u["_id"] not in hidden]
     return [_profile_user(u) for u in matches[:15]]
+
+
+@router.get("/suggested", response_model=list[SuggestedUser])
+async def suggested_users(user: dict = Depends(get_current_user)):
+    """Accounts the viewer might want to follow -- recently joined, public,
+    not already followed, not blocked/muted. No mutual-connection data
+    (e.g. "followed by X") since the user base is still small enough that
+    it would mostly be empty or misleading."""
+    db = get_db()
+    following_ids = {f["following_id"] for f in await db.follows.find({"follower_id": user["_id"]})}
+    hidden = await _hidden_author_ids(db, user)
+    all_users = await db.users.find({}, sort_key="created_at", reverse=True)
+    suggestions = []
+    for u in all_users:
+        if u["_id"] == user["_id"] or u["_id"] in following_ids or u["_id"] in hidden:
+            continue
+        if u.get("is_private", False):
+            continue
+        suggestions.append(_suggested_user(u))
+        if len(suggestions) >= 5:
+            break
+    return suggestions
 
 
 @router.get("/{user_id}", response_model=PublicProfile)

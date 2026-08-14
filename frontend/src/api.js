@@ -89,6 +89,7 @@ export const api = {
   unmarkTestAccount: (userId) => request(`/admin/users/${userId}/mark-test`, { method: 'DELETE' }),
   bulkMarkTestAccounts: (userIds) => request('/admin/users/bulk-mark-test', { method: 'POST', body: { user_ids: userIds } }),
   getProfile: (userId) => request(`/users/${userId}`),
+  getSuggestedUsers: () => request('/users/suggested'),
   listFollowers: (userId) => request(`/users/${userId}/followers`, { auth: false }),
   listFollowing: (userId) => request(`/users/${userId}/following`, { auth: false }),
   followUser: (userId) => request(`/users/${userId}/follow`, { method: 'POST' }),

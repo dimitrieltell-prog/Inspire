@@ -126,6 +126,17 @@ class ProfileUser(BaseModel):
     is_founder: bool
 
 
+class SuggestedUser(BaseModel):
+    """A user summary for the "Suggested for you" widget -- like ProfileUser
+    but with an avatar, since the suggestion cards show real photos."""
+    id: str
+    display_name: str
+    username: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_premium: bool
+    is_founder: bool
+
+
 class PublicProfile(BaseModel):
     id: str
     display_name: str

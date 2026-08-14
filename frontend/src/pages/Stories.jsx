@@ -6,6 +6,7 @@ import CommentsPanel from '../components/CommentsPanel'
 import FeedDots from '../components/FeedDots'
 import OnboardingChecklist from '../components/OnboardingChecklist'
 import StoriesTray from '../components/StoriesTray'
+import SuggestedAccounts from '../components/SuggestedAccounts'
 
 // The Stories tray + a scroll-snap feed of content-sized cards (not
 // full-viewport Reels-style slides) -- cards sit close together with a gap,
@@ -76,60 +77,65 @@ export default function Stories() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen">
-        <StoriesTray />
-        <div
-          ref={containerRef}
-          className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-gradient-to-b from-white to-bg"
-        >
-          {loading && (
-            <div className="h-full w-full flex items-center justify-center">
-              <p className="text-slate">Loading stories…</p>
-            </div>
-          )}
-          {error && (
-            <div className="h-full w-full flex items-center justify-center px-6">
-              <p className="text-rose-ink text-center">{error}</p>
-            </div>
-          )}
-          {!loading && !error && onboardingChecked && stories.length === 0 && !showOnboarding && (
-            <div className="h-full w-full flex items-center justify-center px-6">
-              <p className="text-slate text-center">{tag ? `No posts tagged #${tag} yet.` : 'No stories yet — be the first to share one.'}</p>
-            </div>
-          )}
-          {!loading && !error && (
-            <>
-              {/* Always mounted so its own fetch can run and report visibility
-                  via onVisibilityChange -- gating the mount on showOnboarding
-                  itself would create a chicken-and-egg problem where it never
-                  gets a chance to determine whether it should show. When it
-                  shouldn't show, the section collapses to `hidden` (no slide
-                  footprint, not counted for the IntersectionObserver). */}
-              <section
-                data-slide-index={showOnboarding ? slideIndex++ : undefined}
-                className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
-              >
-                <div className="w-full max-w-[480px]">
-                  <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
-                </div>
-              </section>
-              {stories.map((s) => (
-                <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
+      <div className="flex flex-row h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen">
+        <div className="flex flex-col flex-1 min-w-0">
+          <StoriesTray />
+          <div
+            ref={containerRef}
+            className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-gradient-to-b from-white to-bg"
+          >
+            {loading && (
+              <div className="h-full w-full flex items-center justify-center">
+                <p className="text-slate">Loading stories…</p>
+              </div>
+            )}
+            {error && (
+              <div className="h-full w-full flex items-center justify-center px-6">
+                <p className="text-rose-ink text-center">{error}</p>
+              </div>
+            )}
+            {!loading && !error && onboardingChecked && stories.length === 0 && !showOnboarding && (
+              <div className="h-full w-full flex items-center justify-center px-6">
+                <p className="text-slate text-center">{tag ? `No posts tagged #${tag} yet.` : 'No stories yet — be the first to share one.'}</p>
+              </div>
+            )}
+            {!loading && !error && (
+              <>
+                {/* Always mounted so its own fetch can run and report visibility
+                    via onVisibilityChange -- gating the mount on showOnboarding
+                    itself would create a chicken-and-egg problem where it never
+                    gets a chance to determine whether it should show. When it
+                    shouldn't show, the section collapses to `hidden` (no slide
+                    footprint, not counted for the IntersectionObserver). */}
+                <section
+                  data-slide-index={showOnboarding ? slideIndex++ : undefined}
+                  className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
+                >
                   <div className="w-full max-w-[480px]">
-                    <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} />
+                    <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
                   </div>
-                </div>
-              ))}
-            </>
-          )}
-          <FeedDots count={slideCount} activeIndex={currentIndex} />
-          {tag && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-navy/70 backdrop-blur text-white text-xs rounded-full px-4 py-2 flex items-center gap-2">
-              <span>#{tag}</span>
-              <button onClick={() => setSearchParams({})} className="font-semibold hover:underline">Clear</button>
-            </div>
-          )}
+                </section>
+                {stories.map((s) => (
+                  <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
+                    <div className="w-full max-w-[480px]">
+                      <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} />
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            <FeedDots count={slideCount} activeIndex={currentIndex} />
+            {tag && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-navy/70 backdrop-blur text-white text-xs rounded-full px-4 py-2 flex items-center gap-2">
+                <span>#{tag}</span>
+                <button onClick={() => setSearchParams({})} className="font-semibold hover:underline">Clear</button>
+              </div>
+            )}
+          </div>
         </div>
+        <aside className="hidden lg:flex flex-shrink-0 w-[360px] px-8 pt-8 overflow-y-auto">
+          <SuggestedAccounts />
+        </aside>
       </div>
       {openStory && (
         <CommentsPanel
