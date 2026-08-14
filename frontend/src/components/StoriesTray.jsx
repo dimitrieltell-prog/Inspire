@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import StoryViewer from './StoryViewer'
 import StoryComposer from './StoryComposer'
 
-// Horizontal row of ephemeral-Story avatar bubbles above the feed --
-// gradient ring = unseen, gray ring = already watched. Fetches the tray
-// once (pre-computed per-author seen state from the backend) rather than
-// reusing Avatar.jsx's self-fetching pattern, which would be an N+1
-// waterfall for a tray of N followed authors.
+// Horizontal row of avatar bubbles above the feed for everyone the viewer
+// follows, not just accounts currently posting a Story -- gradient ring =
+// unseen story, gray ring = already watched or no active story at all.
+// Tapping a bubble with a story opens the viewer; tapping one without
+// (author_id only, no active story) goes straight to that person's
+// profile instead. Fetches the tray once (pre-computed per-author seen
+// state from the backend) rather than reusing Avatar.jsx's self-fetching
+// pattern, which would be an N+1 waterfall for a tray of N followed
+// authors.
 export default function StoriesTray() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [entries, setEntries] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [openAuthorId, setOpenAuthorId] = useState(null)
@@ -68,7 +74,7 @@ export default function StoriesTray() {
           avatarUrl={e.author_avatar_url}
           displayInitial={e.author_name}
           seen={!e.has_unseen}
-          onClick={() => setOpenAuthorId(e.author_id)}
+          onClick={() => (e.stories.length > 0 ? setOpenAuthorId(e.author_id) : navigate(`/users/${e.author_id}`))}
         />
       ))}
 

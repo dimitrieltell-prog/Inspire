@@ -117,9 +117,13 @@ async def list_user_stories(user_id: str, viewer: Optional[dict] = Depends(get_o
 
 @router.get("/tray", response_model=list[StoryTrayEntry])
 async def get_story_tray(user: dict = Depends(get_current_user)):
-    """Active Stories from everyone the viewer follows, plus their own,
-    grouped by author -- what populates the horizontal tray above the feed.
-    Own bubble first, then unseen authors before already-seen ones."""
+    """Everyone the viewer follows, plus their own bubble -- what populates
+    the horizontal tray above the feed. Followed accounts with an active
+    Story show it (tap opens the viewer); followed accounts without one
+    still get a bubble with their own avatar (tap goes to their profile
+    instead) -- the tray is "who you follow", not just "who's currently
+    posting". Ordering: self first, then unseen stories, then seen
+    stories, then no-story follows."""
     db = get_db()
     await _expire_ephemeral_stories(db)
 
@@ -144,10 +148,17 @@ async def get_story_tray(user: dict = Depends(get_current_user)):
     views = await db.story_views.find({"user_id": user["_id"]})
     viewed_story_ids = {v["ephemeral_story_id"] for v in views}
 
+    # Every followed account gets a bubble, not just ones with a story --
+    # start from the full follow list (minus hidden) and layer story data
+    # on top, rather than only building entries from `by_author`.
+    tray_author_ids = {user["_id"]} | (following_ids - hidden)
+
     entries = []
-    for author_id, stories in by_author.items():
-        stories.sort(key=lambda s: s["created_at"])
+    for author_id in tray_author_ids:
+        stories = sorted(by_author.get(author_id, []), key=lambda s: s["created_at"])
         author = await db.users.find_one({"_id": author_id})
+        if not author and not stories:
+            continue
         serialized = [await _serialize_ephemeral_story(s, user, db) for s in stories]
         has_unseen = any(s["_id"] not in viewed_story_ids for s in stories)
         entries.append(StoryTrayEntry(
@@ -159,7 +170,7 @@ async def get_story_tray(user: dict = Depends(get_current_user)):
             stories=serialized,
         ))
 
-    entries.sort(key=lambda e: (not e.is_self, not e.has_unseen))
+    entries.sort(key=lambda e: (not e.is_self, not e.stories, not e.has_unseen))
     return entries
 
 
