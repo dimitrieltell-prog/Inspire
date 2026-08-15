@@ -151,7 +151,7 @@ export default function StoryViewer({ stories, startIndex = 0, onClose, onViewed
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-      <div className="relative w-full h-full sm:w-[420px] sm:h-[90vh] sm:rounded-2xl overflow-hidden bg-navy flex flex-col">
+      <div className="relative w-full h-full sm:w-[420px] sm:h-[90vh] sm:rounded-2xl overflow-hidden bg-[#131A33] flex flex-col">
         {/* progress segments */}
         <div className="absolute top-3 left-3 right-3 flex gap-1.5 z-10">
           {items.map((_, i) => (

@@ -60,7 +60,14 @@ export default function App() {
           </Routes>
         </main>
         {!isStoriesFeed && (
-          <footer className="bg-navy text-white/60 py-8 mt-10 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+          /* Deliberately always-dark, not theme-following -- bg-navy would
+             have been wrong here since `navy` is the app's flip-with-theme
+             *text* token (light in dark mode), not a fixed dark
+             background; that mismatch is exactly what made this bar look
+             washed-out and mismatched in dark mode. A literal hex pinned
+             to the light theme's own navy value keeps this footer looking
+             identical (and correctly dark) in both themes. */
+          <footer className="bg-[#131A33] text-white/60 py-8 mt-10 pb-[calc(2rem+env(safe-area-inset-bottom))]">
             <div className="max-w-6xl mx-auto px-7 flex flex-col sm:flex-row justify-between gap-3 text-sm">
               <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
               <div className="flex items-center gap-4">

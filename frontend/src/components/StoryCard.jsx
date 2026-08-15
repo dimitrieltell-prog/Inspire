@@ -165,7 +165,7 @@ export default function StoryCard({ story, repostedBy }) {
 
       {/* media */}
       {story.media_url && (
-        <Link to={`/stories/${story.id}`} className="block w-full aspect-[4/5] bg-navy overflow-hidden">
+        <Link to={`/stories/${story.id}`} className="block w-full aspect-[4/5] bg-[#131A33] overflow-hidden">
           {story.media_type === 'video' ? (
             <video src={story.media_url} controls className="w-full h-full object-cover" />
           ) : (

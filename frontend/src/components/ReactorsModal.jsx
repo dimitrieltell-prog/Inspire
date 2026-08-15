@@ -13,7 +13,7 @@ export default function ReactorsModal({ storyId, onClose }) {
   // Portaled to document.body -- see ReportModal.jsx for why (avoids being
   // mispositioned relative to a transformed ancestor like CommentsPanel).
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-navy/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-[#131A33]/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
         className="bg-surface rounded-t-2xl sm:rounded-xl2 w-full sm:max-w-sm p-6 max-h-[70vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}

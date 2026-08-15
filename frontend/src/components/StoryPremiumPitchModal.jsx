@@ -24,7 +24,7 @@ export default function StoryPremiumPitchModal() {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-navy/60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#131A33]/60 flex items-center justify-center p-4">
       <div className="bg-surface rounded-xl2 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-line">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">Want to read it again someday?</h2>

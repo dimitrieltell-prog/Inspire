@@ -31,7 +31,7 @@ export default function OnboardingGuideModal() {
   const doneCount = checklist.steps.filter((s) => s.done).length
 
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-navy/60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#131A33]/60 flex items-center justify-center p-4">
       <div className="bg-surface rounded-xl2 w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-line flex-shrink-0">
           <div>

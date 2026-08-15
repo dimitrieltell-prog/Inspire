@@ -165,7 +165,7 @@ export default function NotificationsBell({ anchor = 'right' }) {
       </button>
 
       {toast && !open && (
-        <div className={`${toastPosition} z-40 flex items-center gap-2.5 bg-navy text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg whitespace-nowrap`}>
+        <div className={`${toastPosition} z-40 flex items-center gap-2.5 bg-[#131A33] text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg whitespace-nowrap`}>
           {SUMMARY_ICONS.filter(([key]) => toast[key] > 0).map(([key, icon]) => (
             <span key={key} className="flex items-center gap-1">
               <span>{icon}</span>

@@ -97,7 +97,7 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
       )}
 
       {story.media_url && (
-        <div className="w-full aspect-[4/5] bg-navy overflow-hidden">
+        <div className="w-full aspect-[4/5] bg-[#131A33] overflow-hidden">
           {story.media_type === 'video' ? (
             <video src={story.media_url} controls className="w-full h-full object-cover" />
           ) : (

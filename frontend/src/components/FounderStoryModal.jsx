@@ -58,7 +58,7 @@ export default function FounderStoryModal({ onClose } = {}) {
   }
 
   return createPortal(
-    <div className="founder-story-modal fixed inset-0 z-50 bg-navy/60 flex items-center justify-center p-4 print:hidden">
+    <div className="founder-story-modal fixed inset-0 z-50 bg-[#131A33]/60 flex items-center justify-center p-4 print:hidden">
       {/* Belt-and-suspenders: Tailwind's print:hidden above should already
           cover this, but a plain @media print rule guarantees the essay
           never ends up in a "Print" / "Save as PDF" output regardless of

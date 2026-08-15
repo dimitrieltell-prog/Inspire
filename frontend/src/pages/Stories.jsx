@@ -192,7 +192,7 @@ export default function Stories() {
             )}
             <FeedDots count={slideCount} activeIndex={currentIndex} />
             {tag && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-navy/70 backdrop-blur text-white text-xs rounded-full px-4 py-2 flex items-center gap-2">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-[#131A33]/70 backdrop-blur text-white text-xs rounded-full px-4 py-2 flex items-center gap-2">
                 <span>#{tag}</span>
                 <button onClick={() => setSearchParams({})} className="font-semibold hover:underline">Clear</button>
               </div>

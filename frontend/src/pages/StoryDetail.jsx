@@ -119,7 +119,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
         </div>
 
         {story.media_url && (
-          <div className="w-full bg-navy">
+          <div className="w-full bg-[#131A33]">
             {story.media_type === 'video' ? (
               <video src={story.media_url} controls className="w-full max-h-[70vh]" />
             ) : (

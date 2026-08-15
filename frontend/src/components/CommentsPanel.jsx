@@ -45,7 +45,7 @@ export default function CommentsPanel({ storyId, initialCommentCount, onCountCha
   return createPortal(
     <>
       <div
-        className={`fixed inset-0 z-[45] bg-navy/40 transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 z-[45] bg-[#131A33]/40 transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
         onClick={handleClose}
       />
       <div className={sheetPosition}>

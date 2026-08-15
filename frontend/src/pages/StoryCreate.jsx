@@ -368,7 +368,7 @@ export default function StoryCreate() {
                     type="button"
                     onClick={removeMedia}
                     aria-label="Remove media"
-                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-navy text-white text-sm flex items-center justify-center shadow"
+                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#131A33] text-white text-sm flex items-center justify-center shadow"
                   >
                     ✕
                   </button>
