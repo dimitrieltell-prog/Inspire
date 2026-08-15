@@ -40,7 +40,7 @@ export default function SearchOverlay({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-20 px-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[75vh] flex flex-col overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-2xl w-full max-w-lg max-h-[75vh] flex flex-col overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 p-4 border-b border-line">
           <span className="text-slate-light">🔍</span>
           <input

@@ -57,12 +57,12 @@ export default function ProfileMenu({ anchor = 'topbar' }) {
           : <div className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold">
               {user.display_name?.charAt(0).toUpperCase()}
             </div>}
-        {user.is_founder && <CrownIcon className="absolute -bottom-1 -right-1 w-4 h-4 text-navy bg-white rounded-full p-0.5" />}
-        {!user.is_founder && user.is_premium && <VerifiedBadge className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full" />}
+        {user.is_founder && <CrownIcon className="absolute -bottom-1 -right-1 w-4 h-4 text-navy bg-surface rounded-full p-0.5" />}
+        {!user.is_founder && user.is_premium && <VerifiedBadge className="absolute -bottom-1 -right-1 w-4 h-4 bg-surface rounded-full" />}
       </button>
 
       {open && (
-        <div className={`${panelPosition} w-56 bg-white border border-line rounded-xl2 shadow-lg z-50 py-1.5`}>
+        <div className={`${panelPosition} w-56 bg-surface border border-line rounded-xl2 shadow-lg z-50 py-1.5`}>
           <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-1.5 flex-wrap px-4 py-2.5 border-b border-line hover:bg-bg transition-colors">
             <span className="text-navy font-semibold text-sm">{user.display_name}</span>
             {user.is_founder && <CrownIcon className="w-3.5 h-3.5 text-navy flex-shrink-0" />}

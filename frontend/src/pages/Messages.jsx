@@ -298,7 +298,7 @@ export default function Messages() {
       <span className="text-xs font-bold uppercase tracking-wide text-indigo">Messages</span>
       <h1 className="text-3xl font-bold mt-3 mb-8">Messages</h1>
 
-      <div className="bg-white border border-line rounded-xl2 overflow-hidden grid md:grid-cols-[280px_1fr]" style={{ height: '65vh' }}>
+      <div className="bg-surface border border-line rounded-xl2 overflow-hidden grid md:grid-cols-[280px_1fr]" style={{ height: '65vh' }}>
         <div className={`flex flex-col min-h-0 border-line ${userId ? 'hidden md:flex md:border-r' : 'border-r'}`}>
           <div className="flex gap-1 p-2 border-b border-line flex-shrink-0">
             <button

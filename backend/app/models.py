@@ -58,6 +58,7 @@ class GoogleSignupFinish(BaseModel):
 BUSINESS_CATEGORIES = ["Creator", "Brand", "Local business", "Community", "Media", "Nonprofit"]
 COMMENT_AUDIENCES = ["everyone", "followers", "no_one"]
 CONTENT_VISIBILITY_OPTIONS = ["everyone", "followers"]
+THEME_PREFERENCES = ["light", "dark", "system"]
 
 
 class UserOut(BaseModel):
@@ -82,6 +83,7 @@ class UserOut(BaseModel):
     saves_visibility: str = "followers"
     dm_visibility: str = "followers"
     show_read_receipts: bool = True
+    theme_preference: str = "light"
     has_seen_founder_story: bool = False
     has_seen_onboarding_guide: bool = False
     has_seen_story_premium_pitch: bool = False
@@ -115,6 +117,7 @@ class ProfileUpdate(BaseModel):
     saves_visibility: Optional[str] = None
     dm_visibility: Optional[str] = None
     show_read_receipts: Optional[bool] = None
+    theme_preference: Optional[str] = None  # "light" | "dark" | "system"
 
 
 class ProfileUser(BaseModel):

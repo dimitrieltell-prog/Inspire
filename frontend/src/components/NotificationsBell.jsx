@@ -154,7 +154,7 @@ export default function NotificationsBell({ anchor = 'right' }) {
       <button
         onClick={toggleOpen}
         aria-label="Notifications"
-        className="relative w-9 h-9 rounded-full border border-line bg-white hover:border-indigo transition-colors flex items-center justify-center text-sm flex-shrink-0"
+        className="relative w-9 h-9 rounded-full border border-line bg-surface hover:border-indigo transition-colors flex items-center justify-center text-sm flex-shrink-0"
       >
         <BellIcon className="w-[18px] h-[18px] text-slate" />
         {unread > 0 && (
@@ -176,7 +176,7 @@ export default function NotificationsBell({ anchor = 'right' }) {
       )}
 
       {open && (
-        <div className={`${panelPosition} w-80 max-w-[90vw] max-h-[70vh] overflow-y-auto bg-white border border-line rounded-xl2 shadow-lg z-50`}>
+        <div className={`${panelPosition} w-80 max-w-[90vw] max-h-[70vh] overflow-y-auto bg-surface border border-line rounded-xl2 shadow-lg z-50`}>
           <div className="px-4 py-3 border-b border-line font-bold text-sm">Notifications</div>
           {!items ? (
             <p className="text-sm text-slate-light px-4 py-6">Loading…</p>

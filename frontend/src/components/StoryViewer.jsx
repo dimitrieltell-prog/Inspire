@@ -34,7 +34,7 @@ function SendSheet({ story, onClose }) {
 
   return (
     <div className="absolute inset-0 bg-black/70 flex items-end sm:items-center justify-center z-20" onClick={onClose}>
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:w-96 max-h-[70vh] flex flex-col p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-t-2xl sm:rounded-2xl w-full sm:w-96 max-h-[70vh] flex flex-col p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-navy">Send story</h3>
           <button onClick={onClose} className="text-slate-light hover:text-navy text-lg leading-none">✕</button>
@@ -156,7 +156,7 @@ export default function StoryViewer({ stories, startIndex = 0, onClose, onViewed
         <div className="absolute top-3 left-3 right-3 flex gap-1.5 z-10">
           {items.map((_, i) => (
             <div key={i} className="flex-1 h-1 rounded-full bg-white/30 overflow-hidden">
-              <div className={`h-full bg-white transition-all ${i <= index ? 'w-full' : 'w-0'}`} />
+              <div className={`h-full bg-surface transition-all ${i <= index ? 'w-full' : 'w-0'}`} />
             </div>
           ))}
         </div>

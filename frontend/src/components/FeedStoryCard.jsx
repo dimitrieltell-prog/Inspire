@@ -28,7 +28,7 @@ export default function FeedStoryCard({ story, onOpenComments }) {
   } = useStoryInteractions(story)
 
   return (
-    <div className="w-full bg-white border border-line rounded-xl2 overflow-hidden flex flex-col shadow-[0_30px_60px_-30px_rgba(19,26,51,0.25)]">
+    <div className="w-full bg-surface border border-line rounded-xl2 overflow-hidden flex flex-col shadow-[0_30px_60px_-30px_rgba(19,26,51,0.25)]">
       <div className="relative flex items-center gap-2.5 px-4 pt-4 pb-3">
         <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
           {story.author_name.charAt(0).toUpperCase()}
@@ -57,7 +57,7 @@ export default function FeedStoryCard({ story, onOpenComments }) {
               ⋯
             </button>
             {menuOpen && (
-              <div className="absolute top-10 right-4 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+              <div className="absolute top-10 right-4 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
                 <button
                   onClick={() => { setMenuOpen(false); setReportOpen(true) }}
                   className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
@@ -101,7 +101,7 @@ export default function FeedStoryCard({ story, onOpenComments }) {
 
       <div className="relative px-4 pt-3 pb-4 mt-2">
         {reactOpen && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
+          <div className="absolute bottom-full mb-2 left-4 right-4 bg-surface border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
             {REACTIONS.map((r) => (
               <button
                 key={r}

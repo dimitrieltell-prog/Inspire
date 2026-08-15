@@ -36,7 +36,7 @@ export default function StoryInbox() {
             <button
               key={item.story.id}
               onClick={() => setOpenIndex(i)}
-              className="bg-white border border-line rounded-xl2 p-4 flex items-center justify-between text-left hover:border-indigo transition-colors"
+              className="bg-surface border border-line rounded-xl2 p-4 flex items-center justify-between text-left hover:border-indigo transition-colors"
             >
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{item.sender_name} sent you a story</p>

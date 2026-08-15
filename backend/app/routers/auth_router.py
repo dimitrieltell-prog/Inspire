@@ -19,6 +19,7 @@ from app.models import (
     GoogleAuthIn,
     GoogleSignupFinish,
     ProfileUpdate,
+    THEME_PREFERENCES,
     TokenOut,
     UserLogin,
     UserOut,
@@ -123,6 +124,7 @@ def _to_user_out(user: dict) -> UserOut:
         saves_visibility=user.get("saves_visibility", "followers"),
         dm_visibility=user.get("dm_visibility", "followers"),
         show_read_receipts=user.get("show_read_receipts", True),
+        theme_preference=user.get("theme_preference", "light"),
         has_seen_founder_story=user.get("has_seen_founder_story", False),
         has_seen_onboarding_guide=user.get("has_seen_onboarding_guide", False),
         has_seen_story_premium_pitch=user.get("has_seen_story_premium_pitch", False),
@@ -239,6 +241,11 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.show_read_receipts is not None:
         updates["show_read_receipts"] = payload.show_read_receipts
+
+    if payload.theme_preference is not None:
+        if payload.theme_preference not in THEME_PREFERENCES:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid theme preference.")
+        updates["theme_preference"] = payload.theme_preference
 
     if payload.muted_words is not None:
         words = [w.strip().lower() for w in payload.muted_words if w.strip()]

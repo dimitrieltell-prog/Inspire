@@ -301,7 +301,7 @@ export default function Profile() {
   return (
     <div className="max-w-2xl mx-auto px-7 py-16">
       {/* Header card */}
-      <div className="bg-white border border-line rounded-xl2 p-7">
+      <div className="bg-surface border border-line rounded-xl2 p-7">
         {editing ? (
           <form onSubmit={saveProfile} className="flex flex-col gap-4">
             <div>
@@ -533,7 +533,7 @@ export default function Profile() {
       </div>
 
       {/* Premium status */}
-      <div className="bg-white border border-line rounded-xl2 p-6 mt-5">
+      <div className="bg-surface border border-line rounded-xl2 p-6 mt-5">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light mb-2">Membership</h2>
         {profile.is_premium ? (
           <p className="text-sm">
@@ -549,7 +549,7 @@ export default function Profile() {
 
       {/* Founder-only: all accounts */}
       {user.is_founder && (
-        <div className="bg-white border border-line rounded-xl2 p-6 mt-5">
+        <div className="bg-surface border border-line rounded-xl2 p-6 mt-5">
           <div className="flex items-baseline justify-between mb-1">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">Activity Center (founder only)</h2>
             <div className="flex items-center gap-3">

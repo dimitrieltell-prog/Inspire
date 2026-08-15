@@ -43,7 +43,7 @@ export default function AvatarCropModal({ imageSrc, onCancel, onConfirm }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={onCancel}>
-      <div className="bg-white rounded-2xl w-full sm:w-[420px] p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-2xl w-full sm:w-[420px] p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">Adjust your photo</h2>
           <button onClick={onCancel} className="text-slate-light hover:text-navy text-lg leading-none">✕</button>

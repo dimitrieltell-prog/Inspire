@@ -15,7 +15,7 @@ export default function Landing() {
   return (
     <div>
       <section className="text-center pt-8 md:pt-16 pb-16 px-7 max-w-3xl mx-auto">
-        <span className="inline-flex items-center gap-1.5 bg-white border border-line px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide text-slate mb-6">
+        <span className="inline-flex items-center gap-1.5 bg-surface border border-line px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide text-slate mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo" /> A quieter kind of social
         </span>
         <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">Connect through real experiences.</h1>
@@ -27,13 +27,13 @@ export default function Landing() {
           <Link to="/stories" className="px-7 py-3.5 rounded-full font-semibold bg-indigo text-white hover:bg-indigo-deep transition-colors">
             Read Stories
           </Link>
-          <Link to="/stories/new" className="px-7 py-3.5 rounded-full font-semibold border border-line bg-white hover:border-indigo transition-colors">
+          <Link to="/stories/new" className="px-7 py-3.5 rounded-full font-semibold border border-line bg-surface hover:border-indigo transition-colors">
             Share Yours
           </Link>
         </div>
         <button
           onClick={() => setSearchOpen(true)}
-          className="w-full max-w-md mx-auto mt-5 flex items-center gap-2.5 bg-white border border-line rounded-full px-5 py-3 text-sm text-slate-light hover:border-indigo transition-colors"
+          className="w-full max-w-md mx-auto mt-5 flex items-center gap-2.5 bg-surface border border-line rounded-full px-5 py-3 text-sm text-slate-light hover:border-indigo transition-colors"
         >
           <span>🔍</span> Search people and stories
         </button>
@@ -54,7 +54,7 @@ export default function Landing() {
 
 function Feature({ badge, title, text }) {
   return (
-    <div className="bg-white border border-line rounded-xl2 p-8 hover:-translate-y-1 hover:shadow-[0_24px_48px_-28px_rgba(19,26,51,0.18)] transition-all">
+    <div className="bg-surface border border-line rounded-xl2 p-8 hover:-translate-y-1 hover:shadow-[0_24px_48px_-28px_rgba(19,26,51,0.18)] transition-all">
       <div className={`w-[46px] h-[46px] rounded-[13px] ${badge} mb-5`} />
       <h3 className="text-lg font-bold mb-2.5">{title}</h3>
       <p className="text-sm text-slate leading-relaxed">{text}</p>

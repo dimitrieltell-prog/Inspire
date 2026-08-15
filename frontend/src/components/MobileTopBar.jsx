@@ -18,7 +18,7 @@ export default function MobileTopBar({ user }) {
 
         {user ? (
           <div className="flex items-center gap-2.5">
-            <Link to="/aria" aria-label="Aria" className="w-9 h-9 rounded-full border border-line bg-white hover:border-indigo transition-colors flex items-center justify-center text-slate flex-shrink-0">
+            <Link to="/aria" aria-label="Aria" className="w-9 h-9 rounded-full border border-line bg-surface hover:border-indigo transition-colors flex items-center justify-center text-slate flex-shrink-0">
               <AriaIcon className="w-[18px] h-[18px]" />
             </Link>
             <NotificationsBell anchor="right" />

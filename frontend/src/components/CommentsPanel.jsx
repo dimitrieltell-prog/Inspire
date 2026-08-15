@@ -39,8 +39,8 @@ export default function CommentsPanel({ storyId, initialCommentCount, onCountCha
   }
 
   const sheetPosition = isDesktop
-    ? `fixed inset-y-0 right-0 z-[45] bg-white w-[400px] max-w-[90vw] h-screen flex flex-col shadow-2xl transition-transform duration-200 ${visible ? 'translate-x-0' : 'translate-x-full'}`
-    : `fixed inset-x-0 bottom-0 z-[45] bg-white rounded-t-2xl max-h-[85vh] flex flex-col shadow-2xl transition-transform duration-200 ${visible ? 'translate-y-0' : 'translate-y-full'}`
+    ? `fixed inset-y-0 right-0 z-[45] bg-surface w-[400px] max-w-[90vw] h-screen flex flex-col shadow-2xl transition-transform duration-200 ${visible ? 'translate-x-0' : 'translate-x-full'}`
+    : `fixed inset-x-0 bottom-0 z-[45] bg-surface rounded-t-2xl max-h-[85vh] flex flex-col shadow-2xl transition-transform duration-200 ${visible ? 'translate-y-0' : 'translate-y-full'}`
 
   return createPortal(
     <>

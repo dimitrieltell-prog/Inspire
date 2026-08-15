@@ -56,7 +56,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
     <div className="max-w-2xl mx-auto px-7 py-16">
       <Link to="/stories" className="text-sm text-indigo font-semibold">← Back to stories</Link>
 
-      <div className="bg-white border border-line rounded-xl2 overflow-hidden mt-6">
+      <div className="bg-surface border border-line rounded-xl2 overflow-hidden mt-6">
         <div className="relative flex items-center gap-2.5 px-6 pt-6 pb-3">
           <span className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
             {story.author_name.charAt(0).toUpperCase()}
@@ -85,7 +85,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
                 ⋯
               </button>
               {menuOpen && (
-                <div className="absolute top-11 right-6 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+                <div className="absolute top-11 right-6 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
                   <button
                     onClick={() => { setMenuOpen(false); setReport({ targetType: 'story', targetId: story.id }) }}
                     className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
@@ -124,7 +124,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
 
         <div className="relative px-6 pb-6">
           {reactOpen && (
-            <div className="absolute bottom-full mb-2 left-6 right-6 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
+            <div className="absolute bottom-full mb-2 left-6 right-6 bg-surface border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
               {REACTIONS.map((r) => (
                 <button
                   key={r}

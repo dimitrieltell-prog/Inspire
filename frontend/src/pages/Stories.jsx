@@ -144,7 +144,7 @@ export default function Stories() {
           <StoriesTray />
           <div
             ref={containerRef}
-            className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-gradient-to-b from-white to-bg"
+            className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-gradient-to-b from-surface to-bg"
           >
             {loading && (
               <div className="h-full w-full flex items-center justify-center">
@@ -195,7 +195,7 @@ export default function Stories() {
             )}
           </div>
         </div>
-        <aside className="hidden lg:flex flex-shrink-0 w-[360px] px-8 pt-8 overflow-y-auto bg-white">
+        <aside className="hidden lg:flex flex-shrink-0 w-[360px] px-8 pt-8 overflow-y-auto bg-surface">
           <SuggestedAccounts />
         </aside>
       </div>

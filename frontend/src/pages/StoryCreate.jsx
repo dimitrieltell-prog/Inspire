@@ -335,7 +335,7 @@ export default function StoryCreate() {
               className="w-full border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
             <p className="text-xs text-slate-light mt-1.5">Up to 5 tags, separated by spaces — e.g. #anxiety #growth</p>
             {tagsFocused && tagSuggestions.length > 0 && (
-              <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-line rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-surface border border-line rounded-xl shadow-lg overflow-hidden">
                 {tagSuggestions.map((s) => (
                   <button
                     type="button"
@@ -390,7 +390,7 @@ export default function StoryCreate() {
               Clear / start over
             </button>
             <button type="button" onClick={saveDraft} disabled={savingDraft || submitting || !hasContent}
-              className="ml-auto px-5 py-2.5 rounded-full text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors disabled:opacity-50">
+              className="ml-auto px-5 py-2.5 rounded-full text-sm font-semibold border border-line bg-surface hover:border-indigo transition-colors disabled:opacity-50">
               {savingDraft ? 'Saving…' : 'Save draft'}
             </button>
             <button disabled={submitting || savingDraft} className="bg-indigo text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60">

@@ -72,13 +72,13 @@ export default function Premium() {
           <div className="flex bg-white/10 rounded-full p-1 mb-6">
             <button
               onClick={() => setInterval('month')}
-              className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${interval === 'month' ? 'bg-white text-indigo-deep' : 'text-white/80'}`}
+              className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${interval === 'month' ? 'bg-surface text-indigo-deep' : 'text-white/80'}`}
             >
               Monthly
             </button>
             <button
               onClick={() => setInterval('year')}
-              className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors relative ${interval === 'year' ? 'bg-white text-indigo-deep' : 'text-white/80'}`}
+              className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors relative ${interval === 'year' ? 'bg-surface text-indigo-deep' : 'text-white/80'}`}
             >
               Annual
               <span className="absolute -top-2.5 -right-1 text-[9px] font-bold uppercase bg-sage text-sage-ink px-1.5 py-0.5 rounded-full">Save 33%</span>
@@ -130,7 +130,7 @@ export default function Premium() {
           <button
             onClick={upgrade}
             disabled={loading}
-            className="w-full bg-white text-indigo-deep rounded-full py-3 font-semibold hover:shadow-lg transition-shadow disabled:opacity-60"
+            className="w-full bg-surface text-indigo-deep rounded-full py-3 font-semibold hover:shadow-lg transition-shadow disabled:opacity-60"
           >
             {loading ? 'Redirecting to checkout…' : 'Start your free trial'}
           </button>

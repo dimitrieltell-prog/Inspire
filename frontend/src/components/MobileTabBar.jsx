@@ -12,7 +12,7 @@ const tabClass = ({ isActive }) =>
 export default function MobileTabBar({ hideSearch, onSearchClick, unreadDms }) {
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-line flex items-center justify-around pb-[env(safe-area-inset-bottom)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-line flex items-center justify-around pb-[env(safe-area-inset-bottom)]"
       style={{ height: `calc(${MOBILE_TABBAR_H}px + env(safe-area-inset-bottom))` }}
     >
       <NavLink to="/stories" className={tabClass} aria-label="Home">

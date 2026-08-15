@@ -115,7 +115,7 @@ export default function Aria() {
         )}
       </div>
 
-      <div className="flex-grow overflow-y-auto bg-white border border-line rounded-xl2 p-5 flex flex-col gap-3 mb-4">
+      <div className="flex-grow overflow-y-auto bg-surface border border-line rounded-xl2 p-5 flex flex-col gap-3 mb-4">
         {messages.map((m, i) => m.from === 'crisis' ? (
           <div key={i} className="self-stretch bg-rose border border-rose-ink/30 rounded-xl px-4 py-3 text-sm text-rose-ink leading-relaxed font-medium">
             {m.text}

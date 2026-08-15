@@ -80,7 +80,7 @@ export default function StoryComposer({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:w-[420px] max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-t-2xl sm:rounded-2xl w-full sm:w-[420px] max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">Add to your Story</h2>
           <button onClick={onClose} className="text-slate-light hover:text-navy text-lg leading-none">✕</button>
@@ -131,7 +131,7 @@ export default function StoryComposer({ onClose, onCreated }) {
             <select
               value={durationHours}
               onChange={(e) => setDurationHours(Number(e.target.value))}
-              className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo bg-white w-full"
+              className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo bg-surface w-full"
             >
               {DURATIONS.map((d) => <option key={d.hours} value={d.hours}>{d.label}</option>)}
             </select>

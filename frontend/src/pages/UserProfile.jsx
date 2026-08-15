@@ -132,7 +132,7 @@ export default function UserProfile() {
     <div className="max-w-2xl mx-auto px-7 py-16">
       <Link to="/stories" className="text-sm text-indigo font-semibold">← Back to stories</Link>
 
-      <div className="bg-white border border-line rounded-xl2 p-7 mt-6">
+      <div className="bg-surface border border-line rounded-xl2 p-7 mt-6">
         <div className="flex items-start gap-4">
           <Avatar userId={profile.id} displayName={profile.display_name} avatarUrl={profile.avatar_url} />
           <div className="flex-grow min-w-0">
@@ -187,7 +187,7 @@ export default function UserProfile() {
                   disabled={busy}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
                     profile.is_following || profile.has_requested
-                      ? 'border border-line bg-white hover:border-indigo'
+                      ? 'border border-line bg-surface hover:border-indigo'
                       : 'bg-indigo text-white hover:bg-indigo-deep'
                   }`}
                 >
@@ -197,7 +197,7 @@ export default function UserProfile() {
               {profile.can_message && (
                 <button
                   onClick={() => navigate(`/messages/${profile.id}`)}
-                  className="rounded-full px-5 py-2 text-sm font-semibold border border-line bg-white hover:border-indigo transition-colors"
+                  className="rounded-full px-5 py-2 text-sm font-semibold border border-line bg-surface hover:border-indigo transition-colors"
                 >
                   Message
                 </button>
@@ -254,7 +254,7 @@ export default function UserProfile() {
 
       {/* Private account gate */}
       {!profile.can_view && (
-        <div className="bg-white border border-line rounded-xl2 p-8 mt-6 text-center">
+        <div className="bg-surface border border-line rounded-xl2 p-8 mt-6 text-center">
           <p className="text-sm font-semibold">This account is private</p>
           <p className="text-xs text-slate mt-1">Follow {profile.display_name} to see their posts and activity.</p>
         </div>

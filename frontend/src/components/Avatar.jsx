@@ -35,7 +35,7 @@ export default function Avatar({ userId, displayName, avatarUrl, onChangePhoto, 
         disabled={!hasStory && !isSelf}
         className={`rounded-2xl ${sizeClass} ${hasStory ? 'p-[3px] bg-gradient-to-tr from-indigo via-lavender to-indigo' : ''} ${(hasStory || isSelf) ? 'cursor-pointer' : 'cursor-default'}`}
       >
-        <div className={`w-full h-full ${hasStory ? 'rounded-[13px] bg-white p-[2px]' : ''}`}>
+        <div className={`w-full h-full ${hasStory ? 'rounded-[13px] bg-surface p-[2px]' : ''}`}>
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="w-full h-full rounded-2xl object-cover" />
           ) : (
@@ -51,7 +51,7 @@ export default function Avatar({ userId, displayName, avatarUrl, onChangePhoto, 
           type="button"
           onClick={onChangePhoto}
           title="Change profile picture"
-          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-slate text-xs flex items-center justify-center border-2 border-line shadow-sm hover:text-indigo hover:border-indigo"
+          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-surface text-slate text-xs flex items-center justify-center border-2 border-line shadow-sm hover:text-indigo hover:border-indigo"
         >
           📷
         </button>
@@ -62,7 +62,7 @@ export default function Avatar({ userId, displayName, avatarUrl, onChangePhoto, 
           type="button"
           onClick={() => setShowComposer(true)}
           title="Add to your Story"
-          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-indigo text-white text-sm font-bold flex items-center justify-center border-2 border-white"
+          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-indigo text-white text-sm font-bold flex items-center justify-center border-2 border-surface"
         >
           +
         </button>

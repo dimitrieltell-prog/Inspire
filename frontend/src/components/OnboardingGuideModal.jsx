@@ -32,7 +32,7 @@ export default function OnboardingGuideModal() {
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-navy/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl2 w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-surface rounded-xl2 w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-line flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold">Getting started</h2>

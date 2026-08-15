@@ -84,7 +84,7 @@ export default function StoryCard({ story, repostedBy }) {
   }
 
   return (
-    <div className="bg-white border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
+    <div className="bg-surface border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
       {repostedBy && (
         <div className="flex items-center gap-1.5 px-4 pt-3 text-xs font-semibold text-slate-light">
           <span className="text-sm leading-none">🔁</span> Reposted by {repostedBy}
@@ -119,7 +119,7 @@ export default function StoryCard({ story, repostedBy }) {
               ⋯
             </button>
             {menuOpen && (
-              <div className="absolute top-10 right-4 bg-white border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+              <div className="absolute top-10 right-4 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
                 <button
                   onClick={() => { setMenuOpen(false); setReportOpen(true) }}
                   className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
@@ -169,7 +169,7 @@ export default function StoryCard({ story, repostedBy }) {
       {/* action row */}
       <div className="relative px-4 pt-3 pb-4 mt-3">
         {open && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 bg-white border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
+          <div className="absolute bottom-full mb-2 left-4 right-4 bg-surface border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
             {REACTIONS.map((r) => (
               <button
                 key={r}

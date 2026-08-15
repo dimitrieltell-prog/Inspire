@@ -64,7 +64,7 @@ export default function FounderStoryModal({ onClose } = {}) {
           never ends up in a "Print" / "Save as PDF" output regardless of
           how Tailwind's print variant is configured. */}
       <style>{'@media print { .founder-story-modal { display: none !important; } }'}</style>
-      <div className="bg-white rounded-xl2 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+      <div className="bg-surface rounded-xl2 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-line flex-shrink-0">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light">A note from the founder</h2>
           <button

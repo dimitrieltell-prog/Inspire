@@ -48,7 +48,7 @@ export default function ConfirmUsernameGate() {
 
   return (
     <div className="fixed inset-0 z-50 bg-navy/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-xl2 w-full sm:max-w-sm p-6 max-h-[85vh] overflow-y-auto">
+      <div className="bg-surface rounded-t-2xl sm:rounded-xl2 w-full sm:max-w-sm p-6 max-h-[85vh] overflow-y-auto">
         <form onSubmit={submit}>
           <h2 className="text-lg font-bold mb-1">Confirm your username</h2>
           <p className="text-xs text-slate-light mb-5">

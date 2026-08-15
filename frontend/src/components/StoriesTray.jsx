@@ -58,7 +58,7 @@ export default function StoriesTray() {
   // distance between those two points: midpoint of [0, 50%-240px] is
   // 25%-120px.
   return (
-    <div className="flex gap-3.5 px-4 py-2.5 md:px-[max(2rem,calc(25%-120px))] md:py-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden bg-white flex-shrink-0">
+    <div className="flex gap-3.5 px-4 py-2.5 md:px-[max(2rem,calc(25%-120px))] md:py-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden bg-surface flex-shrink-0">
       <StoryBubble
         name="Your story"
         avatarUrl={user.avatar_url}
@@ -94,7 +94,7 @@ function StoryBubble({ name, avatarUrl, displayInitial, seen, isOwn, onClick }) 
   return (
     <button type="button" onClick={onClick} className="flex flex-col items-center gap-1.5 flex-shrink-0 w-16">
       <div className={`relative w-16 h-16 max-md:w-[56px] max-md:h-[56px] rounded-full p-[2.5px] ${seen ? 'bg-line' : 'bg-gradient-to-tr from-indigo to-rose-ink'}`}>
-        <div className="w-full h-full rounded-full bg-white p-0.5 box-border">
+        <div className="w-full h-full rounded-full bg-surface p-0.5 box-border">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (
@@ -104,7 +104,7 @@ function StoryBubble({ name, avatarUrl, displayInitial, seen, isOwn, onClick }) 
           )}
         </div>
         {isOwn && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-[20px] h-[20px] rounded-full bg-indigo text-white flex items-center justify-center text-sm font-extrabold border-2 border-white">+</span>
+          <span className="absolute -bottom-0.5 -right-0.5 w-[20px] h-[20px] rounded-full bg-indigo text-white flex items-center justify-center text-sm font-extrabold border-2 border-surface">+</span>
         )}
       </div>
       <span className="text-[11px] font-semibold text-slate max-w-16 overflow-hidden text-ellipsis whitespace-nowrap">{name}</span>

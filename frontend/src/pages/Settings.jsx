@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+import { useTheme } from '../ThemeContext'
 
 const BUSINESS_CATEGORIES = ['Creator', 'Brand', 'Local business', 'Community', 'Media', 'Nonprofit']
 const AUDIENCES = [
@@ -22,8 +23,28 @@ function Toggle({ checked, onChange, disabled }) {
       disabled={disabled}
       className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 ${checked ? 'bg-indigo' : 'bg-line'}`}
     >
-      <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      <span className={`absolute top-0.5 w-5 h-5 bg-surface rounded-full shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
     </button>
+  )
+}
+
+function Segmented({ value, onChange, options, disabled }) {
+  return (
+    <div className="flex bg-bg border border-line rounded-full p-0.5">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          disabled={disabled}
+          className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 ${
+            value === opt.value ? 'bg-indigo text-white' : 'text-slate hover:text-navy'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -31,7 +52,7 @@ function Section({ title, children }) {
   return (
     <div className="mb-8">
       <h2 className="text-xs font-bold uppercase tracking-wide text-slate-light mb-2 px-1">{title}</h2>
-      <div className="bg-white border border-line rounded-xl2 divide-y divide-line overflow-hidden">{children}</div>
+      <div className="bg-surface border border-line rounded-xl2 divide-y divide-line overflow-hidden">{children}</div>
     </div>
   )
 }
@@ -74,6 +95,7 @@ function PersonRow({ person, actionLabel, onAction, busy, danger }) {
 
 export default function Settings() {
   const { user, ready, updateProfile, logout } = useAuth()
+  const { preference: themePreference, setPreference: setThemePreference } = useTheme()
   const navigate = useNavigate()
 
   const [saving, setSaving] = useState(false)
@@ -375,7 +397,7 @@ export default function Settings() {
                   <select
                     value={bizDraft.business_category}
                     onChange={(e) => setBizDraft((d) => ({ ...d, business_category: e.target.value }))}
-                    className="w-full border border-line rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:border-indigo"
+                    className="w-full border border-line rounded-xl px-3 py-2 text-sm bg-surface focus:outline-none focus:border-indigo"
                   >
                     <option value="">Choose a category…</option>
                     {BUSINESS_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -436,7 +458,7 @@ export default function Settings() {
                   ['Reposts', insights.reposts_received],
                   ['Saves', insights.saves_received],
                 ].map(([label, value]) => (
-                  <div key={label} className="bg-white border border-line rounded-xl px-3 py-3 text-center">
+                  <div key={label} className="bg-surface border border-line rounded-xl px-3 py-3 text-center">
                     <div className="text-xl font-bold">{value}</div>
                     <div className="text-[11px] text-slate mt-0.5">{label}</div>
                   </div>
@@ -445,6 +467,25 @@ export default function Settings() {
             )}
           </div>
         )}
+      </Section>
+
+      {/* ============ APPEARANCE ============ */}
+      <Section title="Appearance">
+        <Row
+          title="Theme"
+          subtitle="Light, dark, or match your device's setting."
+          right={
+            <Segmented
+              value={themePreference}
+              onChange={setThemePreference}
+              options={[
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+                { value: 'system', label: 'System' },
+              ]}
+            />
+          }
+        />
       </Section>
 
       {/* ============ PRIVACY ============ */}
@@ -586,7 +627,7 @@ export default function Settings() {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {user.muted_words.map((w) => (
-                  <span key={w} className="inline-flex items-center gap-1.5 bg-white border border-line rounded-full px-3 py-1.5 text-sm">
+                  <span key={w} className="inline-flex items-center gap-1.5 bg-surface border border-line rounded-full px-3 py-1.5 text-sm">
                     {w}
                     <button onClick={() => removeMutedWord(w)} disabled={saving} className="text-slate-light hover:text-rose-ink">✕</button>
                   </span>
