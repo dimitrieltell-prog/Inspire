@@ -148,15 +148,9 @@ export default function Stories() {
           ref={containerRef}
           className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-bg [overflow-anchor:none]"
         >
-          {/* [overflow-anchor:none] above -- belt-and-suspenders alongside
-              StoriesTray.jsx's skeleton placeholder (the real fix): with
-              Tray now living inside this scrollable pane instead of
-              outside it, any late-arriving content that changes its
-              height above the story cards is exactly the shape of layout
-              shift scroll anchoring exists to compensate for -- opting out
-              here means our own deliberate reset (resetScrollNextFrame)
-              is the only thing driving scroll position, not a browser
-              heuristic layered on top of it. */}
+          {/* [overflow-anchor:none]: this pane's scroll position is set
+              deliberately (resetScrollNextFrame), so the browser's own
+              anchoring heuristic shouldn't also be adjusting it. */}
           {/* Tray and the suggested-accounts rail are siblings in the SAME
               row so both start at the same y -- nesting Tray above this
               row (outside it) previously pushed the rail down to start
@@ -189,21 +183,42 @@ export default function Stories() {
                       gets a chance to determine whether it should show. When it
                       shouldn't show, the section collapses to `hidden` (no slide
                       footprint, not counted for the IntersectionObserver). */}
+                  {/* No snap-center here (unlike the story slides below):
+                      when shown, this is always slide 0, and slide 0 must
+                      not carry a snap point -- see the story slides for
+                      why. */}
                   <section
                     data-slide-index={showOnboarding ? slideIndex++ : undefined}
-                    className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
+                    className={showOnboarding ? 'w-full flex-shrink-0 flex items-start justify-center px-4 py-6' : 'hidden'}
                   >
                     <div className="w-full max-w-[480px]">
                       <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
                     </div>
                   </section>
-                  {stories.map((s) => (
-                    <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
-                      <div className="w-full max-w-[480px]">
-                        <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
+                  {/* Slide 0 deliberately gets NO snap point. snap-center on
+                      a card TALLER than the viewport resolves to a positive
+                      scroll offset (centering it requires scrolling past the
+                      top), so the snap engine would drag the feed down off
+                      scrollTop 0 right after our reset -- reading as "the
+                      page reloads slightly scrolled down". Cards only exceed
+                      the viewport once they carry media, which is why this
+                      only ever reproduced on real image posts. Later slides
+                      keep snap-center: their centers sit well past 0, so
+                      there's nothing to clamp against. */}
+                  {stories.map((s) => {
+                    const index = slideIndex++
+                    return (
+                      <div
+                        key={s.id}
+                        data-slide-index={index}
+                        className={`w-full flex-shrink-0 flex items-start justify-center px-4 py-6 ${index === 0 ? '' : 'snap-center'}`}
+                      >
+                        <div className="w-full max-w-[480px]">
+                          <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </>
               )}
             </div>
