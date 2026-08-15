@@ -144,51 +144,36 @@ export default function Stories() {
   return (
     <>
       <div className="flex flex-col h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen">
-        {/* Tray's own internal padding (md:px-[max(2rem,calc(25%-120px))])
-            is tuned to center its avatar row against the feed column alone
-            -- the empty w-[360px] spacer keeps that math correct by
-            matching the rail's width, instead of letting Tray stretch
-            across it and throw the centering off. */}
-        <div className="flex flex-row flex-shrink-0">
-          <div className="flex-1 min-w-0">
-            <StoriesTray />
-          </div>
-          <div className="hidden lg:block flex-shrink-0 w-[360px]" />
-        </div>
         <div
           ref={containerRef}
           className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-bg"
         >
-          {loading && (
-            <div className="h-full w-full flex items-center justify-center">
-              <p className="text-slate">Loading stories…</p>
-            </div>
-          )}
-          {error && (
-            <div className="h-full w-full flex items-center justify-center px-6">
-              <p className="text-rose-ink text-center">{error}</p>
-            </div>
-          )}
-          {!loading && !error && onboardingChecked && stories.length === 0 && !showOnboarding && (
-            <div className="h-full w-full flex items-center justify-center px-6">
-              <p className="text-slate text-center">{tag ? `No posts tagged #${tag} yet.` : 'No stories yet — be the first to share one.'}</p>
-            </div>
-          )}
-          {!loading && !error && (
-            /* One shared scroll pane (containerRef, above) for the feed
-               AND the suggested-accounts rail, instead of two independent
-               scrollers -- previously the rail stayed fixed in place while
-               only the feed scrolled, so the trailing footer below had
-               nowhere to go without overlapping the still-visible rail.
-               Scrolling together means the rail simply scrolls out of view
-               like everything else, so the footer below is reachable
-               (and full width, since it's a sibling of both columns) on
-               every breakpoint, on top of Terms/Privacy/Contact also
-               living under the suggested list itself (mirrors Instagram's
-               placement). */
-            <>
-              <div className="flex flex-row">
-                <div className="flex flex-col flex-1 min-w-0">
+          {/* Tray and the suggested-accounts rail are siblings in the SAME
+              row so both start at the same y -- nesting Tray above this
+              row (outside it) previously pushed the rail down to start
+              below Tray instead of beside it. The row (and the rail)
+              render unconditionally, matching the rail's own independent
+              fetch not depending on whether the story list is loaded. */}
+          <div className="flex flex-row">
+            <div className="flex flex-col flex-1 min-w-0">
+              <StoriesTray />
+              {loading && (
+                <div className="min-h-[60vh] w-full flex items-center justify-center">
+                  <p className="text-slate">Loading stories…</p>
+                </div>
+              )}
+              {error && (
+                <div className="min-h-[60vh] w-full flex items-center justify-center px-6">
+                  <p className="text-rose-ink text-center">{error}</p>
+                </div>
+              )}
+              {!loading && !error && onboardingChecked && stories.length === 0 && !showOnboarding && (
+                <div className="min-h-[60vh] w-full flex items-center justify-center px-6">
+                  <p className="text-slate text-center">{tag ? `No posts tagged #${tag} yet.` : 'No stories yet — be the first to share one.'}</p>
+                </div>
+              )}
+              {!loading && !error && (
+                <>
                   {/* Always mounted so its own fetch can run and report visibility
                       via onVisibilityChange -- gating the mount on showOnboarding
                       itself would create a chicken-and-egg problem where it never
@@ -210,29 +195,31 @@ export default function Stories() {
                       </div>
                     </div>
                   ))}
-                </div>
-                <aside className="hidden lg:flex flex-shrink-0 w-[360px] flex-col px-8 pt-8 pb-8 bg-bg">
-                  <SuggestedAccounts />
-                  <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-light">
-                    <Link to="/terms" className="hover:text-indigo transition-colors">Terms</Link>
-                    <Link to="/privacy" className="hover:text-indigo transition-colors">Privacy</Link>
-                    <a href="mailto:support@inspirerealexperiences.com" className="hover:text-indigo transition-colors">Contact</a>
-                    <span className="w-full">Inspire — a space to be real. © 2026</span>
-                  </div>
-                </aside>
+                </>
+              )}
+            </div>
+            <aside className="hidden lg:flex flex-shrink-0 w-[360px] flex-col px-8 pt-8 pb-8 bg-bg">
+              <SuggestedAccounts />
+              <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-light">
+                <Link to="/terms" className="hover:text-indigo transition-colors">Terms</Link>
+                <Link to="/privacy" className="hover:text-indigo transition-colors">Privacy</Link>
+                <a href="mailto:support@inspirerealexperiences.com" className="hover:text-indigo transition-colors">Contact</a>
+                <span className="w-full">Inspire — a space to be real. © 2026</span>
               </div>
-              <footer className="bg-[#131A33] text-white/60 py-5 px-7">
-                <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-center sm:text-left">
-                  <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
-                  <div className="flex items-center gap-4">
-                    <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-                    <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-                    <a href="mailto:support@inspirerealexperiences.com" className="hover:text-white transition-colors">Contact</a>
-                    <span>Made for people, not metrics.</span>
-                  </div>
+            </aside>
+          </div>
+          {!loading && !error && (
+            <footer className="bg-[#131A33] text-white/60 py-5 px-7">
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-center sm:text-left">
+                <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
+                <div className="flex items-center gap-4">
+                  <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+                  <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                  <a href="mailto:support@inspirerealexperiences.com" className="hover:text-white transition-colors">Contact</a>
+                  <span>Made for people, not metrics.</span>
                 </div>
-              </footer>
-            </>
+              </div>
+            </footer>
           )}
           <FeedDots count={slideCount} activeIndex={currentIndex} />
           {tag && (
