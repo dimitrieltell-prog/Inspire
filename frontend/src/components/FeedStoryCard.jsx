@@ -111,7 +111,7 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
             so an untitled post reads as intentional rather than as content
             that failed to load. */}
         {story.title?.trim() && <h3 className="text-[17px] font-bold leading-snug">{story.title}</h3>}
-        <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>
+        {story.body?.trim() && <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>}
         {story.tags?.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
             {story.tags.map((t) => (

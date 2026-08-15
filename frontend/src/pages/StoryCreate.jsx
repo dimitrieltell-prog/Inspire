@@ -228,7 +228,7 @@ export default function StoryCreate() {
 
       await api.createStory({
         title: title.trim(),
-        body,
+        body: body.trim(),
         tags: parseTags(tagsInput),
         is_anonymous: isAnonymous,
         media_url,
@@ -323,7 +323,12 @@ export default function StoryCreate() {
             onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
 
-          <textarea required maxLength={5000} rows={6} placeholder="What happened? Be as honest as you want to be." value={body} onChange={(e) => setBody(e.target.value)}
+          {/* On a photo/video post the caption is optional -- the media is
+              the post. A text-only post still needs words, since there'd
+              otherwise be nothing to show. */}
+          <textarea required={mode !== 'media'} maxLength={5000} rows={6}
+            placeholder={mode === 'media' ? 'Add a caption (optional)' : 'What happened? Be as honest as you want to be.'}
+            value={body} onChange={(e) => setBody(e.target.value)}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo resize-none" />
 
           <div className="relative">

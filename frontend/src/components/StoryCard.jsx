@@ -176,11 +176,11 @@ export default function StoryCard({ story, repostedBy }) {
 
       {/* text content */}
       <div className="px-4 pt-4 flex flex-col flex-grow">
-        {/* Titles are optional. When there is one it's the tile's link into
-            the post; when there isn't, that link moves to the body so the
-            tile never becomes unclickable -- on a text-only post the media
-            link above is absent too, which would otherwise leave only the
-            small comment-count link as a way in. */}
+        {/* Title and caption are both optional, so the tile's link into the
+            post moves to whichever one exists. A media-only post has
+            neither -- there the media <Link> above is the tap target, and
+            rendering an empty anchor here would just be an unlabelled link
+            for screen readers. */}
         {story.title?.trim() ? (
           <>
             <h3 className="text-[17px] font-bold mb-1.5 leading-snug">
@@ -188,11 +188,11 @@ export default function StoryCard({ story, repostedBy }) {
             </h3>
             <p className="text-sm text-slate leading-relaxed line-clamp-3 flex-grow">{story.body}</p>
           </>
-        ) : (
+        ) : story.body?.trim() ? (
           <Link to={`/stories/${story.id}`} className="flex-grow hover:text-indigo transition-colors">
             <p className="text-sm text-slate leading-relaxed line-clamp-3">{story.body}</p>
           </Link>
-        )}
+        ) : null}
         {story.tags?.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2.5">
             {story.tags.map((t) => (

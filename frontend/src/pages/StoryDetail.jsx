@@ -128,9 +128,13 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
           </div>
         )}
 
+        {/* Skipped entirely on a media-only post with no tags -- otherwise
+            its padding leaves an empty band between the image and the
+            action row. */}
+        {(story.title?.trim() || story.body?.trim() || story.tags?.length > 0) && (
         <div className="px-6 pt-5 mb-6">
           {story.title?.trim() && <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>}
-          <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>
+          {story.body?.trim() && <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>}
           {story.tags?.length > 0 && (
             <div className="flex flex-wrap gap-x-2.5 gap-y-1 mt-3">
               {story.tags.map((t) => (
@@ -141,6 +145,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
             </div>
           )}
         </div>
+        )}
 
         <div className="relative px-6 pb-6">
           {reactOpen && (
