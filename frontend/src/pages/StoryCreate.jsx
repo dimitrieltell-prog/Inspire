@@ -52,7 +52,6 @@ export default function StoryCreate() {
   const [tab, setTab] = useState('new')
   const [mode, setMode] = useState(null) // 'media' | 'text' | null (not chosen yet)
 
-  const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
@@ -101,7 +100,7 @@ export default function StoryCreate() {
     )
   }
 
-  const hasContent = title || body || mediaFile || existingMediaUrl || isAnonymous || tagsInput
+  const hasContent = body || mediaFile || existingMediaUrl || isAnonymous || tagsInput
 
   function onFileChange(e) {
     const file = e.target.files[0]
@@ -128,7 +127,6 @@ export default function StoryCreate() {
 
   function clearForm() {
     if (hasContent && !window.confirm("Clear everything you've added and start over?")) return
-    setTitle('')
     setBody('')
     setTagsInput('')
     setIsAnonymous(false)
@@ -151,7 +149,6 @@ export default function StoryCreate() {
   }
 
   function openDraft(d) {
-    setTitle(d.title || '')
     setBody(d.body || '')
     setTagsInput(d.tags?.length ? d.tags.map((t) => `#${t}`).join(' ') : '')
     setIsAnonymous(d.is_anonymous || false)
@@ -173,7 +170,6 @@ export default function StoryCreate() {
       // If this draft is loaded into the compose form, clear it too --
       // otherwise "Save draft" would silently recreate what was just deleted.
       if (draftId === id) {
-        setTitle('')
         setBody('')
         setTagsInput('')
         setIsAnonymous(false)
@@ -197,7 +193,7 @@ export default function StoryCreate() {
     setError('')
     try {
       const { media_url, media_type } = await resolveMediaUrl()
-      const payload = { title, body, tags: parseTags(tagsInput), is_anonymous: isAnonymous, media_url, media_type }
+      const payload = { body, tags: parseTags(tagsInput), is_anonymous: isAnonymous, media_url, media_type }
       if (draftId) {
         await api.updateStoryDraft(draftId, payload)
       } else {
@@ -227,7 +223,6 @@ export default function StoryCreate() {
       const { media_url, media_type } = await resolveMediaUrl()
 
       await api.createStory({
-        title: title.trim(),
         body: body.trim(),
         tags: parseTags(tagsInput),
         is_anonymous: isAnonymous,
@@ -277,9 +272,10 @@ export default function StoryCreate() {
             {drafts.map((d) => (
               <div key={d.id} className="border border-line rounded-xl p-4 flex items-start justify-between gap-3">
                 <button onClick={() => openDraft(d)} className="text-left min-w-0 flex-1">
-                  <p className="font-semibold truncate">{d.title?.trim() || 'Untitled draft'}</p>
-                  <p className="text-sm text-slate-light truncate mt-0.5">
-                    {d.body || (d.media_url ? `${d.media_type === 'video' ? '🎥' : '📷'} Photo/video attached, no text yet.` : 'No text yet.')}
+                  {/* Drafts have no title to head the row any more, so the
+                      draft's own text names it. */}
+                  <p className="font-semibold truncate">
+                    {d.body?.trim() || (d.media_url ? `${d.media_type === 'video' ? '🎥' : '📷'} Photo/video attached, no text yet.` : 'Empty draft')}
                   </p>
                   <p className="text-xs text-slate-light mt-1">{timeAgo(d.updated_at)}</p>
                 </button>
@@ -318,10 +314,6 @@ export default function StoryCreate() {
           <button type="button" onClick={() => setMode(null)} className="text-xs font-semibold text-slate-light hover:text-indigo transition-colors self-start">
             ← {mode === 'media' ? 'Photo or video' : 'Text only'} · change
           </button>
-
-          <input maxLength={120} placeholder="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
-            className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
 
           {/* On a photo/video post the caption is optional -- the media is
               the post. A text-only post still needs words, since there'd

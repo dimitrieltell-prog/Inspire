@@ -92,14 +92,13 @@ export default function SearchOverlay({ onClose }) {
                       onClick={() => go(`/stories/${s.id}`)}
                       className="w-full text-left px-2 py-2.5 rounded-lg hover:bg-bg transition-colors"
                     >
-                      {/* Search has to NAME the post, so untitled ones fall
-                          back to the server's display_title (the body's first
-                          line). The extra || chain keeps this correct if the
-                          frontend ships ahead of the backend. The body line is
-                          dropped for untitled posts to avoid printing the
-                          same text twice. */}
-                      <p className="text-sm font-semibold truncate">{s.display_title || s.title?.trim() || s.body}</p>
-                      {s.title?.trim() && <p className="text-xs text-slate-light truncate">{s.body}</p>}
+                      {/* Search still has to NAME each result, so it uses the
+                          server's display_title -- the post's first line, or
+                          "a photo"/"a video" when there's no text. Never
+                          falls back to s.title: posts don't show titles any
+                          more, and naming a result by a hidden title would
+                          look like it matched nothing. */}
+                      <p className="text-sm font-semibold truncate">{s.display_title || s.body}</p>
                     </button>
                   ))}
                 </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ReportModal from './ReportModal'
 import DeleteStoryConfirm from './DeleteStoryConfirm'
@@ -23,6 +23,32 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const isOwn = user && story.author_id === user.id
   const canDelete = isOwn || user?.is_founder
+
+  // Long posts are clamped to a few lines so one post can't fill the whole
+  // feed. "more" only appears when the text is actually cut off, which we
+  // can only know by measuring -- a character count guesses wrong as soon
+  // as the card width or font changes.
+  const [expanded, setExpanded] = useState(false)
+  const [isTruncated, setIsTruncated] = useState(false)
+  const bodyRef = useRef(null)
+
+  useEffect(() => {
+    if (expanded) return
+    const el = bodyRef.current
+    if (!el) return
+    const measure = () => setIsTruncated(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    // A single measurement on mount isn't enough: how many lines the text
+    // wraps to depends on the card's width and the font, and either can
+    // still be wrong at this point -- a backgrounded or freshly-restored
+    // tab can lay out at zero width (where everything looks truncated),
+    // and webfonts land after first paint. Both fire again below, so a
+    // wrong first reading corrects itself instead of sticking.
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    document.fonts?.ready.then(measure).catch(() => {})
+    return () => observer.disconnect()
+  }, [story.body, expanded])
 
   const {
     supportCount, picked, reactOpen, setReactOpen, error,
@@ -97,7 +123,7 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
       )}
 
       {story.media_url && (
-        <div className="w-full aspect-[4/5] bg-[#131A33] overflow-hidden">
+        <div className="w-full aspect-square bg-[#131A33] overflow-hidden">
           {story.media_type === 'video' ? (
             <video src={story.media_url} controls className="w-full h-full object-cover" />
           ) : (
@@ -107,11 +133,25 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
       )}
 
       <div className="px-4 pt-4 flex flex-col gap-1.5">
-        {/* Optional -- rendering nothing collapses the parent's flex gap too,
-            so an untitled post reads as intentional rather than as content
-            that failed to load. */}
-        {story.title?.trim() && <h3 className="text-[17px] font-bold leading-snug">{story.title}</h3>}
-        {story.body?.trim() && <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>}
+        {story.body?.trim() && (
+          <div>
+            <p
+              ref={bodyRef}
+              className={`text-sm text-slate leading-relaxed whitespace-pre-wrap ${expanded ? '' : 'line-clamp-3'}`}
+            >
+              {story.body}
+            </p>
+            {(isTruncated || expanded) && (
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="text-xs font-semibold text-slate-light hover:text-indigo transition-colors mt-1"
+              >
+                {expanded ? 'less' : 'more'}
+              </button>
+            )}
+          </div>
+        )}
         {story.tags?.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
             {story.tags.map((t) => (

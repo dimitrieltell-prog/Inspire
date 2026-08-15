@@ -165,7 +165,7 @@ export default function StoryCard({ story, repostedBy }) {
 
       {/* media */}
       {story.media_url && (
-        <Link to={`/stories/${story.id}`} className="block w-full aspect-[4/5] bg-[#131A33] overflow-hidden">
+        <Link to={`/stories/${story.id}`} className="block w-full aspect-square bg-[#131A33] overflow-hidden">
           {story.media_type === 'video' ? (
             <video src={story.media_url} controls className="w-full h-full object-cover" />
           ) : (
@@ -176,23 +176,15 @@ export default function StoryCard({ story, repostedBy }) {
 
       {/* text content */}
       <div className="px-4 pt-4 flex flex-col flex-grow">
-        {/* Title and caption are both optional, so the tile's link into the
-            post moves to whichever one exists. A media-only post has
-            neither -- there the media <Link> above is the tap target, and
-            rendering an empty anchor here would just be an unlabelled link
-            for screen readers. */}
-        {story.title?.trim() ? (
-          <>
-            <h3 className="text-[17px] font-bold mb-1.5 leading-snug">
-              <Link to={`/stories/${story.id}`} className="hover:text-indigo transition-colors">{story.title}</Link>
-            </h3>
-            <p className="text-sm text-slate leading-relaxed line-clamp-3 flex-grow">{story.body}</p>
-          </>
-        ) : story.body?.trim() ? (
+        {/* Posts have no titles, so the text preview carries the link into
+            the post. A media-only post has no text either -- there the
+            media <Link> above is the tap target, and an empty anchor here
+            would just be an unlabelled link for screen readers. */}
+        {story.body?.trim() && (
           <Link to={`/stories/${story.id}`} className="flex-grow hover:text-indigo transition-colors">
             <p className="text-sm text-slate leading-relaxed line-clamp-3">{story.body}</p>
           </Link>
-        ) : null}
+        )}
         {story.tags?.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2.5">
             {story.tags.map((t) => (
