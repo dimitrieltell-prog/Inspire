@@ -1,5 +1,5 @@
 from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 MAX_TAGS = 5
 MAX_TAG_LENGTH = 30
@@ -196,21 +196,29 @@ class TagSuggestion(BaseModel):
 
 
 class StoryCreate(BaseModel):
-    # Title is optional -- a post only needs a body. Stripped so a title of
-    # spaces is stored as "" and every downstream site only has to tell ""
-    # apart from real text, never " ".
+    # Title and caption are both optional -- a photo can speak for itself.
+    # Both are stripped so whitespace-only input is stored as "" and every
+    # downstream site only has to tell "" apart from real text, never " ".
+    # What a post can't be is empty: see _require_content below.
     title: str = Field(default="", max_length=120)
-    body: str = Field(min_length=1, max_length=5000)
+    body: str = Field(default="", max_length=5000)
     category: Optional[Category] = None
     is_anonymous: bool = False
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
 
-    @field_validator("title")
+    @field_validator("title", "body")
     @classmethod
-    def _strip_title(cls, v):
+    def _strip_text(cls, v):
         return (v or "").strip()
+
+    @model_validator(mode="after")
+    def _require_content(self):
+        # A title alone isn't a post -- it needs words or something to look at.
+        if not self.body and not self.media_url:
+            raise ValueError("Add a caption or a photo or video.")
+        return self
 
     @field_validator("tags")
     @classmethod
@@ -228,11 +236,12 @@ class StoryDraftSave(BaseModel):
     tags: list[str] = []
 
     # Drafts hydrate the composer and are then posted, so strip here too --
-    # otherwise a whitespace-only draft title is the one way a blank-looking
-    # title re-enters the flow.
-    @field_validator("title")
+    # otherwise a whitespace-only draft title or caption is the one way
+    # blank-looking text re-enters the flow. No _require_content here: an
+    # empty draft is a legitimate work in progress.
+    @field_validator("title", "body")
     @classmethod
-    def _strip_title(cls, v):
+    def _strip_text(cls, v):
         return (v or "").strip()
 
     @field_validator("tags")

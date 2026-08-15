@@ -37,8 +37,8 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         # new writes are stripped by StoryCreate, but rows written before
         # that validator existed were not.
         title=(story.get("title") or "").strip(),
-        display_title=story_label(story),
-        body=story["body"],
+        display_title=story_display_name(story),
+        body=story.get("body") or "",
         category=story["category"],
         author_name="Anonymous" if story["is_anonymous"] else story["author_display_name"],
         author_id=None if story["is_anonymous"] else story.get("author_id"),
@@ -61,13 +61,13 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
 
 
 def story_label(story: dict) -> str:
-    """How to name a post anywhere it has to be referred to BY NAME.
+    """The post in the author's OWN WORDS -- title, else the first line of
+    the caption, else "" for a media-only post.
 
-    Titles are optional, so notifications, the activity feed and search all
-    need something to call an untitled post. One rule, one place: the title
-    if there is one, else the first line of the body, else a generic phrase.
-    Body is required on published posts, so the body branch effectively
-    always resolves -- "a post" only catches malformed legacy documents.
+    Returns "" rather than a generic phrase because this gets quoted
+    verbatim in notification copy ('reacted to your story "..."'), where a
+    stand-in like "a post" would read as if the author had written it. An
+    empty value makes the quoted clause drop out instead.
     """
     title = (story.get("title") or "").strip()
     if title:
@@ -75,7 +75,23 @@ def story_label(story: dict) -> str:
     body = (story.get("body") or "").strip()
     first_line = body.splitlines()[0].strip() if body else ""
     if first_line:
-        return (first_line[:60] + "…") if len(first_line) > 60 else first_line
+        if len(first_line) > 60:
+            return first_line[:60] + "…"
+        # Captions usually end in a period, and this gets quoted inside a
+        # sentence that adds its own -- trim so it isn't 'your story "Hi.".'
+        return first_line.rstrip(".") or first_line
+    return ""
+
+
+def story_display_name(story: dict) -> str:
+    """Never-empty name, for places that refer to a post as a noun inside a
+    sentence (the activity feed) or need a label for it (search results).
+    Falls back to what kind of post it is once the author wrote no text."""
+    label = story_label(story)
+    if label:
+        return label
+    if story.get("media_url"):
+        return "a video" if story.get("media_type") == "video" else "a photo"
     return "a post"
 
 

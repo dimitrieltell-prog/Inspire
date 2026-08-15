@@ -22,11 +22,16 @@ async def create_report(payload: ReportCreate, user: dict = Depends(get_current_
     if payload.target_type == "story":
         target = await db.stories.find_one({"_id": payload.target_id})
         if target:
-            # Untitled posts skip the separator -- otherwise the saved excerpt
-            # opens with a dangling em dash and reads like lost data.
+            # Title and caption are both optional, so join only the parts
+            # that exist -- otherwise the excerpt the founder reads in the
+            # moderation queue opens with a dangling em dash and looks like
+            # lost data. A media-only post still needs to say something.
             title = (target.get("title") or "").strip()
-            body = (target.get("body") or "")[:200]
-            context = f"{title} — {body}" if title else body
+            body = (target.get("body") or "").strip()[:200]
+            parts = [p for p in (title, body) if p]
+            if not parts and target.get("media_url"):
+                parts = ["[video]" if target.get("media_type") == "video" else "[photo]"]
+            context = " — ".join(parts)
     elif payload.target_type == "comment":
         target = await db.comments.find_one({"_id": payload.target_id})
         if target:

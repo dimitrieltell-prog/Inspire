@@ -16,7 +16,7 @@ from app.models import (
 )
 from app.notifications import notify_new_follower
 from app.routers.ephemeral_story_router import _expire_ephemeral_stories, _serialize_ephemeral_story
-from app.routers.stories_router import story_label
+from app.routers.stories_router import story_display_name
 from app.routers.users_router import _profile_user
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -163,7 +163,7 @@ async def my_activity(user: dict = Depends(get_current_user)):
                 type="support",
                 detail=r["reaction"],
                 story_id=story["_id"],
-                story_title=story_label(story),
+                story_title=story_display_name(story),
                 created_at=r.get("created_at", 0),
             ))
 
@@ -174,7 +174,7 @@ async def my_activity(user: dict = Depends(get_current_user)):
                 type="reply",
                 detail=c["body"],
                 story_id=story["_id"],
-                story_title=story_label(story),
+                story_title=story_display_name(story),
                 created_at=c.get("created_at", 0),
             ))
 
