@@ -178,60 +178,61 @@ export default function Stories() {
             /* One shared scroll pane (containerRef, above) for the feed
                AND the suggested-accounts rail, instead of two independent
                scrollers -- previously the rail stayed fixed in place while
-               only the feed scrolled, so a trailing footer had nowhere to
-               go without overlapping the still-visible rail. Scrolling
-               together means the rail simply scrolls out of view like
-               everything else, and Terms/Privacy/Contact live under the
-               suggested list itself (mirrors Instagram's placement)
-               instead of needing a separate footer element on desktop. */
-            <div className="flex flex-row">
-              <div className="flex flex-col flex-1 min-w-0">
-                {/* Always mounted so its own fetch can run and report visibility
-                    via onVisibilityChange -- gating the mount on showOnboarding
-                    itself would create a chicken-and-egg problem where it never
-                    gets a chance to determine whether it should show. When it
-                    shouldn't show, the section collapses to `hidden` (no slide
-                    footprint, not counted for the IntersectionObserver). */}
-                <section
-                  data-slide-index={showOnboarding ? slideIndex++ : undefined}
-                  className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
-                >
-                  <div className="w-full max-w-[480px]">
-                    <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
-                  </div>
-                </section>
-                {stories.map((s) => (
-                  <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
+               only the feed scrolled, so the trailing footer below had
+               nowhere to go without overlapping the still-visible rail.
+               Scrolling together means the rail simply scrolls out of view
+               like everything else, so the footer below is reachable
+               (and full width, since it's a sibling of both columns) on
+               every breakpoint, on top of Terms/Privacy/Contact also
+               living under the suggested list itself (mirrors Instagram's
+               placement). */
+            <>
+              <div className="flex flex-row">
+                <div className="flex flex-col flex-1 min-w-0">
+                  {/* Always mounted so its own fetch can run and report visibility
+                      via onVisibilityChange -- gating the mount on showOnboarding
+                      itself would create a chicken-and-egg problem where it never
+                      gets a chance to determine whether it should show. When it
+                      shouldn't show, the section collapses to `hidden` (no slide
+                      footprint, not counted for the IntersectionObserver). */}
+                  <section
+                    data-slide-index={showOnboarding ? slideIndex++ : undefined}
+                    className={showOnboarding ? 'w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6' : 'hidden'}
+                  >
                     <div className="w-full max-w-[480px]">
-                      <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
+                      <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
                     </div>
-                  </div>
-                ))}
-                {/* Below lg the rail (with its own Terms/Privacy/Contact,
-                    see the aside below) is hidden entirely, so this is the
-                    only place those links are reachable on mobile/tablet. */}
-                <footer className="lg:hidden bg-[#131A33] text-white/60 py-5 px-7">
-                  <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-center sm:text-left">
-                    <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
-                    <div className="flex items-center gap-4">
-                      <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-                      <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-                      <a href="mailto:support@inspirerealexperiences.com" className="hover:text-white transition-colors">Contact</a>
-                      <span>Made for people, not metrics.</span>
+                  </section>
+                  {stories.map((s) => (
+                    <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
+                      <div className="w-full max-w-[480px]">
+                        <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
+                      </div>
                     </div>
-                  </div>
-                </footer>
-              </div>
-              <aside className="hidden lg:flex flex-shrink-0 w-[360px] flex-col px-8 pt-8 pb-8 bg-bg">
-                <SuggestedAccounts />
-                <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-light">
-                  <Link to="/terms" className="hover:text-indigo transition-colors">Terms</Link>
-                  <Link to="/privacy" className="hover:text-indigo transition-colors">Privacy</Link>
-                  <a href="mailto:support@inspirerealexperiences.com" className="hover:text-indigo transition-colors">Contact</a>
-                  <span className="w-full">Inspire — a space to be real. © 2026</span>
+                  ))}
                 </div>
-              </aside>
-            </div>
+                <aside className="hidden lg:flex flex-shrink-0 w-[360px] flex-col px-8 pt-8 pb-8 bg-bg">
+                  <SuggestedAccounts />
+                  <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-light">
+                    <Link to="/terms" className="hover:text-indigo transition-colors">Terms</Link>
+                    <Link to="/privacy" className="hover:text-indigo transition-colors">Privacy</Link>
+                    <a href="mailto:support@inspirerealexperiences.com" className="hover:text-indigo transition-colors">Contact</a>
+                    <span className="w-full">Inspire — a space to be real. © 2026</span>
+                  </div>
+                </aside>
+              </div>
+              <footer className="bg-[#131A33] text-white/60 py-5 px-7">
+                <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-center sm:text-left">
+                  <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
+                  <div className="flex items-center gap-4">
+                    <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+                    <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                    <a href="mailto:support@inspirerealexperiences.com" className="hover:text-white transition-colors">Contact</a>
+                    <span>Made for people, not metrics.</span>
+                  </div>
+                </div>
+              </footer>
+            </>
           )}
           <FeedDots count={slideCount} activeIndex={currentIndex} />
           {tag && (
