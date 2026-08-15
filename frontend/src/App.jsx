@@ -73,6 +73,7 @@ export default function App() {
               <div className="flex items-center gap-4">
                 <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
                 <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                <a href="mailto:support@inspirerealexperiences.com" className="hover:text-white transition-colors">Contact</a>
                 <span>Made for people, not metrics.</span>
               </div>
             </div>
