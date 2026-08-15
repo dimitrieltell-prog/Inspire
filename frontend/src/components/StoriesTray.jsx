@@ -92,22 +92,22 @@ export default function StoriesTray() {
 
 function StoryBubble({ name, avatarUrl, displayInitial, seen, isOwn, onClick }) {
   return (
-    <button type="button" onClick={onClick} className="flex flex-col items-center gap-1.5 flex-shrink-0 w-14">
-      <div className={`relative w-[52px] h-[52px] max-md:w-[44px] max-md:h-[44px] rounded-full p-[2.5px] ${seen ? 'bg-line' : 'bg-gradient-to-tr from-indigo to-rose-ink'}`}>
+    <button type="button" onClick={onClick} className="flex flex-col items-center gap-1.5 flex-shrink-0 w-16">
+      <div className={`relative w-16 h-16 max-md:w-[56px] max-md:h-[56px] rounded-full p-[2.5px] ${seen ? 'bg-line' : 'bg-gradient-to-tr from-indigo to-rose-ink'}`}>
         <div className="w-full h-full rounded-full bg-white p-0.5 box-border">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (
-            <div className="w-full h-full rounded-full bg-indigo text-white flex items-center justify-center font-bold text-[15px]">
+            <div className="w-full h-full rounded-full bg-indigo text-white flex items-center justify-center font-bold text-lg">
               {displayInitial?.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
         {isOwn && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full bg-indigo text-white flex items-center justify-center text-xs font-extrabold border-2 border-white">+</span>
+          <span className="absolute -bottom-0.5 -right-0.5 w-[20px] h-[20px] rounded-full bg-indigo text-white flex items-center justify-center text-sm font-extrabold border-2 border-white">+</span>
         )}
       </div>
-      <span className="text-[10.5px] font-semibold text-slate max-w-14 overflow-hidden text-ellipsis whitespace-nowrap">{name}</span>
+      <span className="text-[11px] font-semibold text-slate max-w-16 overflow-hidden text-ellipsis whitespace-nowrap">{name}</span>
     </button>
   )
 }
