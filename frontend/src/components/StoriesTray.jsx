@@ -26,7 +26,22 @@ export default function StoriesTray() {
     api.getStoryTray().then(setEntries).catch(() => {}).finally(() => setLoaded(true))
   }, [])
 
-  if (!loaded || !user) return null
+  if (!user) return null
+
+  // Reserves the tray's real height (via the same wrapper padding + a
+  // same-size invisible bubble) instead of rendering nothing until the
+  // fetch resolves -- since Stories.jsx now scrolls the tray together
+  // with the feed (it used to sit outside the scrollable area entirely),
+  // popping in late would push already-visible feed content down after
+  // the page had already settled at the top, reading as an unwanted
+  // scroll on load.
+  if (!loaded) {
+    return (
+      <div className="flex gap-3.5 px-4 py-2.5 md:px-[max(2rem,calc(25%-120px))] md:py-3.5 bg-bg flex-shrink-0">
+        <div className="w-16 h-16 max-md:w-[56px] max-md:h-[56px]" />
+      </div>
+    )
+  }
 
   const ownEntry = entries.find((e) => e.is_self)
   const others = entries.filter((e) => !e.is_self)

@@ -146,8 +146,17 @@ export default function Stories() {
       <div className="flex flex-col h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen">
         <div
           ref={containerRef}
-          className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-bg"
+          className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-bg [overflow-anchor:none]"
         >
+          {/* [overflow-anchor:none] above -- belt-and-suspenders alongside
+              StoriesTray.jsx's skeleton placeholder (the real fix): with
+              Tray now living inside this scrollable pane instead of
+              outside it, any late-arriving content that changes its
+              height above the story cards is exactly the shape of layout
+              shift scroll anchoring exists to compensate for -- opting out
+              here means our own deliberate reset (resetScrollNextFrame)
+              is the only thing driving scroll position, not a browser
+              heuristic layered on top of it. */}
           {/* Tray and the suggested-accounts rail are siblings in the SAME
               row so both start at the same y -- nesting Tray above this
               row (outside it) previously pushed the rail down to start
