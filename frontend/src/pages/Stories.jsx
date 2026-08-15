@@ -195,7 +195,13 @@ export default function Stories() {
                     on some devices even with overscroll-contain on the feed
                     itself). No data-slide-index -- it's not a story slide, so
                     it's skipped by the dots/IntersectionObserver. */}
-                <footer className="bg-[#131A33] text-white/60 py-5 px-7">
+                {/* At lg+ the right rail (SuggestedAccounts, w-[360px]) is a
+                    sibling of this pane, not a descendant -- widening past
+                    100% here is how the footer reaches the true screen edge
+                    instead of stopping at the rail. relative z-10 lifts it
+                    above that rail (position:static, painted first) once
+                    they visually overlap at the bottom of the scroll. */}
+                <footer className="relative z-10 bg-[#131A33] text-white/60 py-5 px-7 w-full lg:w-[calc(100%+360px)]">
                   <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-center sm:text-left">
                     <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
                     <div className="flex items-center gap-4">
