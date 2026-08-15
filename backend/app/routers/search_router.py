@@ -39,7 +39,7 @@ async def search(q: str = "", viewer: Optional[dict] = Depends(get_optional_user
         stories = [s for s in stories if s.get("author_id") not in hidden]
     muted_words = (viewer or {}).get("muted_words", [])
     if muted_words:
-        stories = [s for s in stories if not _contains_muted_word(s["title"] + " " + s["body"], muted_words)]
+        stories = [s for s in stories if not _contains_muted_word((s.get("title") or "") + " " + (s.get("body") or ""), muted_words)]
 
     def matches(s: dict) -> bool:
         haystack = " ".join([

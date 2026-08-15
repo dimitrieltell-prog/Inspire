@@ -22,7 +22,11 @@ async def create_report(payload: ReportCreate, user: dict = Depends(get_current_
     if payload.target_type == "story":
         target = await db.stories.find_one({"_id": payload.target_id})
         if target:
-            context = f"{target.get('title', '')} — {target.get('body', '')[:200]}"
+            # Untitled posts skip the separator -- otherwise the saved excerpt
+            # opens with a dangling em dash and reads like lost data.
+            title = (target.get("title") or "").strip()
+            body = (target.get("body") or "")[:200]
+            context = f"{title} — {body}" if title else body
     elif payload.target_type == "comment":
         target = await db.comments.find_one({"_id": payload.target_id})
         if target:

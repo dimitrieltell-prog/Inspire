@@ -31,7 +31,13 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
 
     return StoryOut(
         id=story["_id"],
-        title=story["title"],
+        # `or ""` rather than a .get default: the two-arg default only covers
+        # an absent key, and legacy rows can hold an explicit None. Stripped
+        # so pre-existing whitespace-only titles reach clients as "" too --
+        # new writes are stripped by StoryCreate, but rows written before
+        # that validator existed were not.
+        title=(story.get("title") or "").strip(),
+        display_title=story_label(story),
         body=story["body"],
         category=story["category"],
         author_name="Anonymous" if story["is_anonymous"] else story["author_display_name"],
@@ -52,6 +58,25 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         author_business_category=author.get("business_category") if author_is_business else None,
         created_at=story["created_at"],
     )
+
+
+def story_label(story: dict) -> str:
+    """How to name a post anywhere it has to be referred to BY NAME.
+
+    Titles are optional, so notifications, the activity feed and search all
+    need something to call an untitled post. One rule, one place: the title
+    if there is one, else the first line of the body, else a generic phrase.
+    Body is required on published posts, so the body branch effectively
+    always resolves -- "a post" only catches malformed legacy documents.
+    """
+    title = (story.get("title") or "").strip()
+    if title:
+        return title
+    body = (story.get("body") or "").strip()
+    first_line = body.splitlines()[0].strip() if body else ""
+    if first_line:
+        return (first_line[:60] + "…") if len(first_line) > 60 else first_line
+    return "a post"
 
 
 def _to_comment_out(comment: dict) -> CommentOut:
@@ -141,7 +166,7 @@ async def list_stories(tag: Optional[str] = None, limit: int = 30, viewer: Optio
         stories = [s for s in stories if s.get("author_id") not in hidden]
     muted_words = (viewer or {}).get("muted_words", [])
     if muted_words:
-        stories = [s for s in stories if not _contains_muted_word(s["title"] + " " + s["body"], muted_words)]
+        stories = [s for s in stories if not _contains_muted_word((s.get("title") or "") + " " + (s.get("body") or ""), muted_words)]
     stories = [s for s in stories if await _can_view_story(db, s, viewer)]
     return [await serialize_story(s, viewer, db) for s in stories[:limit]]
 
@@ -265,7 +290,7 @@ async def react_to_story(payload: ReactionCreate, user: dict = Depends(get_curre
             "created_at": time.time(),
         })
         await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"support_count": 1}})
-        await create_notification(db, story.get("author_id"), user, "like", target_id=payload.story_id, preview=story.get("title"))
+        await create_notification(db, story.get("author_id"), user, "like", target_id=payload.story_id, preview=story_label(story))
 
 
 @router.delete("/{story_id}/react", status_code=status.HTTP_204_NO_CONTENT)
@@ -301,7 +326,7 @@ async def repost_story(story_id: str, user: dict = Depends(get_current_user)):
     existing = await db.reposts.find_one({"story_id": story_id, "user_id": user["_id"]})
     if not existing:
         await db.reposts.insert_one({"story_id": story_id, "user_id": user["_id"], "created_at": time.time()})
-        await create_notification(db, story.get("author_id"), user, "repost", target_id=story_id, preview=story.get("title"))
+        await create_notification(db, story.get("author_id"), user, "repost", target_id=story_id, preview=story_label(story))
 
 
 @router.delete("/{story_id}/repost", status_code=status.HTTP_204_NO_CONTENT)

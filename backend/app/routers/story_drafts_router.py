@@ -12,7 +12,7 @@ router = APIRouter(prefix="/story-drafts", tags=["story-drafts"])
 def _to_out(d: dict) -> StoryDraftOut:
     return StoryDraftOut(
         id=d["_id"],
-        title=d.get("title", ""),
+        title=d.get("title") or "",
         body=d.get("body", ""),
         category=d.get("category"),
         is_anonymous=d.get("is_anonymous", False),

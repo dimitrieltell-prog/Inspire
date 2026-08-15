@@ -186,7 +186,7 @@ class ActivityItem(BaseModel):
     type: str  # "support" | "reply"
     detail: str  # the reaction label or the comment text
     story_id: str
-    story_title: str
+    story_title: str = ""
     created_at: float
 
 
@@ -196,13 +196,21 @@ class TagSuggestion(BaseModel):
 
 
 class StoryCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=120)
+    # Title is optional -- a post only needs a body. Stripped so a title of
+    # spaces is stored as "" and every downstream site only has to tell ""
+    # apart from real text, never " ".
+    title: str = Field(default="", max_length=120)
     body: str = Field(min_length=1, max_length=5000)
     category: Optional[Category] = None
     is_anonymous: bool = False
     media_url: Optional[str] = Field(default=None, max_length=2000)
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
+
+    @field_validator("title")
+    @classmethod
+    def _strip_title(cls, v):
+        return (v or "").strip()
 
     @field_validator("tags")
     @classmethod
@@ -219,6 +227,14 @@ class StoryDraftSave(BaseModel):
     media_type: Optional[Literal["photo", "video"]] = None
     tags: list[str] = []
 
+    # Drafts hydrate the composer and are then posted, so strip here too --
+    # otherwise a whitespace-only draft title is the one way a blank-looking
+    # title re-enters the flow.
+    @field_validator("title")
+    @classmethod
+    def _strip_title(cls, v):
+        return (v or "").strip()
+
     @field_validator("tags")
     @classmethod
     def _validate_tags(cls, v):
@@ -227,7 +243,7 @@ class StoryDraftSave(BaseModel):
 
 class StoryDraftOut(BaseModel):
     id: str
-    title: str
+    title: str = ""
     body: str
     category: Optional[str] = None
     is_anonymous: bool
@@ -240,7 +256,14 @@ class StoryDraftOut(BaseModel):
 
 class StoryOut(BaseModel):
     id: str
-    title: str
+    # Raw stored title -- "" when the author didn't write one, so post cards
+    # can choose to render nothing at all.
+    title: str = ""
+    # Never-empty name for this post, resolved once on the server (see
+    # story_label). Used by every surface that has to refer to a post BY
+    # NAME -- search, notifications, activity -- instead of each screen
+    # inventing its own fallback.
+    display_title: str = ""
     body: str
     category: Optional[str] = None
     author_name: str

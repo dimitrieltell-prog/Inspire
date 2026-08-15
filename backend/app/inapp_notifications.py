@@ -8,6 +8,9 @@ import time
 async def create_notification(db, recipient_id: str, actor: dict, type_: str, target_id: str = None, preview: str = None) -> None:
     if not recipient_id or recipient_id == actor["_id"]:
         return  # never notify people about their own actions
+    # Blank and whitespace-only previews both become None, so clients can rely
+    # on a simple truthiness check and never render empty quote marks.
+    preview = (preview or "").strip() or None
     await db.notifications.insert_one({
         "recipient_id": recipient_id,
         "type": type_,
