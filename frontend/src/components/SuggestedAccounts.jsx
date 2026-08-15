@@ -116,12 +116,19 @@ export default function SuggestedAccounts() {
               </div>
             ))}
           </div>
-          {visibleCount < pool.length && (
+          {visibleCount < pool.length ? (
             <button
               onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="text-xs font-semibold text-slate hover:text-indigo transition-colors mt-3.5"
             >
               Show more
+            </button>
+          ) : pool.length > PAGE_SIZE && (
+            <button
+              onClick={() => setVisibleCount(PAGE_SIZE)}
+              className="text-xs font-semibold text-slate hover:text-indigo transition-colors mt-3.5"
+            >
+              Show less
             </button>
           )}
         </div>
