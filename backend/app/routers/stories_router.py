@@ -61,17 +61,19 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
 
 
 def story_label(story: dict) -> str:
-    """The post in the author's OWN WORDS -- title, else the first line of
-    the caption, else "" for a media-only post.
+    """The post in the author's OWN WORDS -- the first line of its text, or
+    "" for a media-only post.
+
+    Deliberately ignores the stored `title`: posts no longer have titles
+    anywhere in the UI, so quoting one here would name a post by something
+    the reader can't see. Old posts keep their title in the database (this
+    is reversible), it just isn't surfaced.
 
     Returns "" rather than a generic phrase because this gets quoted
     verbatim in notification copy ('reacted to your story "..."'), where a
     stand-in like "a post" would read as if the author had written it. An
     empty value makes the quoted clause drop out instead.
     """
-    title = (story.get("title") or "").strip()
-    if title:
-        return title
     body = (story.get("body") or "").strip()
     first_line = body.splitlines()[0].strip() if body else ""
     if first_line:

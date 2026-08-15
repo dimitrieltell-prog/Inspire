@@ -13,8 +13,8 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 @router.get("", response_model=SearchResults)
 async def search(q: str = "", viewer: Optional[dict] = Depends(get_optional_user)):
-    """Global search: matches people by name/username and posts by title,
-    body, category, or tags."""
+    """Global search: matches people by name/username and posts by body,
+    category, or tags."""
     q = q.strip().lower()
     if len(q) < 2:
         return SearchResults(users=[], stories=[])
@@ -42,8 +42,12 @@ async def search(q: str = "", viewer: Optional[dict] = Depends(get_optional_user
         stories = [s for s in stories if not _contains_muted_word((s.get("title") or "") + " " + (s.get("body") or ""), muted_words)]
 
     def matches(s: dict) -> bool:
+        # Titles aren't shown anywhere any more, so they're not searched
+        # either -- matching one would return a post with no visible reason
+        # for being a hit. The muted-word filter above still checks the
+        # stored title, since erring toward hiding is the safe direction.
         haystack = " ".join([
-            s.get("title") or "", s.get("body") or "", s.get("category") or "", " ".join(s.get("tags") or []),
+            s.get("body") or "", s.get("category") or "", " ".join(s.get("tags") or []),
         ]).lower()
         return q in haystack
 
