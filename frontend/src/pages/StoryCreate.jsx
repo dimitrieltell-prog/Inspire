@@ -227,7 +227,7 @@ export default function StoryCreate() {
       const { media_url, media_type } = await resolveMediaUrl()
 
       await api.createStory({
-        title,
+        title: title.trim(),
         body,
         tags: parseTags(tagsInput),
         is_anonymous: isAnonymous,
@@ -277,7 +277,7 @@ export default function StoryCreate() {
             {drafts.map((d) => (
               <div key={d.id} className="border border-line rounded-xl p-4 flex items-start justify-between gap-3">
                 <button onClick={() => openDraft(d)} className="text-left min-w-0 flex-1">
-                  <p className="font-semibold truncate">{d.title || 'Untitled draft'}</p>
+                  <p className="font-semibold truncate">{d.title?.trim() || 'Untitled draft'}</p>
                   <p className="text-sm text-slate-light truncate mt-0.5">
                     {d.body || (d.media_url ? `${d.media_type === 'video' ? '🎥' : '📷'} Photo/video attached, no text yet.` : 'No text yet.')}
                   </p>
@@ -319,7 +319,7 @@ export default function StoryCreate() {
             ← {mode === 'media' ? 'Photo or video' : 'Text only'} · change
           </button>
 
-          <input required maxLength={120} placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
+          <input maxLength={120} placeholder="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo" />
 

@@ -129,7 +129,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
         )}
 
         <div className="px-6 pt-5 mb-6">
-          <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>
+          {story.title?.trim() && <h1 className="text-2xl font-bold mb-3 leading-snug">{story.title}</h1>}
           <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>
           {story.tags?.length > 0 && (
             <div className="flex flex-wrap gap-x-2.5 gap-y-1 mt-3">

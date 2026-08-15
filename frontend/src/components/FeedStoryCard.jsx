@@ -107,7 +107,10 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
       )}
 
       <div className="px-4 pt-4 flex flex-col gap-1.5">
-        <h3 className="text-[17px] font-bold leading-snug">{story.title}</h3>
+        {/* Optional -- rendering nothing collapses the parent's flex gap too,
+            so an untitled post reads as intentional rather than as content
+            that failed to load. */}
+        {story.title?.trim() && <h3 className="text-[17px] font-bold leading-snug">{story.title}</h3>}
         <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{story.body}</p>
         {story.tags?.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
