@@ -72,15 +72,33 @@ async def mark_story_premium_pitch_seen(user: dict = Depends(get_current_user)):
 
 @router.get("/onboarding", response_model=OnboardingChecklist)
 async def my_onboarding_checklist(user: dict = Depends(get_current_user)):
-    """Getting-started checklist -- every step reflects real usage, computed
-    live, so there's nothing to persist or reset: once all four are true
-    they'll stay true (short of the person undoing the underlying action)."""
+    """Getting-started checklist -- each step is detected from real usage,
+    then remembered once it happens.
+
+    Detection alone isn't enough: it describes the CURRENT state, so
+    undoing the underlying action used to un-tick the step and bring the
+    whole checklist back. Deleting your only post would greet you with the
+    new-user guide again. Completing a step is a moment in time, not a
+    state to maintain, so each one is latched here the first time it's
+    seen and never re-evaluated after that."""
     db = get_db()
     uid = user["_id"]
-    has_story = bool(await db.stories.find_one({"author_id": uid}))
-    has_profile = bool(user.get("avatar_url") or user.get("bio"))
-    has_follow = bool(await db.follows.find_one({"follower_id": uid}))
-    has_aria = bool(await db.aria_usage.find_one({"user_id": uid}))
+    latched = set(user.get("onboarding_done") or [])
+    live = {
+        "story": bool(await db.stories.find_one({"author_id": uid})),
+        "profile": bool(user.get("avatar_url") or user.get("bio")),
+        "follow": bool(await db.follows.find_one({"follower_id": uid})),
+        "aria": bool(await db.aria_usage.find_one({"user_id": uid})),
+    }
+    newly_done = {k for k, v in live.items() if v} - latched
+    if newly_done:
+        latched |= newly_done
+        await db.users.update_one({"_id": uid}, {"$set": {"onboarding_done": sorted(latched)}})
+
+    has_story = "story" in latched
+    has_profile = "profile" in latched
+    has_follow = "follow" in latched
+    has_aria = "aria" in latched
     steps = [
         OnboardingStep(
             key="story", title="Share your first story",
