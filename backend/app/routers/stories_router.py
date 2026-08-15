@@ -8,6 +8,7 @@ from app.database import get_db
 from app.inapp_notifications import create_notification
 from app.models import REACTIONS, CommentCreate, CommentOut, ReactionCreate, ReactorOut, StoryCreate, StoryOut, TagSuggestion
 from app.moderation import contains_hostility
+from app.onboarding import latch_onboarding_step
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
@@ -125,6 +126,9 @@ async def create_story(payload: StoryCreate, user: dict = Depends(get_current_us
         "comment_count": 0,
         "created_at": time.time(),
     })
+    # Latch here, not when the checklist is read -- otherwise deleting this
+    # post later would un-finish the step and bring the new-user guide back.
+    await latch_onboarding_step(db, user["_id"], "story")
     return await serialize_story(story, user, db)
 
 

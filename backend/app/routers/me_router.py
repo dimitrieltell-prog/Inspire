@@ -83,6 +83,8 @@ async def my_onboarding_checklist(user: dict = Depends(get_current_user)):
     seen and never re-evaluated after that."""
     db = get_db()
     uid = user["_id"]
+    if user.get("onboarding_dismissed"):
+        return OnboardingChecklist(steps=[], complete=True)
     latched = set(user.get("onboarding_done") or [])
     live = {
         "story": bool(await db.stories.find_one({"author_id": uid})),
@@ -122,6 +124,15 @@ async def my_onboarding_checklist(user: dict = Depends(get_current_user)):
         ),
     ]
     return OnboardingChecklist(steps=steps, complete=all(s.done for s in steps))
+
+
+@router.post("/onboarding/dismiss", status_code=status.HTTP_204_NO_CONTENT)
+async def dismiss_onboarding_checklist(user: dict = Depends(get_current_user)):
+    """Hide the getting-started checklist for good, finished or not. It's a
+    nudge, not a chore -- and it's the escape hatch for anyone whose steps
+    can't be re-detected (someone who deleted the only post that proved
+    they'd shared one)."""
+    await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"onboarding_dismissed": True}})
 
 
 @router.get("/story-inbox", response_model=list[StoryInboxItem])
