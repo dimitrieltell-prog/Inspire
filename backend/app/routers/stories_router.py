@@ -36,6 +36,7 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         category=story["category"],
         author_name="Anonymous" if story["is_anonymous"] else story["author_display_name"],
         author_id=None if story["is_anonymous"] else story.get("author_id"),
+        author_avatar_url=None if story["is_anonymous"] else (author.get("avatar_url") if author else None),
         is_anonymous=story["is_anonymous"],
         media_url=story.get("media_url"),
         media_type=story.get("media_type"),

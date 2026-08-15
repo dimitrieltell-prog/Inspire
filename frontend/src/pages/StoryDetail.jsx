@@ -58,9 +58,13 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
 
       <div className="bg-surface border border-line rounded-xl2 overflow-hidden mt-6">
         <div className="relative flex items-center gap-2.5 px-6 pt-6 pb-3">
-          <span className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-            {story.author_name.charAt(0).toUpperCase()}
-          </span>
+          {story.author_avatar_url ? (
+            <img src={story.author_avatar_url} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <span className="w-9 h-9 rounded-full bg-indigo text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {story.author_name.charAt(0).toUpperCase()}
+            </span>
+          )}
           <div className="min-w-0 flex-grow">
             <div className="flex items-center gap-1.5 min-w-0">
               {story.author_id ? (

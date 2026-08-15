@@ -245,6 +245,7 @@ class StoryOut(BaseModel):
     category: Optional[str] = None
     author_name: str
     author_id: Optional[str] = None  # only set for non-anonymous stories
+    author_avatar_url: Optional[str] = None  # only set for non-anonymous stories
     is_anonymous: bool
     media_url: Optional[str] = None
     media_type: Optional[str] = None

@@ -40,12 +40,12 @@
 :root[data-theme="dark"] {
   --color-bg: #22273F;
   --color-navy: #EDECF6;
-  --color-indigo: #8C99DE;
-  --color-indigo-deep: #A6B0E8;
+  --color-indigo: #4F7FE0;
+  --color-indigo-deep: #6F97EA;
   --color-slate: #AEB4CC;
   --color-slate-light: #838BAC;
   --color-line: #3E4876;
-  --color-lavender: #2B3157;
+  --color-lavender: #253863;
   --color-rose: #3F2A38;
   --color-rose-ink: #E08A9C;
   --color-sage: #223828;

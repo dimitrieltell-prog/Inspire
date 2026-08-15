@@ -92,9 +92,13 @@ export default function StoryCard({ story, repostedBy }) {
       )}
       {/* header */}
       <div className="relative flex items-center gap-2.5 px-4 pt-4 pb-3">
-        <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-          {story.author_name.charAt(0).toUpperCase()}
-        </span>
+        {story.author_avatar_url ? (
+          <img src={story.author_avatar_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+            {story.author_name.charAt(0).toUpperCase()}
+          </span>
+        )}
         <div className="min-w-0 flex-grow">
           <div className="flex items-center gap-1.5 min-w-0">
             {story.author_id ? (
