@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
 import FeedStoryCard from '../components/FeedStoryCard'
 import CommentsPanel from '../components/CommentsPanel'
@@ -188,6 +188,24 @@ export default function Stories() {
                     </div>
                   </div>
                 ))}
+                {/* Trailing content inside the feed's own scroll pane, not the
+                    outer document -- the feed owns a viewport-locked scroll on
+                    both breakpoints and can't have a footer sitting below it
+                    in the document (reachable via overscroll-chaining/keyboard
+                    on some devices even with overscroll-contain on the feed
+                    itself). No data-slide-index -- it's not a story slide, so
+                    it's skipped by the dots/IntersectionObserver. */}
+                <footer className="bg-[#131A33] text-white/60 py-8 px-4">
+                  <div className="max-w-[480px] mx-auto flex flex-col items-center gap-3 text-sm text-center">
+                    <span>Inspire — a space to be real. © 2026 · inspirerealexperiences.com</span>
+                    <div className="flex items-center gap-4">
+                      <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+                      <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                      <a href="mailto:support@inspirerealexperiences.com" className="hover:text-white transition-colors">Contact</a>
+                    </div>
+                    <span>Made for people, not metrics.</span>
+                  </div>
+                </footer>
               </>
             )}
             <FeedDots count={slideCount} activeIndex={currentIndex} />
