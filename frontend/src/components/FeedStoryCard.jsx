@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ReportModal from './ReportModal'
+import DeleteStoryConfirm from './DeleteStoryConfirm'
 import BookmarkIcon from './BookmarkIcon'
 import ReactorsModal from './ReactorsModal'
 import { useAuth } from '../AuthContext'
@@ -15,10 +16,13 @@ const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here
 // links -- the post is already fully shown, so only the comment button
 // navigates (opens the panel via onOpenComments) instead of routing to
 // /stories/:id.
-export default function FeedStoryCard({ story, onOpenComments }) {
+export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
   const { user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const isOwn = user && story.author_id === user.id
+  const canDelete = isOwn || user?.is_founder
 
   const {
     supportCount, picked, reactOpen, setReactOpen, error,
@@ -51,7 +55,7 @@ export default function FeedStoryCard({ story, onOpenComments }) {
             )}
           </div>
         </div>
-        {user && story.author_id !== user.id && (
+        {user && (
           <div className="flex-shrink-0">
             <button
               onClick={() => setMenuOpen((o) => !o)}
@@ -62,18 +66,35 @@ export default function FeedStoryCard({ story, onOpenComments }) {
             </button>
             {menuOpen && (
               <div className="absolute top-10 right-4 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
-                <button
-                  onClick={() => { setMenuOpen(false); setReportOpen(true) }}
-                  className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
-                >
-                  Report
-                </button>
+                {!isOwn && (
+                  <button
+                    onClick={() => { setMenuOpen(false); setReportOpen(true) }}
+                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                  >
+                    Report
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => { setMenuOpen(false); setDeleteOpen(true) }}
+                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
       {reportOpen && <ReportModal targetType="story" targetId={story.id} onClose={() => setReportOpen(false)} />}
+      {deleteOpen && (
+        <DeleteStoryConfirm
+          storyId={story.id}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => { setDeleteOpen(false); onDeleted?.(story.id) }}
+        />
+      )}
 
       {story.media_url && (
         <div className="w-full aspect-[4/5] bg-navy overflow-hidden">

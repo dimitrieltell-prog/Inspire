@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from '../components/ReportModal'
+import DeleteStoryConfirm from '../components/DeleteStoryConfirm'
 import BookmarkIcon from '../components/BookmarkIcon'
 import ReactorsModal from '../components/ReactorsModal'
 import Comments from '../components/Comments'
@@ -45,6 +46,11 @@ export default function StoryDetail() {
 }
 
 function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report, setReport }) {
+  const navigate = useNavigate()
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const isOwn = user && story.author_id === user.id
+  const canDelete = isOwn || user?.is_founder
+
   const {
     supportCount, picked, reactOpen, setReactOpen, error: reactError,
     reactorsOpen, setReactorsOpen,
@@ -79,7 +85,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
               )}
             </div>
           </div>
-          {user && story.author_id !== user.id && (
+          {user && (
             <div className="flex-shrink-0">
               <button
                 onClick={() => setMenuOpen((o) => !o)}
@@ -90,12 +96,22 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
               </button>
               {menuOpen && (
                 <div className="absolute top-11 right-6 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
-                  <button
-                    onClick={() => { setMenuOpen(false); setReport({ targetType: 'story', targetId: story.id }) }}
-                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
-                  >
-                    Report
-                  </button>
+                  {!isOwn && (
+                    <button
+                      onClick={() => { setMenuOpen(false); setReport({ targetType: 'story', targetId: story.id }) }}
+                      className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                    >
+                      Report
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => { setMenuOpen(false); setDeleteOpen(true) }}
+                      className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -183,6 +199,13 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
 
       {report && (
         <ReportModal targetType={report.targetType} targetId={report.targetId} onClose={() => setReport(null)} />
+      )}
+      {deleteOpen && (
+        <DeleteStoryConfirm
+          storyId={story.id}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => navigate('/stories')}
+        />
       )}
     </div>
   )

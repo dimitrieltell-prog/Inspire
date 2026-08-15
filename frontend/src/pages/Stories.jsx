@@ -129,6 +129,10 @@ export default function Stories() {
     setStories((arr) => arr.map((s) => (s.id === storyId ? { ...s, comment_count: n } : s)))
   }
 
+  function handleDeleted(storyId) {
+    setStories((arr) => arr.filter((s) => s.id !== storyId))
+  }
+
   function handleOnboardingVisibility(visible) {
     setShowOnboarding(visible)
     setOnboardingChecked(true)
@@ -180,7 +184,7 @@ export default function Stories() {
                 {stories.map((s) => (
                   <div key={s.id} data-slide-index={slideIndex++} className="w-full flex-shrink-0 snap-center flex items-start justify-center px-4 py-6">
                     <div className="w-full max-w-[480px]">
-                      <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} />
+                      <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
                     </div>
                   </div>
                 ))}

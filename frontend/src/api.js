@@ -65,6 +65,7 @@ export const api = {
   searchTags: (q) => request(`/stories/tags/search?q=${encodeURIComponent(q)}`),
   getStory: (storyId) => request(`/stories/${storyId}`),
   createStory: (payload) => request('/stories', { method: 'POST', body: payload }),
+  deleteStory: (storyId) => request(`/stories/${storyId}`, { method: 'DELETE' }),
   reactToStory: (storyId, reaction) => request('/stories/react', { method: 'POST', body: { story_id: storyId, reaction } }),
   unreactToStory: (storyId) => request(`/stories/${storyId}/react`, { method: 'DELETE' }),
   getStoryReactors: (storyId) => request(`/stories/${storyId}/reactions`),

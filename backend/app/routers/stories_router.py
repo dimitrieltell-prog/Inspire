@@ -170,6 +170,25 @@ async def get_story(story_id: str, viewer: Optional[dict] = Depends(get_optional
     return await serialize_story(story, viewer, db)
 
 
+@router.delete("/{story_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_story(story_id: str, user: dict = Depends(get_current_user)):
+    """The author can delete their own post; a founder can delete anyone's
+    (e.g. cleaning up test-account posts) -- same author-or-founder shape
+    already used for other story permission checks in this file. 404s on a
+    missing story to match _require_visible_story's not-403 convention."""
+    db = get_db()
+    story = await db.stories.find_one({"_id": story_id})
+    if not story:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    if story.get("author_id") != user["_id"] and not is_founder(user):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Story not found.")
+    await db.comments.delete_many({"story_id": story_id})
+    await db.reactions.delete_many({"story_id": story_id})
+    await db.reposts.delete_many({"story_id": story_id})
+    await db.saves.delete_many({"story_id": story_id})
+    await db.stories.delete_one({"_id": story_id})
+
+
 @router.get("/{story_id}/comments", response_model=list[CommentOut])
 async def list_comments(story_id: str, viewer: Optional[dict] = Depends(get_optional_user)):
     db = get_db()

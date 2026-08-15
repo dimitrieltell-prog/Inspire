@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from './ReportModal'
+import DeleteStoryConfirm from './DeleteStoryConfirm'
 import BookmarkIcon from './BookmarkIcon'
 import ReactorsModal from './ReactorsModal'
 
@@ -23,6 +24,10 @@ export default function StoryCard({ story, repostedBy }) {
   const [repostCount, setRepostCount] = useState(story.repost_count || 0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleted, setDeleted] = useState(false)
+  const isOwn = user && story.author_id === user.id
+  const canDelete = isOwn || user?.is_founder
 
   function promptSignIn() {
     navigate('/login', { state: { from: location } })
@@ -83,6 +88,10 @@ export default function StoryCard({ story, repostedBy }) {
     }
   }
 
+  // Deleting is self-contained (no callback threaded through every grid
+  // this card appears in) -- once gone, just stop rendering the tile.
+  if (deleted) return null
+
   return (
     <div className="bg-surface border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
       {repostedBy && (
@@ -113,7 +122,7 @@ export default function StoryCard({ story, repostedBy }) {
             )}
           </div>
         </div>
-        {user && story.author_id !== user.id && (
+        {user && (
           <div className="flex-shrink-0">
             <button
               onClick={() => setMenuOpen((o) => !o)}
@@ -124,18 +133,35 @@ export default function StoryCard({ story, repostedBy }) {
             </button>
             {menuOpen && (
               <div className="absolute top-10 right-4 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
-                <button
-                  onClick={() => { setMenuOpen(false); setReportOpen(true) }}
-                  className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
-                >
-                  Report
-                </button>
+                {!isOwn && (
+                  <button
+                    onClick={() => { setMenuOpen(false); setReportOpen(true) }}
+                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                  >
+                    Report
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => { setMenuOpen(false); setDeleteOpen(true) }}
+                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
       {reportOpen && <ReportModal targetType="story" targetId={story.id} onClose={() => setReportOpen(false)} />}
+      {deleteOpen && (
+        <DeleteStoryConfirm
+          storyId={story.id}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => setDeleted(true)}
+        />
+      )}
 
       {/* media */}
       {story.media_url && (
