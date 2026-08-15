@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
+import Logo from './Logo'
 import HomeIcon from './HomeIcon'
 import SearchIcon from './SearchIcon'
 import AriaIcon from './AriaIcon'
@@ -14,12 +15,7 @@ export default function DesktopSidebar({ user, unreadDms, hideSearch, onSearchCl
   return (
     <aside className="hidden md:flex md:h-screen md:w-[76px] md:flex-shrink-0 md:flex-col md:items-center bg-bg py-4">
       <Link to="/" className="mb-4 flex-shrink-0">
-        {/* favicon.svg, not logo.svg -- logo.svg is navy line-art on a
-            transparent background, meant for a light page background, and
-            all but disappears against the dark sidebar in dark mode.
-            favicon.svg carries its own navy-gradient background box, so it
-            stays legible on either theme -- same mark as the browser tab. */}
-        <img src="/favicon.svg" alt="" className="w-9 h-9" />
+        <Logo className="w-9 h-9 text-navy" />
       </Link>
 
       {/* A generous fixed gap between icons, centered as a group in the

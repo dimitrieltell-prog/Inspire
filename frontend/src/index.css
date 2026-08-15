@@ -24,10 +24,11 @@
 /* Dark mode: every Tailwind utility (bg-navy, text-slate, etc.) already
    compiles to `var(--color-navy)` etc. under the hood -- redefining these
    same custom properties here is enough to re-theme every component that
-   uses them, with no per-component edits needed. Kept as a cohesive
-   "midnight indigo" dark palette (brand navy/indigo hues, not a generic
-   black-and-gray inversion) -- approved via a side-by-side mockup before
-   this was wired in for real.
+   uses them, with no per-component edits needed. bg/surface/line are
+   pulled directly from favicon.svg's own gradient (#22273F/#333D68/
+   #3E4876) rather than an invented near-black palette -- the favicon *is*
+   Inspire's dark theme, so the app should read as the same navy-indigo
+   world it's already drawn in, not a separate darker one.
 
    Default is light, full stop -- a visitor's OS/browser dark-mode setting
    is NEVER auto-applied here. No `prefers-color-scheme` media query on
@@ -37,19 +38,19 @@
    data-theme="light"/"dark" -- never "system" itself -- so this single
    explicit selector is the complete dark-mode surface at the CSS layer. */
 :root[data-theme="dark"] {
-  --color-bg: #0B0F1F;
-  --color-navy: #EDEFF7;
-  --color-indigo: #7C89D4;
-  --color-indigo-deep: #94A0E0;
-  --color-slate: #A7AEC0;
-  --color-slate-light: #7B8299;
-  --color-line: #232A45;
-  --color-lavender: #262C52;
-  --color-rose: #3A2530;
+  --color-bg: #22273F;
+  --color-navy: #EDECF6;
+  --color-indigo: #8C99DE;
+  --color-indigo-deep: #A6B0E8;
+  --color-slate: #AEB4CC;
+  --color-slate-light: #838BAC;
+  --color-line: #3E4876;
+  --color-lavender: #2B3157;
+  --color-rose: #3F2A38;
   --color-rose-ink: #E08A9C;
-  --color-sage: #1F3324;
+  --color-sage: #223828;
   --color-sage-ink: #7FC492;
-  --color-surface: #141A30;
+  --color-surface: #333D68;
 }
 
 html {

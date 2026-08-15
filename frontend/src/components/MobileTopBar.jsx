@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Logo from './Logo'
 import AriaIcon from './AriaIcon'
 import NotificationsBell from './NotificationsBell'
 import ProfileMenu from './ProfileMenu'
@@ -11,12 +12,8 @@ export default function MobileTopBar({ user }) {
       style={{ height: `calc(${MOBILE_TOPBAR_H}px + env(safe-area-inset-top))` }}
     >
       <div className="h-14 px-5 flex items-center justify-between gap-3">
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg flex-shrink-0">
-          {/* favicon.svg, not logo.svg -- see DesktopSidebar.jsx's comment:
-              logo.svg is transparent-background line-art that washes out
-              in dark mode, favicon.svg carries its own background so it
-              matches the browser tab and stays legible either way. */}
-          <img src="/favicon.svg" alt="" className="w-8 h-8" />
+        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg flex-shrink-0 text-navy">
+          <Logo className="w-8 h-8" />
           Inspire
         </Link>
 
