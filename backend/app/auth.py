@@ -35,10 +35,15 @@ def create_access_token(user_id: str) -> str:
 
 
 def create_unsubscribe_token(user_id: str) -> str:
-    """A no-login-required, one-purpose token for email unsubscribe links --
-    doesn't expire like a session token, but can't be used to do anything
-    other than unsubscribe (checked via the "purpose" claim)."""
-    payload = {"sub": user_id, "purpose": "unsubscribe"}
+    """A no-login-required, one-purpose token for email unsubscribe links.
+
+    The "purpose" claim is what keeps this from being a password: it's
+    signed with the same secret as a session token, so get_current_user
+    rejects anything carrying a purpose. Long-lived because it has to keep
+    working in an email someone opens months later, but no longer eternal.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(days=365)
+    payload = {"sub": user_id, "purpose": "unsubscribe", "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
@@ -63,6 +68,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         user_id = payload.get("sub")
         if not user_id:
+            raise credentials_error
+        # Only session tokens can authenticate. Single-purpose tokens are
+        # signed with the same secret, so without this check an unsubscribe
+        # link -- which sits in the footer of every email we've ever sent,
+        # and never expires -- works as a permanent password for that
+        # account: read their profile, post as them, anything.
+        if payload.get("purpose") is not None:
             raise credentials_error
     except JWTError:
         raise credentials_error
