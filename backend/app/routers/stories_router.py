@@ -153,20 +153,31 @@ def _contains_muted_word(text: str, muted_words: list) -> bool:
 
 
 async def _can_view_story(db, story: dict, viewer: Optional[dict]) -> bool:
-    """A story/post is visible to everyone unless its author has a private
-    account, in which case only the author, the founder, and people who
-    already follow the author can see it -- a shared link can't bypass that."""
+    """Whether this viewer is allowed to see this post.
+
+    Two independent settings gate a post, and BOTH have to be honoured
+    here: the account-level `is_private` flag, and the post-level
+    `posts_visibility` ("everyone" | "followers") that Settings offers as
+    "Who can see your posts". This used to check only is_private, so a
+    public account that chose followers-only still had every post served
+    to strangers and to logged-out visitors through the feed, tag
+    listings, direct links and search.
+
+    Delegates to users_router.can_view_posts so there is ONE definition of
+    the rule -- that helper already implemented it correctly, it was just
+    only ever called on the profile tab.
+    """
     author_id = story.get("author_id")
     if not author_id:
-        return True
+        return True  # anonymous posts have no author gate
     if viewer and (viewer["_id"] == author_id or is_founder(viewer)):
         return True
     author = await db.users.find_one({"_id": author_id})
-    if author and author.get("is_private", False):
-        if not viewer:
-            return False
-        return bool(await db.follows.find_one({"follower_id": viewer["_id"], "following_id": author_id}))
-    return True
+    if not author:
+        return True
+    from app.routers.users_router import can_view_posts
+
+    return await can_view_posts(db, author, viewer)
 
 
 async def _require_visible_story(db, story_id: str, viewer: Optional[dict]) -> dict:

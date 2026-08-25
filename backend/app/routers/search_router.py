@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from app.auth import get_optional_user
 from app.database import get_db
 from app.models import SearchResults
-from app.routers.stories_router import _contains_muted_word, _hidden_author_ids, serialize_story
+from app.routers.stories_router import _can_view_story, _contains_muted_word, _hidden_author_ids, serialize_story
 from app.routers.users_router import _profile_user
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -51,7 +51,14 @@ async def search(q: str = "", viewer: Optional[dict] = Depends(get_optional_user
         ]).lower()
         return q in haystack
 
-    story_matches = [s for s in stories if matches(s)][:10]
+    # Visibility is enforced here as well as in the feed. Search previously
+    # applied only the block/mute and muted-word filters and never called
+    # _can_view_story, so an unauthenticated caller searching a common word
+    # could read posts belonging to private accounts they don't follow.
+    # Filter BEFORE the [:10] slice, or a hidden post still consumes one of
+    # the ten result slots and silently buries a legitimate match.
+    visible = [s for s in stories if matches(s) and await _can_view_story(db, s, viewer)]
+    story_matches = visible[:10]
     story_results = [await serialize_story(s, viewer, db) for s in story_matches]
 
     return SearchResults(users=user_results, stories=story_results)
