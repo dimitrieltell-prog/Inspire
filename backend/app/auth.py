@@ -112,6 +112,12 @@ async def get_optional_user(token: Optional[str] = Depends(optional_oauth2_schem
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         user_id = payload.get("sub")
+        # Same rule as get_current_user: only session tokens identify a
+        # viewer. Missing it here mattered as much as there -- this guards
+        # the read endpoints (feed, search, profiles), and viewer identity
+        # is exactly what decides which private posts get served.
+        if payload.get("purpose") is not None:
+            return None
     except JWTError:
         return None
     if not user_id:
