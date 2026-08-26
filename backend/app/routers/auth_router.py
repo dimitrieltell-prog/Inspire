@@ -358,6 +358,13 @@ def _verify_google_credential(credential: str) -> dict:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid Google credential.")
     if not idinfo.get("email"):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Google account has no email.")
+    # Google signs the token, but an address it has NOT verified can still
+    # appear in one (notably on Workspace domains). Without this check,
+    # anyone able to create such an account for an address that already has
+    # an Inspire password account could sign in straight into it, since the
+    # handlers below look the user up by email alone.
+    if not idinfo.get("email_verified", False):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Please verify your email with Google first.")
     return idinfo
 
 
