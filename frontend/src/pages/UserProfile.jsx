@@ -289,7 +289,9 @@ export default function UserProfile() {
             {tab === 'saved' && `${profile.display_name} hasn't saved anything yet.`}
           </p>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-5">
+          /* Square tiles: 2 up on phones so text posts stay readable, 3 up
+             from sm where there is room for the tighter photo-grid look. */
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {tabStories.map((s) => <StoryCard key={s.id} story={s} repostedBy={tab === 'reposts' ? profile.display_name : undefined} />)}
           </div>
         )}

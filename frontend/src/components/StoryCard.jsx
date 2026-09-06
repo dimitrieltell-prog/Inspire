@@ -1,158 +1,125 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { api } from '../api'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
-import { LIKE_REACTION } from './useStoryInteractions'
 import ReportModal from './ReportModal'
 import DeleteStoryConfirm from './DeleteStoryConfirm'
-import BookmarkIcon from './BookmarkIcon'
 import HeartIcon from './HeartIcon'
 import CommentIcon from './CommentIcon'
 import RepostIcon from './RepostIcon'
-import ReactorsModal from './ReactorsModal'
 
+// A single square tile in the profile grids (Profile.jsx and
+// UserProfile.jsx -- the only two places this renders).
+//
+// This used to be a full post card: header, media, text, and its own
+// like/comment/repost/save row. In a grid that made every tile a
+// different height, and CSS grid stretches each tile to its row's tallest
+// one -- so a one-line text post sitting next to a photo post grew a few
+// hundred pixels of empty space, and no two rows lined up.
+//
+// Now every tile is the same square. A photo fills it; a text post shows
+// its words in the same footprint. Interactions moved to the post itself,
+// which is what tapping a tile does -- the one exception is the ⋯ menu,
+// kept so posts can still be deleted straight from the grid rather than
+// opening each one.
 export default function StoryCard({ story, repostedBy }) {
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [supportCount, setSupportCount] = useState(story.support_count)
-  const [picked, setPicked] = useState(story.my_reaction || null)
-  const [error, setError] = useState('')
-  const [reactorsOpen, setReactorsOpen] = useState(false)
-
-  const [saved, setSaved] = useState(story.is_saved)
-  const [reposted, setReposted] = useState(story.is_reposted)
-  const [repostCount, setRepostCount] = useState(story.repost_count || 0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleted, setDeleted] = useState(false)
+
   const isOwn = user && story.author_id === user.id
   const canDelete = isOwn || user?.is_founder
+  const isVideo = story.media_type === 'video'
 
-  function promptSignIn() {
-    navigate('/login', { state: { from: location } })
-  }
-
-  // Tapping the heart likes outright -- no named-reaction picker. Mirrors
-  // useStoryInteractions.toggleLike; this file predates that hook and keeps
-  // its own copy of the logic.
-  async function toggleLike() {
-    if (!user) { promptSignIn(); return }
-    if (picked) { unreact(); return }
-    try {
-      await api.reactToStory(story.id, LIKE_REACTION)
-      setSupportCount((c) => c + 1)
-      setPicked(LIKE_REACTION)
-      setError('')
-    } catch (e) {
-      setError(e.message)
-    }
-  }
-
-  async function unreact() {
-    try {
-      await api.unreactToStory(story.id)
-      setSupportCount((c) => c - 1)
-      setPicked(null)
-      setError('')
-    } catch (e) {
-      setError(e.message)
-    }
-  }
-
-  async function toggleSave() {
-    if (!user) { promptSignIn(); return }
-    const next = !saved
-    setSaved(next)
-    try {
-      next ? await api.saveStory(story.id) : await api.unsaveStory(story.id)
-    } catch (e) {
-      setSaved(!next)
-      setError(e.message)
-    }
-  }
-
-  async function toggleRepost() {
-    if (!user) { promptSignIn(); return }
-    const next = !reposted
-    setReposted(next)
-    setRepostCount((c) => c + (next ? 1 : -1))
-    try {
-      next ? await api.repostStory(story.id) : await api.unrepostStory(story.id)
-    } catch (e) {
-      setReposted(!next)
-      setRepostCount((c) => c + (next ? -1 : 1))
-      setError(e.message)
-    }
-  }
-
-  // Deleting is self-contained (no callback threaded through every grid
-  // this card appears in) -- once gone, just stop rendering the tile.
+  // Self-contained: once gone, the tile just stops rendering rather than
+  // threading a callback through every grid this appears in.
   if (deleted) return null
 
   return (
-    <div className="bg-surface border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
+    <div className="relative group">
+      <Link
+        to={`/stories/${story.id}`}
+        className="block aspect-square rounded-xl overflow-hidden border border-line bg-surface"
+      >
+        {story.media_url ? (
+          isVideo ? (
+            <video src={story.media_url} muted playsInline className="w-full h-full object-cover" />
+          ) : (
+            <img src={story.media_url} alt="" className="w-full h-full object-cover" />
+          )
+        ) : (
+          /* Bottom padding reserves the corner the ⋯ button sits in (always
+             visible on touch), and the line count steps down with the tile:
+             at 2-up on a phone a tile is ~155px, where 5 lines of 14px text
+             is taller than the space left over and printed straight through
+             the button. */
+          <div className="w-full h-full p-4 pb-10 flex items-center justify-center">
+            <p className="text-xs sm:text-sm text-slate leading-relaxed text-center line-clamp-4 sm:line-clamp-5 whitespace-pre-wrap">
+              {story.body}
+            </p>
+          </div>
+        )}
+
+        {/* Counts on hover, the way a photo grid usually surfaces them --
+            hidden entirely when the author has turned counts off. */}
+        {!story.counts_hidden && (
+          <div className="absolute inset-0 bg-[#131A33]/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-5 text-white text-sm font-semibold">
+            <span className="flex items-center gap-1.5">
+              <HeartIcon filled className="w-4 h-4" />
+              {story.support_count}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CommentIcon className="w-4 h-4" />
+              {story.comment_count}
+            </span>
+          </div>
+        )}
+      </Link>
+
+      {/* Corner markers, so a tile reads correctly at a glance without
+          opening it. */}
+      {isVideo && (
+        <span className="absolute top-2 right-2 pointer-events-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] text-xs">▶</span>
+      )}
       {repostedBy && (
-        <div className="flex items-center gap-1.5 px-4 pt-3 text-xs font-semibold text-slate-light">
-          <RepostIcon className="w-3.5 h-3.5" /> Reposted by {repostedBy}
+        <span className="absolute top-2 left-2 pointer-events-none flex items-center gap-1 rounded-full bg-[#131A33]/70 text-white text-[10px] font-semibold px-2 py-0.5">
+          <RepostIcon className="w-3 h-3" /> Repost
+        </span>
+      )}
+
+      {user && (
+        <div className="absolute bottom-2 right-2">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="More options"
+            className="w-7 h-7 rounded-full flex items-center justify-center bg-[#131A33]/70 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 max-md:opacity-100 transition-opacity"
+          >
+            ⋯
+          </button>
+          {menuOpen && (
+            <div className="absolute bottom-9 right-0 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
+              {!isOwn && (
+                <button
+                  onClick={() => { setMenuOpen(false); setReportOpen(true) }}
+                  className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                >
+                  Report
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => { setMenuOpen(false); setDeleteOpen(true) }}
+                  className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
-      {/* header */}
-      <div className="relative flex items-center gap-2.5 px-4 pt-4 pb-3">
-        {story.author_avatar_url ? (
-          <img src={story.author_avatar_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-        ) : (
-          <span className="w-8 h-8 rounded-full bg-indigo text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-            {story.author_name.charAt(0).toUpperCase()}
-          </span>
-        )}
-        <div className="min-w-0 flex-grow">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {story.author_id ? (
-              <Link to={`/users/${story.author_id}`} className="text-sm font-semibold text-navy hover:text-indigo transition-colors truncate">{story.author_name}</Link>
-            ) : (
-              <span className="text-sm font-semibold text-navy truncate">{story.author_name}</span>
-            )}
-            {story.author_is_business && (
-              <span className="text-[9px] font-bold uppercase tracking-wide border border-line text-slate-light px-1.5 py-0.5 rounded-full flex-shrink-0">
-                {story.author_business_category || 'Business'}
-              </span>
-            )}
-          </div>
-        </div>
-        {user && (
-          <div className="flex-shrink-0">
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="More options"
-              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-light hover:text-navy hover:bg-bg transition-colors"
-            >
-              ⋯
-            </button>
-            {menuOpen && (
-              <div className="absolute top-10 right-4 bg-surface border border-line rounded-xl shadow-lg py-1.5 z-10 min-w-[120px]">
-                {!isOwn && (
-                  <button
-                    onClick={() => { setMenuOpen(false); setReportOpen(true) }}
-                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
-                  >
-                    Report
-                  </button>
-                )}
-                {canDelete && (
-                  <button
-                    onClick={() => { setMenuOpen(false); setDeleteOpen(true) }}
-                    className="w-full text-left px-4 py-2 text-sm text-rose-ink hover:bg-bg transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+
       {reportOpen && <ReportModal targetType="story" targetId={story.id} onClose={() => setReportOpen(false)} />}
       {deleteOpen && (
         <DeleteStoryConfirm
@@ -161,77 +128,6 @@ export default function StoryCard({ story, repostedBy }) {
           onDeleted={() => setDeleted(true)}
         />
       )}
-
-      {/* media */}
-      {story.media_url && (
-        <Link to={`/stories/${story.id}`} className="block w-full aspect-square bg-[#131A33] overflow-hidden">
-          {story.media_type === 'video' ? (
-            <video src={story.media_url} controls className="w-full h-full object-cover" />
-          ) : (
-            <img src={story.media_url} alt="" className="w-full h-full object-cover" />
-          )}
-        </Link>
-      )}
-
-      {/* text content */}
-      <div className="px-4 pt-4 flex flex-col flex-grow">
-        {/* Posts have no titles, so the text preview carries the link into
-            the post. A media-only post has no text either -- there the
-            media <Link> above is the tap target, and an empty anchor here
-            would just be an unlabelled link for screen readers. */}
-        {story.body?.trim() && (
-          <Link to={`/stories/${story.id}`} className="flex-grow hover:text-indigo transition-colors">
-            <p className="text-sm text-slate leading-relaxed line-clamp-3">{story.body}</p>
-          </Link>
-        )}
-        {story.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2.5">
-            {story.tags.map((t) => (
-              <Link
-                key={t}
-                to={`/stories?tag=${encodeURIComponent(t)}`}
-                onClick={(e) => e.stopPropagation()}
-                className="text-xs font-semibold text-indigo hover:underline"
-              >
-                #{t}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* action row */}
-      <div className="relative px-4 pt-3 pb-4 mt-3">
-        <div className="flex items-center gap-4 border-t border-line pt-3">
-          <div className={`flex items-center gap-1.5 text-sm font-medium ${picked ? 'text-rose-ink' : 'text-slate-light'}`}>
-            <button onClick={toggleLike} aria-label={picked ? 'Remove like' : 'Like'} className="hover:text-indigo transition-colors">
-              <HeartIcon filled={!!picked} />
-            </button>
-            {!story.counts_hidden && (
-              <button onClick={() => setReactorsOpen(true)} className="hover:underline hover:text-indigo transition-colors">
-                {supportCount}
-              </button>
-            )}
-          </div>
-          {reactorsOpen && <ReactorsModal storyId={story.id} onClose={() => setReactorsOpen(false)} />}
-          <Link to={`/stories/${story.id}`} aria-label="Comments" className="flex items-center gap-1.5 text-sm font-medium text-slate-light hover:text-indigo transition-colors">
-            <CommentIcon />
-            <span>{story.comment_count}</span>
-          </Link>
-          <button onClick={toggleRepost} aria-label={reposted ? 'Undo repost' : 'Repost'} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
-            <RepostIcon />
-            <span>{repostCount}</span>
-          </button>
-          <button
-            onClick={toggleSave}
-            aria-label={saved ? 'Unsave' : 'Save'}
-            className={`ml-auto transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
-          >
-            <BookmarkIcon filled={saved} className="w-4 h-4" />
-          </button>
-        </div>
-        {error && <p className="text-xs text-rose-ink mt-2">{error}</p>}
-      </div>
     </div>
   )
 }
