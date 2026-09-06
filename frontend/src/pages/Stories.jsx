@@ -8,9 +8,14 @@ import OnboardingChecklist from '../components/OnboardingChecklist'
 import StoriesTray from '../components/StoriesTray'
 import SuggestedAccounts from '../components/SuggestedAccounts'
 
-// Waits two animation frames -- past the browser's own scroll-snap "settle"
-// pass -- then forces the feed back to the top. Shared by the two places
-// that need it: the normal load-finished effect, and a bfcache restore.
+// Waits two animation frames -- past the browser's own post-layout pass --
+// then forces the feed back to the top, so the feed always opens at the
+// newest post. Shared by the two places that need it: the normal
+// load-finished effect, and a bfcache restore.
+// (The frame delay originally existed to out-wait the scroll-snap settle.
+// Snap is gone now, but the wait still earns its keep: images and the
+// story tray finish laying out after first paint, and resetting before
+// that lands on the wrong offset.)
 function resetScrollNextFrame(containerRef) {
   let raf2 = 0
   const raf1 = requestAnimationFrame(() => {
@@ -61,13 +66,10 @@ export default function Stories() {
       .finally(() => setLoading(false))
   }, [tag])
 
-  // The browser's own scroll-snap engine runs its initial "settle" pass
-  // (aligning to whichever slide it considers nearest) asynchronously,
-  // after the slides first paint -- a scrollTo(0) issued synchronously in
-  // this effect loses that race and gets silently overridden a moment
-  // later. Waiting two animation frames pushes our correction after the
-  // browser's own settle pass instead of before it, so ours wins and
-  // sticks.
+  // Open the feed at the top whenever the story list changes. Deferred by
+  // two frames (see resetScrollNextFrame): the cards are still settling
+  // when this effect runs, and a scrollTo issued before that gets
+  // overridden by the browser's own post-layout pass.
   useEffect(() => {
     if (loading) return
     return resetScrollNextFrame(containerRef)
@@ -79,7 +81,7 @@ export default function Stories() {
   // at -- without re-running any mount effects, so the fix above never
   // fires for that path. `pageshow`'s `persisted` flag is true specifically
   // for a bfcache restore. Unlike a fresh mount, there's no competing
-  // browser snap-settle pass to out-wait here, and waiting for one is
+  // layout pass to out-wait here, and waiting for one is
   // actively wrong: `pageshow` can fire while the tab is still
   // backgrounded (visibilityState "hidden"), and browsers suspend
   // requestAnimationFrame entirely for hidden tabs -- a rAF-based
@@ -146,7 +148,7 @@ export default function Stories() {
       <div className="flex flex-col h-[calc(100dvh-56px-64px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen">
         <div
           ref={containerRef}
-          className="relative w-full flex-1 min-h-0 snap-y snap-proximity overflow-y-auto overscroll-contain bg-bg [overflow-anchor:none]"
+          className="relative w-full flex-1 min-h-0 overflow-y-auto overscroll-contain bg-bg [overflow-anchor:none]"
         >
           {/* [overflow-anchor:none]: this pane's scroll position is set
               deliberately (resetScrollNextFrame), so the browser's own
@@ -183,10 +185,6 @@ export default function Stories() {
                       gets a chance to determine whether it should show. When it
                       shouldn't show, the section collapses to `hidden` (no slide
                       footprint, not counted for the IntersectionObserver). */}
-                  {/* No snap-center here (unlike the story slides below):
-                      when shown, this is always slide 0, and slide 0 must
-                      not carry a snap point -- see the story slides for
-                      why. */}
                   <section
                     data-slide-index={showOnboarding ? slideIndex++ : undefined}
                     className={showOnboarding ? 'w-full flex-shrink-0 flex items-start justify-center px-4 py-6' : 'hidden'}
@@ -195,30 +193,25 @@ export default function Stories() {
                       <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
                     </div>
                   </section>
-                  {/* Slide 0 deliberately gets NO snap point. snap-center on
-                      a card TALLER than the viewport resolves to a positive
-                      scroll offset (centering it requires scrolling past the
-                      top), so the snap engine would drag the feed down off
-                      scrollTop 0 right after our reset -- reading as "the
-                      page reloads slightly scrolled down". Cards only exceed
-                      the viewport once they carry media, which is why this
-                      only ever reproduced on real image posts. Later slides
-                      keep snap-center: their centers sit well past 0, so
-                      there's nothing to clamp against. */}
-                  {stories.map((s) => {
-                    const index = slideIndex++
-                    return (
-                      <div
-                        key={s.id}
-                        data-slide-index={index}
-                        className={`w-full flex-shrink-0 flex items-start justify-center px-4 py-6 ${index === 0 ? '' : 'snap-center'}`}
-                      >
-                        <div className="w-full max-w-[480px]">
-                          <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
-                        </div>
+                  {/* Plain scrolling, no scroll-snap. Snap points pulled the
+                      feed toward whichever card was nearest whenever you
+                      stopped, which read as the page scrolling itself --
+                      worst at the very top, where the story tray sits above
+                      the first card and the pull dragged you back down.
+                      Excluding just the first card wasn't enough; every
+                      other card still grabbed. data-slide-index stays: the
+                      dots still track which post is in view. */}
+                  {stories.map((s) => (
+                    <div
+                      key={s.id}
+                      data-slide-index={slideIndex++}
+                      className="w-full flex-shrink-0 flex items-start justify-center px-4 py-6"
+                    >
+                      <div className="w-full max-w-[480px]">
+                        <FeedStoryCard story={s} onOpenComments={() => setOpenCommentsFor(s.id)} onDeleted={handleDeleted} />
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
                 </>
               )}
             </div>
