@@ -129,7 +129,7 @@ export default function UserProfile() {
   if (!profile) return null
 
   return (
-    <div className="max-w-2xl mx-auto px-7 py-16">
+    <div className="max-w-5xl mx-auto px-7 py-16">
       <Link to="/stories" className="text-sm text-indigo font-semibold">← Back to stories</Link>
 
       <div className="bg-surface border border-line rounded-xl2 p-7 mt-6">
@@ -236,7 +236,7 @@ export default function UserProfile() {
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-6 max-w-md">
           <div className="flex-1 rounded-xl border border-line px-4 py-3 text-center">
             <div className="text-xl font-bold">{profile.follower_count}</div>
             <div className="text-xs text-slate">Followers</div>

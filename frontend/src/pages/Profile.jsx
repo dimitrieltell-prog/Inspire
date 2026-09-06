@@ -299,7 +299,7 @@ export default function Profile() {
   if (!profile) return null
 
   return (
-    <div className="max-w-2xl mx-auto px-7 py-16">
+    <div className="max-w-5xl mx-auto px-7 py-16">
       {/* Header card */}
       <div className="bg-surface border border-line rounded-xl2 p-7">
         {editing ? (
@@ -459,7 +459,7 @@ export default function Profile() {
         )}
 
         {/* Stats */}
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-6 max-w-md">
           <button onClick={() => openList('followers')} className={`flex-1 rounded-xl border px-4 py-3 text-center transition-colors ${listMode === 'followers' ? 'border-indigo bg-lavender' : 'border-line hover:border-indigo'}`}>
             <div className="text-xl font-bold">{profile.follower_count}</div>
             <div className="text-xs text-slate">Followers</div>
