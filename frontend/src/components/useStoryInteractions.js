@@ -3,6 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 
+// The one reaction a heart records. The backend still validates against its
+// REACTIONS list, so this must stay a member of it.
+export const LIKE_REACTION = 'Love this!'
+
 // Reaction/save/repost state + actions for a single story, extracted out of
 // StoryDetail.jsx so FeedStoryCard.jsx (the new full-screen feed card) can
 // share the same logic instead of growing a third duplicated copy. Owns its
@@ -20,7 +24,6 @@ export function useStoryInteractions(story) {
 
   const [supportCount, setSupportCount] = useState(story.support_count)
   const [picked, setPicked] = useState(story.my_reaction || null)
-  const [reactOpen, setReactOpen] = useState(false)
   const [error, setError] = useState('')
   const [reactorsOpen, setReactorsOpen] = useState(false)
   const [saved, setSaved] = useState(story.is_saved)
@@ -31,18 +34,18 @@ export function useStoryInteractions(story) {
     navigate('/login', { state: { from: location } })
   }
 
-  function openReactions() {
+  // Tapping the heart likes the post outright -- it used to open a picker
+  // of named reactions ("Stay strong", "I'm here for you"...) and make you
+  // choose one. The API still stores a named reaction, so existing ones are
+  // untouched and the reactors list keeps working; new likes all record the
+  // same value.
+  async function toggleLike() {
     if (!user) { promptSignIn(); return }
     if (picked) { unreact(); return }
-    setReactOpen((o) => !o)
-  }
-
-  async function react(reaction) {
     try {
-      await api.reactToStory(story.id, reaction)
-      if (!picked) setSupportCount((c) => c + 1)
-      setPicked(reaction)
-      setReactOpen(false)
+      await api.reactToStory(story.id, LIKE_REACTION)
+      setSupportCount((c) => c + 1)
+      setPicked(LIKE_REACTION)
       setError('')
     } catch (e) {
       setError(e.message)
@@ -87,9 +90,9 @@ export function useStoryInteractions(story) {
   }
 
   return {
-    supportCount, picked, reactOpen, setReactOpen, error,
+    supportCount, picked, error,
     reactorsOpen, setReactorsOpen,
     saved, reposted, repostCount,
-    openReactions, react, unreact, toggleSave, toggleRepost,
+    toggleLike, unreact, toggleSave, toggleRepost,
   }
 }

@@ -5,11 +5,12 @@ import { useAuth } from '../AuthContext'
 import ReportModal from '../components/ReportModal'
 import DeleteStoryConfirm from '../components/DeleteStoryConfirm'
 import BookmarkIcon from '../components/BookmarkIcon'
+import HeartIcon from '../components/HeartIcon'
+import CommentIcon from '../components/CommentIcon'
+import RepostIcon from '../components/RepostIcon'
 import ReactorsModal from '../components/ReactorsModal'
 import Comments from '../components/Comments'
 import { useStoryInteractions } from '../components/useStoryInteractions'
-
-const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
 export default function StoryDetail() {
   const { storyId } = useParams()
@@ -52,10 +53,10 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
   const canDelete = isOwn || user?.is_founder
 
   const {
-    supportCount, picked, reactOpen, setReactOpen, error: reactError,
+    supportCount, picked, error: reactError,
     reactorsOpen, setReactorsOpen,
     saved, reposted, repostCount,
-    openReactions, react, unreact, toggleSave, toggleRepost,
+    toggleLike, toggleSave, toggleRepost,
   } = useStoryInteractions(story)
 
   return (
@@ -147,23 +148,10 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
         )}
 
         <div className="relative px-6 pb-6">
-          {reactOpen && (
-            <div className="absolute bottom-full mb-2 left-6 right-6 bg-surface border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
-              {REACTIONS.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => react(r)}
-                  className={`text-left text-sm px-3 py-2 rounded-lg hover:bg-lavender transition-colors ${picked === r ? 'bg-indigo text-white hover:bg-indigo' : ''}`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          )}
           <div className="flex items-center gap-5 pt-4 border-t border-line">
             <div className={`flex items-center gap-1.5 text-sm font-medium ${picked ? 'text-rose-ink' : 'text-slate-light'}`}>
-              <button onClick={openReactions} className="hover:text-indigo transition-colors">
-                <span className="text-lg leading-none">{picked ? '❤️' : '🤍'}</span>
+              <button onClick={toggleLike} aria-label={picked ? 'Remove like' : 'Like'} className="hover:text-indigo transition-colors">
+                <HeartIcon filled={!!picked} className="w-5 h-5" />
               </button>
               {!story.counts_hidden && (
                 <button onClick={() => setReactorsOpen(true)} className="hover:underline hover:text-indigo transition-colors">
@@ -173,11 +161,11 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
             </div>
             {reactorsOpen && <ReactorsModal storyId={story.id} onClose={() => setReactorsOpen(false)} />}
             <span className="flex items-center gap-1.5 text-sm font-medium text-slate-light">
-              <span className="text-lg leading-none">💬</span>
+              <CommentIcon className="w-5 h-5" />
               <span>{story.comment_count}</span>
             </span>
-            <button onClick={toggleRepost} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
-              <span className="text-lg leading-none">🔁</span>
+            <button onClick={toggleRepost} aria-label={reposted ? 'Undo repost' : 'Repost'} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
+              <RepostIcon className="w-5 h-5" />
               <span>{repostCount}</span>
             </button>
             <button

@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom'
 import ReportModal from './ReportModal'
 import DeleteStoryConfirm from './DeleteStoryConfirm'
 import BookmarkIcon from './BookmarkIcon'
+import HeartIcon from './HeartIcon'
+import CommentIcon from './CommentIcon'
+import RepostIcon from './RepostIcon'
 import ReactorsModal from './ReactorsModal'
 import { useAuth } from '../AuthContext'
 import { useStoryInteractions } from './useStoryInteractions'
-
-const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
 // One card in the Stories scroll-snap feed -- sized to its content (like
 // StoryCard.jsx's grid tile), not stretched to fill the viewport. Matches
@@ -51,10 +52,10 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
   }, [story.body, expanded])
 
   const {
-    supportCount, picked, reactOpen, setReactOpen, error,
+    supportCount, picked, error,
     reactorsOpen, setReactorsOpen,
     saved, reposted, repostCount,
-    openReactions, react, toggleSave, toggleRepost,
+    toggleLike, toggleSave, toggleRepost,
   } = useStoryInteractions(story)
 
   return (
@@ -168,23 +169,10 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
       </div>
 
       <div className="relative px-4 pt-3 pb-4 mt-2">
-        {reactOpen && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 bg-surface border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
-            {REACTIONS.map((r) => (
-              <button
-                key={r}
-                onClick={() => react(r)}
-                className={`text-left text-sm px-3 py-2 rounded-lg hover:bg-lavender transition-colors ${picked === r ? 'bg-indigo text-white hover:bg-indigo' : ''}`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="flex items-center gap-4 border-t border-line pt-3">
           <div className={`flex items-center gap-1.5 text-sm font-medium ${picked ? 'text-rose-ink' : 'text-slate-light'}`}>
-            <button onClick={openReactions} className="hover:text-indigo transition-colors">
-              <span className="text-base leading-none">{picked ? '❤️' : '🤍'}</span>
+            <button onClick={toggleLike} aria-label={picked ? 'Remove like' : 'Like'} className="hover:text-indigo transition-colors">
+              <HeartIcon filled={!!picked} />
             </button>
             {!story.counts_hidden && (
               <button onClick={() => setReactorsOpen(true)} className="hover:underline hover:text-indigo transition-colors">
@@ -193,12 +181,12 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
             )}
           </div>
           {reactorsOpen && <ReactorsModal storyId={story.id} onClose={() => setReactorsOpen(false)} />}
-          <button onClick={onOpenComments} className="flex items-center gap-1.5 text-sm font-medium text-slate-light hover:text-indigo transition-colors">
-            <span className="text-base leading-none">💬</span>
+          <button onClick={onOpenComments} aria-label="Comments" className="flex items-center gap-1.5 text-sm font-medium text-slate-light hover:text-indigo transition-colors">
+            <CommentIcon />
             <span>{story.comment_count}</span>
           </button>
-          <button onClick={toggleRepost} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
-            <span className="text-base leading-none">🔁</span>
+          <button onClick={toggleRepost} aria-label={reposted ? 'Undo repost' : 'Repost'} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
+            <RepostIcon />
             <span>{repostCount}</span>
           </button>
           <button

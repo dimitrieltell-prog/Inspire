@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
+import { LIKE_REACTION } from './useStoryInteractions'
 import ReportModal from './ReportModal'
 import DeleteStoryConfirm from './DeleteStoryConfirm'
 import BookmarkIcon from './BookmarkIcon'
+import HeartIcon from './HeartIcon'
+import CommentIcon from './CommentIcon'
+import RepostIcon from './RepostIcon'
 import ReactorsModal from './ReactorsModal'
-
-const REACTIONS = ["That's awesome!", 'Love this!', 'So proud of you', "I'm here for you", 'You helped me', 'I understand', 'Stay strong', 'Thank you for sharing']
 
 export default function StoryCard({ story, repostedBy }) {
   const { user } = useAuth()
@@ -15,7 +17,6 @@ export default function StoryCard({ story, repostedBy }) {
   const location = useLocation()
   const [supportCount, setSupportCount] = useState(story.support_count)
   const [picked, setPicked] = useState(story.my_reaction || null)
-  const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
   const [reactorsOpen, setReactorsOpen] = useState(false)
 
@@ -33,18 +34,16 @@ export default function StoryCard({ story, repostedBy }) {
     navigate('/login', { state: { from: location } })
   }
 
-  function openReactions() {
+  // Tapping the heart likes outright -- no named-reaction picker. Mirrors
+  // useStoryInteractions.toggleLike; this file predates that hook and keeps
+  // its own copy of the logic.
+  async function toggleLike() {
     if (!user) { promptSignIn(); return }
     if (picked) { unreact(); return }
-    setOpen((o) => !o)
-  }
-
-  async function react(reaction) {
     try {
-      await api.reactToStory(story.id, reaction)
-      if (!picked) setSupportCount((c) => c + 1)
-      setPicked(reaction)
-      setOpen(false)
+      await api.reactToStory(story.id, LIKE_REACTION)
+      setSupportCount((c) => c + 1)
+      setPicked(LIKE_REACTION)
       setError('')
     } catch (e) {
       setError(e.message)
@@ -96,7 +95,7 @@ export default function StoryCard({ story, repostedBy }) {
     <div className="bg-surface border border-line rounded-xl2 overflow-hidden flex flex-col h-full hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(19,26,51,0.18)] transition-all">
       {repostedBy && (
         <div className="flex items-center gap-1.5 px-4 pt-3 text-xs font-semibold text-slate-light">
-          <span className="text-sm leading-none">🔁</span> Reposted by {repostedBy}
+          <RepostIcon className="w-3.5 h-3.5" /> Reposted by {repostedBy}
         </div>
       )}
       {/* header */}
@@ -203,23 +202,10 @@ export default function StoryCard({ story, repostedBy }) {
 
       {/* action row */}
       <div className="relative px-4 pt-3 pb-4 mt-3">
-        {open && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 bg-surface border border-line rounded-xl shadow-lg p-2 flex flex-col gap-1 z-10">
-            {REACTIONS.map((r) => (
-              <button
-                key={r}
-                onClick={() => react(r)}
-                className={`text-left text-sm px-3 py-2 rounded-lg hover:bg-lavender transition-colors ${picked === r ? 'bg-indigo text-white hover:bg-indigo' : ''}`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="flex items-center gap-4 border-t border-line pt-3">
           <div className={`flex items-center gap-1.5 text-sm font-medium ${picked ? 'text-rose-ink' : 'text-slate-light'}`}>
-            <button onClick={openReactions} className="hover:text-indigo transition-colors">
-              <span className="text-base leading-none">{picked ? '❤️' : '🤍'}</span>
+            <button onClick={toggleLike} aria-label={picked ? 'Remove like' : 'Like'} className="hover:text-indigo transition-colors">
+              <HeartIcon filled={!!picked} />
             </button>
             {!story.counts_hidden && (
               <button onClick={() => setReactorsOpen(true)} className="hover:underline hover:text-indigo transition-colors">
@@ -228,12 +214,12 @@ export default function StoryCard({ story, repostedBy }) {
             )}
           </div>
           {reactorsOpen && <ReactorsModal storyId={story.id} onClose={() => setReactorsOpen(false)} />}
-          <Link to={`/stories/${story.id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-light hover:text-indigo transition-colors">
-            <span className="text-base leading-none">💬</span>
+          <Link to={`/stories/${story.id}`} aria-label="Comments" className="flex items-center gap-1.5 text-sm font-medium text-slate-light hover:text-indigo transition-colors">
+            <CommentIcon />
             <span>{story.comment_count}</span>
           </Link>
-          <button onClick={toggleRepost} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
-            <span className="text-base leading-none">🔁</span>
+          <button onClick={toggleRepost} aria-label={reposted ? 'Undo repost' : 'Repost'} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${reposted ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}>
+            <RepostIcon />
             <span>{repostCount}</span>
           </button>
           <button

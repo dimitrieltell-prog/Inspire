@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import HeartIcon from './HeartIcon'
 import { useAuth } from '../AuthContext'
 import { timeLeftLabel } from '../timeLeft'
 
@@ -205,8 +206,8 @@ export default function StoryViewer({ stories, startIndex = 0, onClose, onViewed
           ) : (
             <span className="flex-grow text-white/70 text-sm">Reply sent.</span>
           )}
-          <button onClick={toggleLike} className="text-2xl flex-shrink-0">
-            {story.is_liked ? '❤️' : '🤍'}
+          <button onClick={toggleLike} aria-label={story.is_liked ? 'Remove like' : 'Like'} className="flex-shrink-0 text-white">
+            <HeartIcon filled={story.is_liked} className="w-7 h-7" />
           </button>
           <button onClick={() => setShowSend(true)} className="text-white text-2xl flex-shrink-0">➤</button>
         </div>
