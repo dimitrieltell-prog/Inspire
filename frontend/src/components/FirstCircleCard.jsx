@@ -46,7 +46,7 @@ export default function FirstCircleCard({ onVisibilityChange } = {}) {
   // Tell the feed whether this occupies a slot, so an empty card doesn't
   // leave a gap or take a place in the dot indicator.
   const celebrating = !!state && state.show_celebration && !dismissed
-  const visible = !!state && (celebrating || (!state.number && !state.closed))
+  const visible = !!state && (celebrating || (state.eligible && !state.number && !state.closed))
   useEffect(() => {
     onVisibilityChange?.(visible)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +54,7 @@ export default function FirstCircleCard({ onVisibilityChange } = {}) {
 
   if (!state) return null
   if (celebrating) return <FirstCircleJoined state={state} onClose={closeCelebration} />
-  if (state.number || state.closed) return null
+  if (state.number || state.closed || !state.eligible) return null
 
   const done = state.steps.filter((s) => s.done).length
   const nearlyGone = state.places_left <= 10
