@@ -144,8 +144,10 @@ async def my_first_circle(user: dict = Depends(get_current_user)):
     db = get_db()
     prog = await first_circle.progress(db, user)
 
+    eligible = first_circle.can_take_a_place(user, founder=is_founder(user))
+
     number = user.get("first_circle_number")
-    if number is None and prog["complete"]:
+    if number is None and prog["complete"] and eligible:
         number = await first_circle.try_admit(db, user)
         if number:
             await create_system_notification(
@@ -165,6 +167,7 @@ async def my_first_circle(user: dict = Depends(get_current_user)):
         # Closed for everyone still outside it. A member's own card never
         # says "closed" -- they're in, so it shows their number instead.
         closed=left <= 0 and number is None,
+        eligible=eligible,
         show_celebration=bool(number) and not user.get("first_circle_celebrated"),
     )
 

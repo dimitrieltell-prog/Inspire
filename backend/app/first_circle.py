@@ -80,22 +80,51 @@ async def places_left(db) -> int:
     return max(0, CIRCLE_SIZE - await _issued_count(db))
 
 
+def _merge_days(*groups) -> list:
+    """Fold timestamps from any number of sources into the list of separate
+    days, oldest first, keeping only as many as the step actually needs.
+
+    One rule in one place, so a day reconstructed from someone's old posts
+    and a day recorded live today mean exactly the same thing.
+    """
+    merged = []
+    for t in sorted(t for group in groups for t in group if t):
+        if not merged or t - merged[-1] >= DAY_GAP_SECONDS:
+            merged.append(t)
+    return merged[-DAYS_REQUIRED:]
+
+
 async def record_active_day(db, user: dict) -> None:
-    """Credit today, if it's far enough from the last day already credited.
+    """Credit today, and -- once per account -- everything that came before.
 
     Called on every authenticated request, so it must be cheap and must not
-    write on the overwhelming majority of them -- the gap check makes it
-    write at most once per user per day.
+    write on the overwhelming majority of them.
+
+    The reconstruction is keyed off its own flag rather than off
+    `active_days` being empty. That distinction is the whole thing: this
+    runs before anything else touches the account, so an "is it empty?"
+    test would write [now] on someone's very first request and the history
+    would never get a chance to be read. Anyone already recorded that way
+    is repaired the next time they load a page, because the flag is what's
+    missing, not the list.
     """
     if user.get("first_circle_number"):
         return  # already in; stop counting
     now = time.time()
     days = user.get("active_days") or []
-    if days and now - max(days) < DAY_GAP_SECONDS:
-        return
-    days = sorted(days + [now])[-DAYS_REQUIRED:]
-    await db.users.update_one({"_id": user["_id"]}, {"$set": {"active_days": days}})
-    user["active_days"] = days
+    updates = {}
+
+    if not user.get("active_days_backfilled"):
+        days = _merge_days(await backfill_active_days(db, user), days)
+        updates["active_days_backfilled"] = True
+
+    if not days or now - max(days) >= DAY_GAP_SECONDS:
+        days = _merge_days(days, [now])
+
+    if updates or days != (user.get("active_days") or []):
+        updates["active_days"] = days
+        await db.users.update_one({"_id": user["_id"]}, {"$set": updates})
+        user.update(updates)
 
 
 async def backfill_active_days(db, user: dict) -> list:
@@ -118,13 +147,7 @@ async def backfill_active_days(db, user: dict) -> list:
     for reaction in await db.reactions.find({"user_id": uid}):
         stamps.append(reaction.get("created_at"))
 
-    # Same 20-hour rule as live tracking, applied oldest-first, so a
-    # backfilled day and a live one mean exactly the same thing.
-    days = []
-    for t in sorted(s for s in stamps if s):
-        if not days or t - days[-1] >= DAY_GAP_SECONDS:
-            days.append(t)
-    return days[-DAYS_REQUIRED:]
+    return _merge_days(stamps)
 
 
 async def progress(db, user: dict) -> dict:
@@ -141,12 +164,9 @@ async def progress(db, user: dict) -> dict:
     # instead, and that isn't a connection until the other person says so.
     follows = len(await db.follows.find({"follower_id": uid}))
 
-    days = user.get("active_days")
-    if days is None:
-        # First time we've looked at this person since the feature shipped.
-        days = await backfill_active_days(db, user)
-        await db.users.update_one({"_id": uid}, {"$set": {"active_days": days}})
-        user["active_days"] = days
+    # Already reconstructed and topped up by record_active_day, which every
+    # authenticated request runs through before reaching here.
+    days = user.get("active_days") or []
 
     profile_done = bool(user.get("avatar_url") or user.get("bio"))
 
@@ -173,6 +193,12 @@ async def progress(db, user: dict) -> dict:
          "need": DAYS_REQUIRED, "cta_url": None},
     ]
     return {"steps": steps, "complete": all(s["done"] for s in steps)}
+
+
+def can_take_a_place(user: dict, founder: bool = False) -> bool:
+    """Founders have their own crown, and test accounts aren't people --
+    neither should burn one of the hundred places."""
+    return not founder and not user.get("is_founder") and not user.get("is_test_account")
 
 
 async def try_admit(db, user: dict) -> int | None:

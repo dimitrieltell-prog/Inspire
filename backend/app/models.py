@@ -510,6 +510,10 @@ class FirstCircleState(BaseModel):
     places_left: int
     circle_size: int
     closed: bool
+    # False for founder and test accounts, which don't take places. The card
+    # hides entirely rather than sitting there fully ticked and never
+    # resolving.
+    eligible: bool = True
     # Whether the "you're in" moment still needs showing. Persisted on the
     # account rather than being a one-shot flag on the response that awards
     # the place: anything that fetches twice -- a remount, a retry, React's
