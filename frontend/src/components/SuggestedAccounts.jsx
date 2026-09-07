@@ -4,6 +4,7 @@ import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import CrownIcon from './CrownIcon'
 import VerifiedBadge from './VerifiedBadge'
+import FirstCircleIcon from './FirstCircleIcon'
 
 const PAGE_SIZE = 5
 
@@ -70,6 +71,7 @@ export default function SuggestedAccounts() {
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-semibold text-navy truncate">{user.display_name}</span>
             {user.is_founder && <CrownIcon className="w-3.5 h-3.5 text-navy flex-shrink-0" />}
+            {user.first_circle_number && <FirstCircleIcon size={14} />}
             {user.is_premium && <VerifiedBadge className="w-3.5 h-3.5 flex-shrink-0" />}
           </div>
           {user.username && <span className="text-xs text-slate-light truncate block">@{user.username}</span>}
@@ -101,6 +103,7 @@ export default function SuggestedAccounts() {
                     <div className="flex items-center gap-1 min-w-0">
                       <span className="text-sm font-semibold text-navy truncate">{p.display_name}</span>
                       {p.is_founder && <CrownIcon className="w-3 h-3 text-navy flex-shrink-0" />}
+                      {p.first_circle_number && <FirstCircleIcon size={12} />}
                       {p.is_premium && <VerifiedBadge className="w-3 h-3 flex-shrink-0" />}
                     </div>
                     {p.username && <span className="text-xs text-slate-light truncate block">@{p.username}</span>}

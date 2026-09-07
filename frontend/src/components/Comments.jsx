@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
 import ReportModal from './ReportModal'
+import FirstCircleIcon from './FirstCircleIcon'
 
 // The comments "guts" (fetch, composer, list, per-comment report) shared
 // between StoryDetail.jsx's page layout and CommentsPanel.jsx's slide-up/
@@ -24,7 +25,7 @@ export default function Comments({ storyId, initialCommentCount, onCountChange }
 
   async function submitComment(e) {
     e.preventDefault()
-    if (!user) { setCommentError('Sign in to leave a reply.'); return }
+    if (!user) { setCommentError('Sign in to leave a comment.'); return }
     setPosting(true)
     setCommentError('')
     try {
@@ -46,7 +47,7 @@ export default function Comments({ storyId, initialCommentCount, onCountChange }
           <textarea
             required
             maxLength={1000}
-            placeholder="Share a supportive reply…"
+            placeholder="Share a supportive comment…"
             value={commentBody}
             onChange={(e) => setCommentBody(e.target.value)}
             className="border border-line rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo resize-none"
@@ -57,26 +58,29 @@ export default function Comments({ storyId, initialCommentCount, onCountChange }
             disabled={posting}
             className="self-start bg-indigo text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-indigo-deep transition-colors disabled:opacity-60"
           >
-            {posting ? 'Posting…' : 'Post reply'}
+            {posting ? 'Posting…' : 'Post comment'}
           </button>
         </form>
       ) : (
         <p className="text-sm text-slate mb-6">
-          <Link to="/login" className="text-indigo font-semibold">Sign in</Link> to leave a reply.
+          <Link to="/login" className="text-indigo font-semibold">Sign in</Link> to leave a comment.
         </p>
       )}
 
-      {!loading && comments.length === 0 && <p className="text-sm text-slate-light">No replies yet — be the first.</p>}
+      {!loading && comments.length === 0 && <p className="text-sm text-slate-light">No comments yet — be the first.</p>}
 
       <div className="flex flex-col gap-4">
         {comments.map((c) => (
           <div key={c.id} className="border-b border-line pb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              {c.author_id ? (
-                <Link to={`/users/${c.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{c.author_name}</Link>
-              ) : (
-                <span className="text-xs font-semibold text-slate">{c.author_name}</span>
-              )}
+              <span className="flex items-center gap-1.5 min-w-0">
+                {c.author_id ? (
+                  <Link to={`/users/${c.author_id}`} className="text-xs font-semibold text-slate hover:text-indigo transition-colors">{c.author_name}</Link>
+                ) : (
+                  <span className="text-xs font-semibold text-slate">{c.author_name}</span>
+                )}
+                {c.author_first_circle_number && <FirstCircleIcon size={12} />}
+              </span>
               <p className="text-sm text-slate leading-relaxed mt-1 whitespace-pre-wrap">{c.body}</p>
             </div>
             {user && c.author_id !== user.id && (

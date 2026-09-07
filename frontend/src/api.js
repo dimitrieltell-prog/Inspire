@@ -147,6 +147,8 @@ export const api = {
   markStoryPremiumPitchSeen: () => request('/me/story-premium-pitch-seen', { method: 'POST' }),
   getOnboardingChecklist: () => request('/me/onboarding'),
   dismissOnboardingChecklist: () => request('/me/onboarding/dismiss', { method: 'POST' }),
+  getFirstCircle: () => request('/me/first-circle'),
+  markFirstCircleSeen: () => request('/me/first-circle/seen', { method: 'POST' }),
 
   // Notifications
   getNotifications: () => request('/notifications'),

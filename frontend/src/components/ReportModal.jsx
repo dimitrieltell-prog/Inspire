@@ -55,7 +55,7 @@ export default function ReportModal({ targetType, targetId, onClose }) {
           </div>
         ) : (
           <form onSubmit={submit}>
-            <h2 className="text-lg font-bold mb-1">Report {targetType === 'user' ? 'this account' : targetType === 'comment' ? 'this reply' : 'this story'}</h2>
+            <h2 className="text-lg font-bold mb-1">Report {targetType === 'user' ? 'this account' : targetType === 'comment' ? 'this comment' : 'this story'}</h2>
             <p className="text-xs text-slate-light mb-4">This is sent privately to the Inspire team for review.</p>
 
             <div className="flex flex-col gap-1.5 mb-4">

@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar'
 import ReportModal from '../components/ReportModal'
 import CrownIcon from '../components/CrownIcon'
 import VerifiedBadge from '../components/VerifiedBadge'
+import FirstCircleIcon from '../components/FirstCircleIcon'
 
 function formatDate(ts) {
   if (!ts) return '—'
@@ -139,6 +140,7 @@ export default function UserProfile() {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.display_name}</h1>
               {profile.is_founder && <CrownIcon className="w-[18px] h-[18px] text-navy flex-shrink-0" />}
+              {profile.first_circle_number && <FirstCircleIcon size={18} />}
               {profile.is_premium && <VerifiedBadge className="w-[18px] h-[18px] flex-shrink-0" />}
               {profile.is_business && (
                 <span className="text-[11px] font-bold uppercase tracking-wide border border-line text-slate px-2 py-0.5 rounded-full">
@@ -150,6 +152,11 @@ export default function UserProfile() {
               {profile.username && `@${profile.username}`}
               {profile.pronouns && ` · ${profile.pronouns}`}
             </p>
+            {/* Their place is worth spelling out, not just implied by the
+                badge -- the number is the part people actually tell friends. */}
+            {profile.first_circle_number && (
+              <p className="text-sm font-semibold text-bronze mt-1">First Circle · #{profile.first_circle_number}</p>
+            )}
             {profile.bio && <p className="text-sm mt-2 whitespace-pre-wrap">{profile.bio}</p>}
             {(profile.links?.length > 0) && (
               <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">

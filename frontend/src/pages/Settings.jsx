@@ -454,7 +454,7 @@ export default function Settings() {
                   ['Followers', insights.followers],
                   ['Stories', insights.stories],
                   ['Support received', insights.supports_received],
-                  ['Replies received', insights.replies_received],
+                  ['Comments received', insights.replies_received],
                   ['Reposts', insights.reposts_received],
                   ['Saves', insights.saves_received],
                 ].map(([label, value]) => (

@@ -11,6 +11,7 @@ import RepostIcon from '../components/RepostIcon'
 import ReactorsModal from '../components/ReactorsModal'
 import Comments from '../components/Comments'
 import { useStoryInteractions } from '../components/useStoryInteractions'
+import FirstCircleIcon from '../components/FirstCircleIcon'
 
 export default function StoryDetail() {
   const { storyId } = useParams()
@@ -79,6 +80,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
               ) : (
                 <span className="text-sm font-semibold text-navy truncate">{story.author_name}</span>
               )}
+              {story.author_first_circle_number && <FirstCircleIcon size={14} />}
               {story.author_is_business && (
                 <span className="text-[9px] font-bold uppercase tracking-wide border border-line text-slate-light px-1.5 py-0.5 rounded-full flex-shrink-0">
                   {story.author_business_category || 'Business'}
@@ -181,7 +183,7 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
       </div>
 
       <div className="mt-5">
-        <h2 className="text-lg font-bold mb-3">Replies</h2>
+        <h2 className="text-lg font-bold mb-3">Comments</h2>
         <Comments
           storyId={story.id}
           initialCommentCount={story.comment_count}

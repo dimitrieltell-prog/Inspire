@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import BellIcon from './BellIcon'
+import FirstCircleIcon from './FirstCircleIcon'
 
 const POLL_MS = 15000
 const TOAST_MS = 2000
@@ -48,6 +49,9 @@ function copyFor(n) {
     case 'story_reply': return `${n.actor_name} replied${n.preview ? `: "${n.preview}"` : ' to your story.'}`
     case 'story_send': return `${n.actor_name} sent you a story.`
     case 'message': return `${n.actor_name} sent you a message.`
+    // From Inspire itself, not another person -- the preview IS the whole
+    // message here, so actor_name is deliberately not used.
+    case 'first_circle': return n.preview || "You're in the First Circle."
     default: return `${n.actor_name} did something.`
   }
 }
@@ -68,6 +72,8 @@ function linkFor(n) {
       return '/profile'
     case 'story_send':
       return '/story-inbox'
+    case 'first_circle':
+      return '/profile'
     case 'story_reply':
       // Replies to a Story are delivered as a real DM now, not a public
       // reply -- target_id is the replier's own id, same as "message".
@@ -190,7 +196,14 @@ export default function NotificationsBell({ anchor = 'right' }) {
                   onClick={() => onSelect(n)}
                   className={`text-left px-4 py-3 flex items-start gap-3 border-b border-line last:border-b-0 hover:bg-lavender/30 transition-colors ${!n.read ? 'bg-lavender/20' : ''}`}
                 >
-                  <span className="text-lg flex-shrink-0">{ICONS[n.type] || '🔔'}</span>
+                  {/* The First Circle gets its real badge rather than an
+                      emoji stand-in -- it's the same mark they'll now see
+                      beside their name everywhere else. */}
+                  {n.type === 'first_circle' ? (
+                    <span className="flex-shrink-0 mt-0.5"><FirstCircleIcon size={18} /></span>
+                  ) : (
+                    <span className="text-lg flex-shrink-0">{ICONS[n.type] || '🔔'}</span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm text-navy">{copyFor(n)}</span>
                     <span className="block text-[11px] text-slate-light mt-0.5">{timeAgo(n.created_at)}</span>

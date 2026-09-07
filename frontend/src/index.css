@@ -14,6 +14,12 @@
   --color-sage: #E4F1E6;
   --color-sage-ink: #4C8B5A;
   --color-surface: #FFFFFF;
+  /* First Circle. A bronze nothing else in the app uses, so the badge can
+     never be mistaken for the navy founder crown or the indigo Premium
+     check sitting beside the same names. */
+  --color-bronze: #A9762F;
+  --color-bronze-bg: #F7EEDB;
+  --color-bronze-line: #E3CB9C;
 
   --font-display: "Plus Jakarta Sans", sans-serif;
   --font-body: Inter, sans-serif;
@@ -51,6 +57,9 @@
   --color-sage: #223828;
   --color-sage-ink: #7FC492;
   --color-surface: #333D68;
+  --color-bronze: #E7B75F;
+  --color-bronze-bg: #3B2F18;
+  --color-bronze-line: #6B5528;
 }
 
 html {

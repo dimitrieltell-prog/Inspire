@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar'
 import AvatarCropModal from '../components/AvatarCropModal'
 import CrownIcon from '../components/CrownIcon'
 import VerifiedBadge from '../components/VerifiedBadge'
+import FirstCircleIcon from '../components/FirstCircleIcon'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -430,6 +431,7 @@ export default function Profile() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold">{profile.display_name}</h1>
                   {profile.is_founder && <CrownIcon className="w-[18px] h-[18px] text-navy flex-shrink-0" />}
+                  {profile.first_circle_number && <FirstCircleIcon size={18} />}
                   {profile.is_premium && <VerifiedBadge className="w-[18px] h-[18px] flex-shrink-0" />}
                   <button onClick={startEditing} className="text-xs text-indigo font-semibold ml-1 hover:underline">
                     Edit
@@ -439,6 +441,11 @@ export default function Profile() {
                   {profile.username && `@${profile.username}`}
                   {profile.pronouns && ` · ${profile.pronouns}`}
                 </p>
+                {/* Their place is worth spelling out, not just implied by the
+                    badge -- the number is the part people actually tell friends. */}
+                {profile.first_circle_number && (
+                  <p className="text-sm font-semibold text-bronze mt-1">First Circle · #{profile.first_circle_number}</p>
+                )}
                 {profile.bio && <p className="text-sm mt-2 whitespace-pre-wrap">{profile.bio}</p>}
                 {(profile.links?.length > 0) && (
                   <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
@@ -488,6 +495,7 @@ export default function Profile() {
                     </span>
                     {u.display_name}
                     {u.is_founder && <CrownIcon className="w-3.5 h-3.5 text-navy flex-shrink-0" />}
+                    {u.first_circle_number && <FirstCircleIcon size={14} />}
                   </Link>
                 ))}
               </div>
@@ -538,10 +546,23 @@ export default function Profile() {
       <div className="bg-surface border border-line rounded-xl2 p-6 mt-5">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-light mb-2">Membership</h2>
         {profile.is_premium ? (
+          /* A First Circle year is a gift with an end date, so it says so
+             plainly. Telling someone they're "on Premium" and then quietly
+             dropping them to the free tier a year later is the version of
+             this that loses their trust. */
+          user?.premium_source === 'first_circle' ? (
+            <p className="text-sm">
+              <span className="font-semibold text-indigo">Premium</span> is on us
+              {user.premium_until && ` until ${new Date(user.premium_until * 1000).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`},
+              as part of your First Circle place. After that your badge stays and your account
+              moves to the free plan.
+            </p>
+          ) : (
           <p className="text-sm">
             You're on <span className="font-semibold text-indigo">Premium</span>
             {profile.is_founder && ' (included with your Founder status)'} — unlimited Aria, and more. ✨
           </p>
+          )
         ) : (
           <p className="text-sm text-slate">
             You're on the free plan. <Link to="/premium" className="text-indigo font-semibold">Go Premium →</Link>

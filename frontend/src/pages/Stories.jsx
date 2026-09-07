@@ -5,6 +5,7 @@ import FeedStoryCard from '../components/FeedStoryCard'
 import CommentsPanel from '../components/CommentsPanel'
 import FeedDots from '../components/FeedDots'
 import OnboardingChecklist from '../components/OnboardingChecklist'
+import FirstCircleCard from '../components/FirstCircleCard'
 import StoriesTray from '../components/StoriesTray'
 import SuggestedAccounts from '../components/SuggestedAccounts'
 
@@ -50,6 +51,7 @@ export default function Stories() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showFirstCircle, setShowFirstCircle] = useState(false)
   const [onboardingChecked, setOnboardingChecked] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [openCommentsFor, setOpenCommentsFor] = useState(null)
@@ -109,7 +111,7 @@ export default function Stories() {
     return () => window.removeEventListener('pageshow', onPageShow)
   }, [])
 
-  const slideCount = (showOnboarding ? 1 : 0) + stories.length
+  const slideCount = (showOnboarding ? 1 : 0) + (showFirstCircle ? 1 : 0) + stories.length
 
   useEffect(() => {
     const root = containerRef.current
@@ -191,6 +193,18 @@ export default function Stories() {
                   >
                     <div className="w-full max-w-[480px]">
                       <OnboardingChecklist onVisibilityChange={handleOnboardingVisibility} />
+                    </div>
+                  </section>
+                  {/* Same always-mounted, collapse-when-empty treatment as the
+                      checklist above: the card has to run its own fetch before
+                      it can know whether there's anything to show, and it has
+                      nothing to say to anyone already in the circle. */}
+                  <section
+                    data-slide-index={showFirstCircle ? slideIndex++ : undefined}
+                    className={showFirstCircle ? 'w-full flex-shrink-0 flex items-start justify-center px-4 py-6' : 'hidden'}
+                  >
+                    <div className="w-full max-w-[480px]">
+                      <FirstCircleCard onVisibilityChange={setShowFirstCircle} />
                     </div>
                   </section>
                   {/* Plain scrolling, no scroll-snap. Snap points pulled the

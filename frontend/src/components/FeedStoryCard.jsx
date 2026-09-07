@@ -9,6 +9,7 @@ import RepostIcon from './RepostIcon'
 import ReactorsModal from './ReactorsModal'
 import { useAuth } from '../AuthContext'
 import { useStoryInteractions } from './useStoryInteractions'
+import FirstCircleIcon from './FirstCircleIcon'
 
 // One card in the Stories scroll-snap feed -- sized to its content (like
 // StoryCard.jsx's grid tile), not stretched to fill the viewport. Matches
@@ -75,6 +76,7 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
             ) : (
               <span className="text-sm font-semibold text-navy truncate">{story.author_name}</span>
             )}
+            {story.author_first_circle_number && <FirstCircleIcon size={14} />}
             {story.author_is_business && (
               <span className="text-[9px] font-bold uppercase tracking-wide border border-line text-slate-light px-1.5 py-0.5 rounded-full flex-shrink-0">
                 {story.author_business_category || 'Business'}
