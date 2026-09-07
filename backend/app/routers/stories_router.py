@@ -1,3 +1,4 @@
+import asyncio
 import time
 from typing import Optional
 
@@ -115,16 +116,22 @@ def _to_comment_out(comment: dict, circle: dict[str, int] | None = None) -> Comm
 
 
 async def _circle_numbers(db, comments: list[dict]) -> dict[str, int]:
-    """First Circle numbers for the authors of these comments, in one pass
-    over the members rather than a lookup per comment."""
-    author_ids = {c.get("author_id") for c in comments if c.get("author_id")}
+    """First Circle numbers for the authors of these comments.
+
+    Fetched one author at a time, concurrently, rather than by scanning the
+    whole user collection. However long a thread gets it still only has a
+    handful of distinct authors, and each of these is a primary-key hit --
+    where the scan read every account on the site every time anybody opened
+    a post, and got slower with every new signup.
+    """
+    author_ids = [a for a in {c.get("author_id") for c in comments} if a]
     if not author_ids:
         return {}
-    members = await db.users.find({})
+    authors = await asyncio.gather(*[db.users.find_one({"_id": a}) for a in author_ids])
     return {
         u["_id"]: u["first_circle_number"]
-        for u in members
-        if u["_id"] in author_ids and u.get("first_circle_number")
+        for u in authors
+        if u and u.get("first_circle_number")
     }
 
 
