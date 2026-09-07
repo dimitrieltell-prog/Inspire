@@ -4,8 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, is_founder
 from app.database import get_db
+from app.first_circle import has_premium
+from app import first_circle
+from app.inapp_notifications import create_system_notification
 from app.models import (
     ActivityItem,
+    FirstCircleState,
+    FirstCircleStep,
     FounderStoryViewCreate,
     FounderStoryViewOut,
     Insights,
@@ -126,6 +131,52 @@ async def my_onboarding_checklist(user: dict = Depends(get_current_user)):
     return OnboardingChecklist(steps=steps, complete=all(s.done for s in steps))
 
 
+@router.get("/first-circle", response_model=FirstCircleState)
+async def my_first_circle(user: dict = Depends(get_current_user)):
+    """Where you stand with the First Circle, and the place itself if this
+    is the moment you've earned one.
+
+    Admission happens here rather than at the end of each qualifying action
+    because the final step -- coming back on a third day -- isn't an action
+    at all. Whatever someone does, they finish by loading a page, so this is
+    the one place guaranteed to run.
+    """
+    db = get_db()
+    prog = await first_circle.progress(db, user)
+
+    number = user.get("first_circle_number")
+    if number is None and prog["complete"]:
+        number = await first_circle.try_admit(db, user)
+        if number:
+            await create_system_notification(
+                db, user["_id"], "first_circle",
+                preview=f"You're in the First Circle — member #{number} of {first_circle.CIRCLE_SIZE}.",
+            )
+
+    left = await first_circle.places_left(db)
+    return FirstCircleState(
+        steps=[FirstCircleStep(**s) for s in prog["steps"]],
+        complete=prog["complete"],
+        number=number,
+        joined_at=user.get("first_circle_at"),
+        premium_until=user.get("premium_grant_until"),
+        places_left=left,
+        circle_size=first_circle.CIRCLE_SIZE,
+        # Closed for everyone still outside it. A member's own card never
+        # says "closed" -- they're in, so it shows their number instead.
+        closed=left <= 0 and number is None,
+        show_celebration=bool(number) and not user.get("first_circle_celebrated"),
+    )
+
+
+@router.post("/first-circle/seen", status_code=status.HTTP_204_NO_CONTENT)
+async def mark_first_circle_celebrated(user: dict = Depends(get_current_user)):
+    """Dismiss the "you're in" card for good. Separate from awarding the
+    place so the moment survives a reload -- someone who joins on a flaky
+    connection, or closes the tab before it renders, still gets to see it."""
+    await get_db().users.update_one({"_id": user["_id"]}, {"$set": {"first_circle_celebrated": True}})
+
+
 @router.post("/onboarding/dismiss", status_code=status.HTTP_204_NO_CONTENT)
 async def dismiss_onboarding_checklist(user: dict = Depends(get_current_user)):
     """Hide the getting-started checklist for good, finished or not. It's a
@@ -159,7 +210,7 @@ async def my_story_inbox(user: dict = Depends(get_current_user)):
 async def my_insights(user: dict = Depends(get_current_user)):
     """How your stories are performing. A Premium perk -- available to any
     Premium account, business or not."""
-    if not (user.get("is_premium", False) or is_founder(user)):
+    if not has_premium({**user, "is_founder": is_founder(user)}):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Insights are a Premium perk. Upgrade to Premium to unlock them.")
     db = get_db()
     my_stories = await db.stories.find({"author_id": user["_id"]})

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
+from app.first_circle import has_premium
 from app.inapp_notifications import create_notification
 from app.models import ProfileUser, PublicProfile, StoryOut, SuggestedUser
 from app.notifications import notify_new_follower
@@ -18,8 +19,9 @@ def _profile_user(u: dict) -> ProfileUser:
         id=u["_id"],
         display_name=u["display_name"],
         username=u.get("username"),
-        is_premium=u.get("is_premium", False) or is_founder(u),
+        is_premium=has_premium({**u, "is_founder": is_founder(u)}),
         is_founder=is_founder(u),
+        first_circle_number=u.get("first_circle_number"),
     )
 
 
@@ -29,8 +31,9 @@ def _suggested_user(u: dict) -> SuggestedUser:
         display_name=u["display_name"],
         username=u.get("username"),
         avatar_url=u.get("avatar_url"),
-        is_premium=u.get("is_premium", False) or is_founder(u),
+        is_premium=has_premium({**u, "is_founder": is_founder(u)}),
         is_founder=is_founder(u),
+        first_circle_number=u.get("first_circle_number"),
     )
 
 
@@ -141,8 +144,9 @@ async def _build_profile(u: dict, viewer: Optional[dict]) -> PublicProfile:
         pronouns=u.get("pronouns", "") if can_view else "",
         links=u.get("links", []) if can_view else [],
         schools=u.get("schools", []) if can_view else [],
-        is_premium=u.get("is_premium", False) or is_founder(u),
+        is_premium=has_premium({**u, "is_founder": is_founder(u)}),
         is_founder=is_founder(u),
+        first_circle_number=u.get("first_circle_number"),
         is_private=u.get("is_private", False),
         is_business=u.get("is_business", False),
         business_category=u.get("business_category"),

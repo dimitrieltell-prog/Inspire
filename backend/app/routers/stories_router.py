@@ -44,6 +44,7 @@ async def serialize_story(story: dict, viewer, db) -> StoryOut:
         author_name="Anonymous" if story["is_anonymous"] else story["author_display_name"],
         author_id=None if story["is_anonymous"] else story.get("author_id"),
         author_avatar_url=None if story["is_anonymous"] else (author.get("avatar_url") if author else None),
+        author_first_circle_number=None if story["is_anonymous"] else (author.get("first_circle_number") if author else None),
         is_anonymous=story["is_anonymous"],
         media_url=story.get("media_url"),
         media_type=story.get("media_type"),
@@ -98,15 +99,33 @@ def story_display_name(story: dict) -> str:
     return "a post"
 
 
-def _to_comment_out(comment: dict) -> CommentOut:
+def _to_comment_out(comment: dict, circle: dict[str, int] | None = None) -> CommentOut:
+    """`circle` maps author id -> First Circle number. Passed in rather than
+    looked up here so rendering a hundred comments stays one query instead
+    of a hundred."""
     return CommentOut(
         id=comment["_id"],
         story_id=comment["story_id"],
         author_name=comment["author_display_name"],
         author_id=comment.get("author_id"),
+        author_first_circle_number=(circle or {}).get(comment.get("author_id")),
         body=comment["body"],
         created_at=comment["created_at"],
     )
+
+
+async def _circle_numbers(db, comments: list[dict]) -> dict[str, int]:
+    """First Circle numbers for the authors of these comments, in one pass
+    over the members rather than a lookup per comment."""
+    author_ids = {c.get("author_id") for c in comments if c.get("author_id")}
+    if not author_ids:
+        return {}
+    members = await db.users.find({})
+    return {
+        u["_id"]: u["first_circle_number"]
+        for u in members
+        if u["_id"] in author_ids and u.get("first_circle_number")
+    }
 
 
 @router.post("", response_model=StoryOut, status_code=status.HTTP_201_CREATED)
@@ -258,7 +277,8 @@ async def list_comments(story_id: str, viewer: Optional[dict] = Depends(get_opti
     muted_words = (viewer or {}).get("muted_words", [])
     if muted_words:
         comments = [c for c in comments if not _contains_muted_word(c["body"], muted_words)]
-    return [_to_comment_out(c) for c in comments]
+    circle = await _circle_numbers(db, comments)
+    return [_to_comment_out(c, circle) for c in comments]
 
 
 @router.post("/comments", response_model=CommentOut, status_code=status.HTTP_201_CREATED)
@@ -297,7 +317,7 @@ async def create_comment(payload: CommentCreate, user: dict = Depends(get_curren
     })
     await db.stories.update_one({"_id": payload.story_id}, {"$inc": {"comment_count": 1}})
     await create_notification(db, author_id, user, "comment", target_id=payload.story_id, preview=payload.body[:80])
-    return _to_comment_out(comment)
+    return _to_comment_out(comment, {user["_id"]: user["first_circle_number"]} if user.get("first_circle_number") else {})
 
 
 @router.post("/react", status_code=status.HTTP_204_NO_CONTENT)

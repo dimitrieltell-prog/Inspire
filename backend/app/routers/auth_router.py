@@ -12,6 +12,7 @@ from google.oauth2 import id_token as google_id_token
 from app.auth import create_access_token, get_current_user, hash_password, is_founder, verify_password
 from app.config import settings
 from app.database import get_db
+from app.first_circle import has_premium, premium_source
 from app.models import (
     BUSINESS_CATEGORIES,
     COMMENT_AUDIENCES,
@@ -100,8 +101,9 @@ async def ensure_username(db, user: dict) -> dict:
 
 def _to_user_out(user: dict) -> UserOut:
     is_founder = user.get("is_founder", False) or user["email"].lower() in settings.founder_emails
-    # Founders always get premium for free.
-    is_premium = user.get("is_premium", False) or is_founder
+    # Founders always get premium for free, and so does anyone inside an
+    # unexpired First Circle grant year.
+    is_premium = has_premium({**user, "is_founder": is_founder})
     return UserOut(
         id=user["_id"],
         email=user["email"],
@@ -111,6 +113,9 @@ def _to_user_out(user: dict) -> UserOut:
         avatar_url=user.get("avatar_url"),
         is_premium=is_premium,
         is_founder=is_founder,
+        first_circle_number=user.get("first_circle_number"),
+        premium_source=premium_source({**user, "is_founder": is_founder}),
+        premium_until=user.get("premium_grant_until"),
         is_private=user.get("is_private", False),
         is_business=user.get("is_business", False),
         business_category=user.get("business_category"),
@@ -249,7 +254,7 @@ async def update_me(payload: ProfileUpdate, user: dict = Depends(get_current_use
 
     if payload.muted_words is not None:
         words = [w.strip().lower() for w in payload.muted_words if w.strip()]
-        is_premium = user.get("is_premium", False) or is_founder(user)
+        is_premium = has_premium({**user, "is_founder": is_founder(user)})
         max_words = 100 if is_premium else 25
         if len(words) > max_words:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"You can mute up to {max_words} words{'' if is_premium else ' — Premium allows up to 100'}.")

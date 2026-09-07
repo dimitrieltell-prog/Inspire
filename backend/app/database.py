@@ -49,6 +49,28 @@ class InMemoryCollection:
             doc[field] = doc.get(field, 0) + amount
         return doc
 
+    async def find_one_and_update(self, query: dict, update: dict, upsert: bool = False) -> Optional[dict]:
+        """Read-modify-write with nothing able to interleave. Everything here
+        runs without awaiting, and asyncio is single-threaded, so two callers
+        can never both read the same value before either writes -- which is
+        the whole point: it's what stops two people being handed the same
+        First Circle number."""
+        doc = None
+        for d in self._docs.values():
+            if _matches(d, query):
+                doc = d
+                break
+        if not doc:
+            if not upsert:
+                return None
+            doc = dict(query)
+            doc["_id"] = doc.get("_id") or str(uuid.uuid4())
+            self._docs[doc["_id"]] = doc
+        doc.update(update.get("$set", {}))
+        for field, amount in update.get("$inc", {}).items():
+            doc[field] = doc.get(field, 0) + amount
+        return doc
+
     async def delete_one(self, query: dict) -> bool:
         doc = await self.find_one(query)
         if not doc:
@@ -95,6 +117,16 @@ class MongoCollection:
         await self._c.update_one(query, update)
         return await self.find_one(query)
 
+    async def find_one_and_update(self, query: dict, update: dict, upsert: bool = False) -> Optional[dict]:
+        """Mongo applies this as a single atomic document operation and hands
+        back the state after the write, so concurrent callers each get their
+        own distinct result rather than both seeing the same pre-write value."""
+        from pymongo import ReturnDocument
+
+        return await self._c.find_one_and_update(
+            query, update, upsert=upsert, return_document=ReturnDocument.AFTER
+        )
+
     async def delete_one(self, query: dict) -> bool:
         result = await self._c.delete_one(query)
         return result.deleted_count > 0
@@ -138,6 +170,7 @@ class DB:
             self.founder_story_views = MongoCollection(mongo_db["founder_story_views"])
             self.notifications = MongoCollection(mongo_db["notifications"])
             self.story_drafts = MongoCollection(mongo_db["story_drafts"])
+            self.counters = MongoCollection(mongo_db["counters"])
         else:
             self.users = InMemoryCollection()
             self.stories = InMemoryCollection()
@@ -161,6 +194,7 @@ class DB:
             self.founder_story_views = InMemoryCollection()
             self.notifications = InMemoryCollection()
             self.story_drafts = InMemoryCollection()
+            self.counters = InMemoryCollection()
 
 
 _db_instance: Optional[DB] = None

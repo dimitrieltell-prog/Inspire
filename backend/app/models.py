@@ -70,6 +70,15 @@ class UserOut(BaseModel):
     avatar_url: Optional[str] = None
     is_premium: bool
     is_founder: bool = False
+    # First Circle place, 1-100. None for everyone else -- the badge only
+    # renders when this is set.
+    first_circle_number: Optional[int] = None
+    # Where Premium is coming from ("stripe", "founder", "first_circle" or
+    # "none") and, for a gift year, when it runs out. Without these the
+    # account screen tells a First Circle member they're "on Premium" and
+    # then silently drops them to the free tier twelve months later.
+    premium_source: str = "none"
+    premium_until: Optional[float] = None
     is_private: bool = False
     is_business: bool = False
     business_category: Optional[str] = None
@@ -127,6 +136,9 @@ class ProfileUser(BaseModel):
     username: Optional[str] = None
     is_premium: bool
     is_founder: bool
+    # First Circle place, 1-100. None for everyone else -- the badge only
+    # renders when this is set.
+    first_circle_number: Optional[int] = None
 
 
 class SuggestedUser(BaseModel):
@@ -138,6 +150,9 @@ class SuggestedUser(BaseModel):
     avatar_url: Optional[str] = None
     is_premium: bool
     is_founder: bool
+    # First Circle place, 1-100. None for everyone else -- the badge only
+    # renders when this is set.
+    first_circle_number: Optional[int] = None
 
 
 class PublicProfile(BaseModel):
@@ -151,6 +166,9 @@ class PublicProfile(BaseModel):
     schools: list[str] = []
     is_premium: bool
     is_founder: bool
+    # First Circle place, 1-100. None for everyone else -- the badge only
+    # renders when this is set.
+    first_circle_number: Optional[int] = None
     is_private: bool = False
     is_business: bool = False
     business_category: Optional[str] = None
@@ -278,6 +296,10 @@ class StoryOut(BaseModel):
     author_name: str
     author_id: Optional[str] = None  # only set for non-anonymous stories
     author_avatar_url: Optional[str] = None  # only set for non-anonymous stories
+    # Author's First Circle place, so the badge shows on the post itself.
+    # Cleared on anonymous posts along with every other identifying field --
+    # a rare badge would narrow "who wrote this" to one of a hundred people.
+    author_first_circle_number: Optional[int] = None
     is_anonymous: bool
     media_url: Optional[str] = None
     media_type: Optional[str] = None
@@ -321,6 +343,7 @@ class CommentOut(BaseModel):
     story_id: str
     author_name: str
     author_id: Optional[str] = None
+    author_first_circle_number: Optional[int] = None
     body: str
     created_at: float
 
@@ -467,6 +490,34 @@ class OnboardingChecklist(BaseModel):
     complete: bool
 
 
+class FirstCircleStep(BaseModel):
+    key: str
+    title: str
+    subtitle: str
+    done: bool
+    have: int
+    need: int
+    cta_url: Optional[str] = None
+
+
+class FirstCircleState(BaseModel):
+    steps: list[FirstCircleStep]
+    complete: bool
+    # Set once they're in, and never changes after that.
+    number: Optional[int] = None
+    joined_at: Optional[float] = None
+    premium_until: Optional[float] = None
+    places_left: int
+    circle_size: int
+    closed: bool
+    # Whether the "you're in" moment still needs showing. Persisted on the
+    # account rather than being a one-shot flag on the response that awards
+    # the place: anything that fetches twice -- a remount, a retry, React's
+    # development double-render -- would consume a transient flag and the
+    # member would never see the moment they earned.
+    show_celebration: bool = False
+
+
 class FounderStoryViewCreate(BaseModel):
     duration_seconds: float = Field(ge=0)
 
@@ -479,8 +530,10 @@ class FounderStoryViewOut(BaseModel):
 
 class NotificationOut(BaseModel):
     id: str
-    type: Literal["follow", "follow_request", "like", "repost", "comment", "story_like", "story_reply", "story_send", "message"]
-    actor_id: str
+    type: Literal["follow", "follow_request", "like", "repost", "comment", "story_like", "story_reply", "story_send", "message", "first_circle"]
+    # None for notifications from Inspire itself rather than another person
+    # (joining the First Circle), where actor_name is "Inspire".
+    actor_id: Optional[str] = None
     actor_name: str
     target_id: Optional[str] = None  # story id, ephemeral story id, or the actor's own id (follow/message)
     preview: Optional[str] = None  # story title or a comment/reply snippet

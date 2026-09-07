@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import get_current_user, get_optional_user, is_founder
 from app.database import get_db
+from app.first_circle import has_premium
 from app.inapp_notifications import create_notification
 from app.models import (
     STORY_DURATIONS_FREE,
@@ -78,7 +79,7 @@ async def create_ephemeral_story(payload: EphemeralStoryCreate, user: dict = Dep
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "A story needs a caption or media.")
 
     db = get_db()
-    is_premium = user.get("is_premium", False) or is_founder(user)
+    is_premium = has_premium({**user, "is_founder": is_founder(user)})
     if payload.body and len(payload.body) > 500 and not is_premium:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Free accounts can write up to 500 characters — Premium allows up to 1000.")
     allowed = STORY_DURATIONS_PREMIUM if is_premium else STORY_DURATIONS_FREE

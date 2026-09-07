@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from app.config import settings
+from app.first_circle import record_active_day
 from app.database import get_db
 
 # How long someone can go without a request before we consider their
@@ -103,6 +104,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     if updates:
         await db.users.update_one({"_id": user_id}, {"$set": updates})
         user.update(updates)
+
+    # "Come back on 3 different days" for the First Circle. This is the one
+    # step that can't be earned in a single sitting, so it has to be
+    # noticed here, on any authenticated request, rather than at some
+    # particular action. It writes at most once per person per day.
+    await record_active_day(db, user)
     return user
 
 

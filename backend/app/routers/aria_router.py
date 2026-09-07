@@ -7,6 +7,7 @@ from app.aria_client import get_aria_reply
 from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
+from app.first_circle import has_premium
 from app.models import AriaMessageIn, AriaMessageOut
 
 router = APIRouter(prefix="/aria", tags=["aria"])
@@ -22,7 +23,7 @@ async def get_usage(user: dict = Depends(get_current_user)):
     db = get_db()
     usage = await db.aria_usage.find_one({"user_id": user["_id"], "date": _today_key()})
     used = usage["count"] if usage else 0
-    is_premium = user.get("is_premium") or user.get("is_founder")
+    is_premium = has_premium(user)
     limit = None if is_premium else settings.aria_free_daily_limit
     return AriaMessageOut(
         reply="",
@@ -35,7 +36,7 @@ async def get_usage(user: dict = Depends(get_current_user)):
 @router.post("/chat", response_model=AriaMessageOut)
 async def chat(payload: AriaMessageIn, user: dict = Depends(get_current_user)):
     db = get_db()
-    is_premium = user.get("is_premium") or user.get("is_founder")
+    is_premium = has_premium(user)
     limit = None if is_premium else settings.aria_free_daily_limit
 
     today = _today_key()
