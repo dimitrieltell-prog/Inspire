@@ -3,8 +3,6 @@ import { useAuth } from './AuthContext'
 import Nav from './components/Nav'
 import RequireAuth from './components/RequireAuth'
 import ConfirmUsernameGate from './components/ConfirmUsernameGate'
-import FounderStoryModal from './components/FounderStoryModal'
-import StoryPremiumPitchModal from './components/StoryPremiumPitchModal'
 import OnboardingGuideModal from './components/OnboardingGuideModal'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -34,9 +32,11 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row md:h-screen">
       {ready && user && !user.username_confirmed && <ConfirmUsernameGate />}
-      {ready && user && user.username_confirmed && !user.has_seen_founder_story && <FounderStoryModal />}
-      {ready && user && user.username_confirmed && user.has_seen_founder_story && !user.is_founder && !user.is_premium && !user.has_seen_story_premium_pitch && <StoryPremiumPitchModal />}
-      {ready && user && user.username_confirmed && user.has_seen_founder_story && (user.is_founder || user.is_premium || user.has_seen_story_premium_pitch) && !user.has_seen_onboarding_guide && <OnboardingGuideModal />}
+      {/* New accounts used to be walked through the founder's story, then a
+          pitch for Premium as the way to reread it, and only then the
+          getting-started guide. The story has been taken down, and the pitch
+          existed only to sell access to it, so the guide is what's left. */}
+      {ready && user && user.username_confirmed && !user.has_seen_onboarding_guide && <OnboardingGuideModal />}
       <Nav />
       <div className={`flex-1 flex flex-col md:h-screen ${isStoriesFeed ? '' : 'md:overflow-y-auto'}`}>
         <main className={`flex-grow ${isStoriesFeed ? '' : 'pb-20 md:pb-0'}`}>

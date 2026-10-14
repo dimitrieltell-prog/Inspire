@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
-import FounderStoryModal from './FounderStoryModal'
 import CrownIcon from './CrownIcon'
 import VerifiedBadge from './VerifiedBadge'
 
@@ -18,7 +17,7 @@ function signOut(logout) {
   window.location.href = '/'
 }
 
-// Avatar-triggered dropdown for My Story / Premium / Settings / Sign out --
+// Avatar-triggered dropdown for Premium / Settings / Sign out --
 // self-contained the same way NotificationsBell is (own open state, own
 // click-outside handler). Deliberately does NOT reuse components/Avatar.jsx,
 // which has its own story-viewer/story-composer click behavior that belongs
@@ -34,7 +33,6 @@ function signOut(logout) {
 export default function ProfileMenu({ anchor = 'topbar' }) {
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
-  const [viewingStory, setViewingStory] = useState(false)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -68,14 +66,6 @@ export default function ProfileMenu({ anchor = 'topbar' }) {
             {user.is_founder && <CrownIcon className="w-3.5 h-3.5 text-navy flex-shrink-0" />}
             {user.is_premium && <VerifiedBadge className="w-3.5 h-3.5 flex-shrink-0" />}
           </Link>
-          {(user.is_founder || user.is_premium) && (
-            <button
-              onClick={() => { setOpen(false); setViewingStory(true) }}
-              className="w-full text-left px-4 py-2.5 text-sm text-slate hover:bg-bg hover:text-navy transition-colors"
-            >
-              My Story
-            </button>
-          )}
           <Link to="/premium" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm text-slate hover:bg-bg hover:text-navy transition-colors">
             Premium
           </Link>
@@ -94,7 +84,6 @@ export default function ProfileMenu({ anchor = 'topbar' }) {
         </div>
       )}
 
-      {viewingStory && <FounderStoryModal onClose={() => setViewingStory(false)} />}
     </div>
   )
 }
