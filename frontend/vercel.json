@@ -1,7 +1,6 @@
 {
   "rewrites": [
     {
-      "comment": "Single-page app: every route serves index.html and React takes over. /api is excluded because this catch-all would otherwise swallow the serverless functions and hand them the app's HTML instead of running them.",
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
