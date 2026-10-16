@@ -38,6 +38,18 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
+// Everything the card needs in ONE parameter. Two parameters need an
+// ampersand, which is correctly written &amp; inside an HTML attribute --
+// correct, and one sloppy crawler away from fetching a URL where the
+// author's name has silently become part of the previous value. No
+// ampersand, nothing to mis-decode.
+function packed(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj))
+  let binary = ''
+  for (const b of bytes) binary += String.fromCharCode(b)
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
 function trim(text, max) {
   const clean = String(text ?? '').replace(/\s+/g, ' ').trim()
   if (clean.length <= max) return clean
@@ -139,8 +151,7 @@ export default async function middleware(request) {
   if (isImage) {
     image = story.media_url
   } else if (body) {
-    const q = new URLSearchParams({ text: trim(story.body, 300), who })
-    image = `${SITE}/api/og?${q.toString()}`
+    image = `${SITE}/api/og?q=${packed({ t: trim(story.body, 300), w: who })}`
     generated = true
   }
 

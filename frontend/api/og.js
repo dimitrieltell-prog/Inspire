@@ -54,8 +54,13 @@ async function loadFonts(origin) {
 
 export default async function handler(req, res) {
   try {
-    const raw = String(req.query.text || '').replace(/\s+/g, ' ').trim()
-    const who = String(req.query.who || '').trim().slice(0, 40) || 'Inspire'
+    // One base64url parameter holding { t: text, w: who } -- see the note
+    // in middleware.js about why this isn't two plain query parameters.
+    const packed = String(req.query.q || '')
+    const json = Buffer.from(packed.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
+    const { t, w } = JSON.parse(json)
+    const raw = String(t || '').replace(/\s+/g, ' ').trim()
+    const who = String(w || '').trim().slice(0, 40) || 'Inspire'
     const text =
       (raw.length > MAX_CHARS ? `${raw.slice(0, MAX_CHARS - 1).trimEnd()}…` : raw) ||
       'A story on Inspire'
