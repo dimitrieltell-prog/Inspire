@@ -1,23 +1,21 @@
-import { ImageResponse } from '@vercel/og'
+import satori from 'satori'
+import { Resvg } from '@resvg/resvg-js'
 
 // Draws the preview image for a post that has no photo of its own.
 //
 // Until now every text post shared the one site-wide banner, so a link to
-// someone's hardest week and a link to the homepage arrived looking
-// identical. This renders the words themselves onto a card, which is the
-// difference between a link that gets opened and one that doesn't.
+// someone's hardest week arrived looking exactly like a link to the
+// homepage. This renders the words themselves onto a card.
 //
 // Called only from middleware.js, and only for posts the backend already
-// served to an anonymous request -- so everything reaching here is public.
-// Nothing is fetched here and no post is looked up: the text arrives in
-// the query string already vetted, and this file just draws it.
-
-// Node, not edge. @vercel/og is not an allowed module in this project's
-// edge bundle -- the deploy step rejected it with "The Edge Function
-// 'middleware' is referencing unsupported modules: @vercel", taking the
-// whole deployment down rather than just this function. The Node runtime
-// has no such restriction and @vercel/og ships a build for it.
-export const config = { runtime: 'nodejs' }
+// served to an anonymous request, so everything arriving here is public.
+// No post is looked up and nothing is fetched from the API: the text comes
+// in the query string already vetted, and this file only draws it.
+//
+// satori + resvg rather than @vercel/og, which wraps exactly these two:
+// its edge build is rejected by this project's function validator, and its
+// Node build does require("fs") inside an ESM package and dies on every
+// invocation. These are the same renderer without the broken wrapper.
 
 const WIDTH = 1200
 const HEIGHT = 630
@@ -26,8 +24,8 @@ const PAD_Y = 72
 const INNER = WIDTH - PAD_X * 2
 const MAX_CHARS = 300
 
-// Longer posts step down in size rather than overflowing the card. Satori
-// has no auto-fit, so the size has to be chosen before laying anything out.
+// Longer posts step down in size rather than overflowing. Satori has no
+// auto-fit, so the size is chosen before anything is laid out.
 function fontSizeFor(length) {
   if (length <= 70) return 62
   if (length <= 140) return 52
@@ -39,26 +37,37 @@ function el(type, style, children) {
   return { type, props: { style, children } }
 }
 
-export default async function handler(request) {
-  try {
-    const { searchParams, origin } = new URL(request.url)
-    const raw = (searchParams.get('text') || '').replace(/\s+/g, ' ').trim()
-    const who = (searchParams.get('who') || '').trim().slice(0, 40)
-    const text = raw.length > MAX_CHARS ? `${raw.slice(0, MAX_CHARS - 1).trimEnd()}…` : raw
+let cachedFonts = null
+async function loadFonts(origin) {
+  // Held across invocations so a warm function doesn't refetch them.
+  if (cachedFonts) return cachedFonts
+  const [semibold, bold] = await Promise.all([
+    fetch(`${origin}/fonts/PlusJakartaSans-SemiBold.ttf`).then((r) => r.arrayBuffer()),
+    fetch(`${origin}/fonts/PlusJakartaSans-Bold.ttf`).then((r) => r.arrayBuffer()),
+  ])
+  cachedFonts = [
+    { name: 'Jakarta', data: Buffer.from(semibold), weight: 600, style: 'normal' },
+    { name: 'Jakarta', data: Buffer.from(bold), weight: 700, style: 'normal' },
+  ]
+  return cachedFonts
+}
 
-    // Fonts are fetched from the site's own public directory rather than
-    // imported as bundled assets. The import.meta.url form is what the
-    // Next.js examples use, and it does not survive this project's
-    // function build -- it took the whole deployment down with it.
-    const [semibold, bold] = await Promise.all([
-      fetch(`${origin}/fonts/PlusJakartaSans-SemiBold.ttf`).then((r) => r.arrayBuffer()),
-      fetch(`${origin}/fonts/PlusJakartaSans-Bold.ttf`).then((r) => r.arrayBuffer()),
-    ])
+export default async function handler(req, res) {
+  try {
+    const raw = String(req.query.text || '').replace(/\s+/g, ' ').trim()
+    const who = String(req.query.who || '').trim().slice(0, 40) || 'Inspire'
+    const text =
+      (raw.length > MAX_CHARS ? `${raw.slice(0, MAX_CHARS - 1).trimEnd()}…` : raw) ||
+      'A story on Inspire'
+
+    const proto = req.headers['x-forwarded-proto'] || 'https'
+    const origin = `${proto}://${req.headers.host}`
+    const fonts = await loadFonts(origin)
 
     // Explicit pixel sizes, no percentages and no padding on the root.
     // Satori lays padding OUTSIDE the declared width, so width:100% plus
-    // padding made the box 168px wider than the canvas and the text ran
-    // clean off the right edge with the footer pushed out of frame.
+    // padding made the box 168px wider than the canvas: text ran off the
+    // right edge mid-word and the footer was pushed out of frame.
     const card = el(
       'div',
       {
@@ -83,7 +92,6 @@ export default async function handler(request) {
             justifyContent: 'space-between',
           },
           [
-            // The words, centred in whatever room the footer leaves.
             el('div', { display: 'flex', width: INNER, flexGrow: 1, alignItems: 'center' }, [
               el(
                 'div',
@@ -95,10 +103,9 @@ export default async function handler(request) {
                   lineHeight: 1.3,
                   letterSpacing: '-0.02em',
                 },
-                text || 'A story on Inspire',
+                text,
               ),
             ]),
-            // The mark, who wrote it, and where it lives.
             el('div', { display: 'flex', width: INNER, alignItems: 'center' }, [
               el('div', {
                 width: 34,
@@ -107,7 +114,7 @@ export default async function handler(request) {
                 transform: 'rotate(45deg)',
                 marginRight: 34,
               }),
-              el('div', { fontSize: 28, fontWeight: 600, color: '#C3CBE8' }, who || 'Inspire'),
+              el('div', { fontSize: 28, fontWeight: 600, color: '#C3CBE8' }, who),
               el('div', { display: 'flex', flexGrow: 1 }),
               el(
                 'div',
@@ -120,21 +127,16 @@ export default async function handler(request) {
       ],
     )
 
-    return new ImageResponse(card, {
-      width: WIDTH,
-      height: HEIGHT,
-      fonts: [
-        { name: 'Jakarta', data: semibold, weight: 600, style: 'normal' },
-        { name: 'Jakarta', data: bold, weight: 700, style: 'normal' },
-      ],
-      headers: {
-        // The text is baked into the URL, so a given URL always renders the
-        // same image and can be cached hard.
-        'cache-control': 'public, max-age=0, s-maxage=86400, immutable',
-      },
-    })
+    const svg = await satori(card, { width: WIDTH, height: HEIGHT, fonts })
+    const png = new Resvg(svg, { fitTo: { mode: 'width', value: WIDTH } }).render().asPng()
+
+    res.setHeader('content-type', 'image/png')
+    // The text is baked into the URL, so a given URL always renders the
+    // same image and can be cached hard.
+    res.setHeader('cache-control', 'public, max-age=0, s-maxage=86400, immutable')
+    res.status(200).send(png)
   } catch (e) {
     // A broken image is worse than the plain banner, so fail over to it.
-    return Response.redirect(new URL('/og-image.png', request.url), 302)
+    res.redirect(302, '/og-image.png')
   }
 }
