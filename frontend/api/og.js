@@ -44,13 +44,17 @@ let cachedFonts = null
 async function loadFonts(origin) {
   // Held across invocations so a warm function doesn't refetch them.
   if (cachedFonts) return cachedFonts
-  const [semibold, bold] = await Promise.all([
+  const [semibold, bold, serif] = await Promise.all([
     fetch(`${origin}/fonts/PlusJakartaSans-SemiBold.ttf`).then((r) => r.arrayBuffer()),
     fetch(`${origin}/fonts/PlusJakartaSans-Bold.ttf`).then((r) => r.arrayBuffer()),
+    // Subset to the single character it draws -- the full face is 582kB
+    // for one letter, and this is fetched on every cold start.
+    fetch(`${origin}/fonts/Tinos-i.ttf`).then((r) => r.arrayBuffer()),
   ])
   cachedFonts = [
     { name: 'Jakarta', data: Buffer.from(semibold), weight: 600, style: 'normal' },
     { name: 'Jakarta', data: Buffer.from(bold), weight: 700, style: 'normal' },
+    { name: 'MarkSerif', data: Buffer.from(serif), weight: 700, style: 'normal' },
   ]
   return cachedFonts
 }
@@ -115,13 +119,54 @@ export default async function handler(req, res) {
               ),
             ]),
             el('div', { display: 'flex', width: INNER, alignItems: 'center' }, [
-              el('div', {
-                width: 34,
-                height: 34,
-                border: '3px solid #8FA2E8',
-                transform: 'rotate(45deg)',
-                marginRight: 34,
-              }),
+              // The real mark, matching components/Logo.jsx: two nested
+              // diamonds around a serif "i". A bare diamond on its own is
+              // not the Inspire logo, it is just a shape.
+              el(
+                'div',
+                {
+                  display: 'flex',
+                  position: 'relative',
+                  width: 46,
+                  height: 46,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 30,
+                },
+                [
+                  el('div', {
+                    position: 'absolute',
+                    top: 5,
+                    left: 5,
+                    width: 36,
+                    height: 36,
+                    border: '2.5px solid #8FA2E8',
+                    transform: 'rotate(45deg)',
+                  }),
+                  el('div', {
+                    position: 'absolute',
+                    top: 9.5,
+                    left: 9.5,
+                    width: 27,
+                    height: 27,
+                    border: '1.2px solid #8FA2E8',
+                    transform: 'rotate(45deg)',
+                  }),
+                  el(
+                    'div',
+                    {
+                      display: 'flex',
+                      fontFamily: 'MarkSerif',
+                      fontSize: 27,
+                      fontWeight: 700,
+                      color: '#C3CBE8',
+                      lineHeight: 1,
+                      marginTop: 1,
+                    },
+                    'i',
+                  ),
+                ],
+              ),
               el('div', { fontSize: 28, fontWeight: 600, color: '#C3CBE8' }, who),
               el('div', { display: 'flex', flexGrow: 1 }),
               el(
