@@ -41,9 +41,13 @@ export default async function handler(request) {
     const who = (searchParams.get('who') || '').trim().slice(0, 40)
     const text = raw.length > MAX_CHARS ? `${raw.slice(0, MAX_CHARS - 1).trimEnd()}…` : raw
 
+    // Fonts are fetched from the site's own public directory rather than
+    // imported as bundled assets. The import.meta.url form is what the
+    // Next.js examples use, and it does not survive this project's
+    // function build -- it took the whole deployment down with it.
     const [semibold, bold] = await Promise.all([
-      fetch(new URL('./fonts/PlusJakartaSans-SemiBold.ttf', import.meta.url)).then((r) => r.arrayBuffer()),
-      fetch(new URL('./fonts/PlusJakartaSans-Bold.ttf', import.meta.url)).then((r) => r.arrayBuffer()),
+      fetch(`${origin}/fonts/PlusJakartaSans-SemiBold.ttf`).then((r) => r.arrayBuffer()),
+      fetch(`${origin}/fonts/PlusJakartaSans-Bold.ttf`).then((r) => r.arrayBuffer()),
     ])
 
     // Explicit pixel sizes, no percentages and no padding on the root.
