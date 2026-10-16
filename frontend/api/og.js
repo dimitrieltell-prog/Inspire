@@ -22,15 +22,18 @@ const HEIGHT = 630
 const PAD_X = 84
 const PAD_Y = 72
 const INNER = WIDTH - PAD_X * 2
-const MAX_CHARS = 300
+// Short on purpose. 300 characters at 38px fills the card edge to edge and
+// turns to mush the moment anything shrinks it -- and plenty of places do:
+// Snapchat's link sticker crops it to a strip barely a third of its width.
+// Fewer words set larger survive that; the full post is one tap away.
+const MAX_CHARS = 150
 
 // Longer posts step down in size rather than overflowing. Satori has no
 // auto-fit, so the size is chosen before anything is laid out.
 function fontSizeFor(length) {
-  if (length <= 70) return 62
-  if (length <= 140) return 52
-  if (length <= 220) return 44
-  return 38
+  if (length <= 60) return 72
+  if (length <= 110) return 62
+  return 54
 }
 
 function el(type, style, children) {

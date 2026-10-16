@@ -27,7 +27,7 @@ const FALLBACK_IMAGE = `${SITE}/og-image.png`
 // Only the agents that actually render link previews. Deliberately not a
 // general "is this a bot" test: a false positive here serves a human a page
 // with no app on it.
-const PREVIEW_AGENTS = /facebookexternalhit|facebookcatalog|Facebot|Twitterbot|Slackbot|Slack-ImgProxy|LinkedInBot|WhatsApp|Discordbot|TelegramBot|Applebot|SkypeUriPreview|redditbot|Pinterest|vkShare|Googlebot|bingbot|DuckDuckBot|iframely|embedly/i
+const PREVIEW_AGENTS = /facebookexternalhit|facebookcatalog|Facebot|Twitterbot|Slackbot|Slack-ImgProxy|LinkedInBot|WhatsApp|Discordbot|TelegramBot|Applebot|SkypeUriPreview|redditbot|Pinterest|vkShare|Googlebot|bingbot|DuckDuckBot|iframely|embedly|Snapchat|Snap URL Preview|TikTok|Bytespider|Yahoo|Google-InspectionTool|Mastodon|Threads/i
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -151,7 +151,7 @@ export default async function middleware(request) {
   if (isImage) {
     image = story.media_url
   } else if (body) {
-    image = `${SITE}/api/og?q=${packed({ t: trim(story.body, 300), w: who })}`
+    image = `${SITE}/api/og?q=${packed({ t: trim(story.body, 150), w: who })}`
     generated = true
   }
 
