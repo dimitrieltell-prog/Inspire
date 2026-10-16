@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ReportModal from './ReportModal'
 import DeleteStoryConfirm from './DeleteStoryConfirm'
 import BookmarkIcon from './BookmarkIcon'
+import ShareIcon from './ShareIcon'
 import HeartIcon from './HeartIcon'
 import CommentIcon from './CommentIcon'
 import RepostIcon from './RepostIcon'
@@ -55,8 +56,8 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
   const {
     supportCount, picked, error,
     reactorsOpen, setReactorsOpen,
-    saved, reposted, repostCount,
-    toggleLike, toggleSave, toggleRepost,
+    saved, reposted, repostCount, shareCopied,
+    toggleLike, toggleSave, toggleRepost, share,
   } = useStoryInteractions(story)
 
   return (
@@ -191,10 +192,20 @@ export default function FeedStoryCard({ story, onOpenComments, onDeleted }) {
             <RepostIcon />
             <span>{repostCount}</span>
           </button>
+{/* Sits immediately left of the bookmark, so ml-auto moves here
+              and the two right-hand actions travel together. */}
+          {shareCopied && <span className="ml-auto text-xs font-medium text-slate-light">Copied</span>}
+          <button
+            onClick={share}
+            aria-label="Share"
+            className={`${shareCopied ? '' : 'ml-auto'} text-slate-light hover:text-indigo transition-colors`}
+          >
+            <ShareIcon className="w-4 h-4" />
+          </button>
           <button
             onClick={toggleSave}
             aria-label={saved ? 'Unsave' : 'Save'}
-            className={`ml-auto transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
+            className={`transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
           >
             <BookmarkIcon filled={saved} className="w-4 h-4" />
           </button>

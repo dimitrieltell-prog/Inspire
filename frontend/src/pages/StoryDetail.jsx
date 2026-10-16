@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext'
 import ReportModal from '../components/ReportModal'
 import DeleteStoryConfirm from '../components/DeleteStoryConfirm'
 import BookmarkIcon from '../components/BookmarkIcon'
+import ShareIcon from '../components/ShareIcon'
 import HeartIcon from '../components/HeartIcon'
 import CommentIcon from '../components/CommentIcon'
 import RepostIcon from '../components/RepostIcon'
@@ -56,8 +57,8 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
   const {
     supportCount, picked, error: reactError,
     reactorsOpen, setReactorsOpen,
-    saved, reposted, repostCount,
-    toggleLike, toggleSave, toggleRepost,
+    saved, reposted, repostCount, shareCopied,
+    toggleLike, toggleSave, toggleRepost, share,
   } = useStoryInteractions(story)
 
   return (
@@ -170,10 +171,20 @@ function StoryDetailBody({ story, setStory, user, menuOpen, setMenuOpen, report,
               <RepostIcon className="w-5 h-5" />
               <span>{repostCount}</span>
             </button>
+{/* Sits immediately left of the bookmark, so ml-auto moves here
+                and the two right-hand actions travel together. */}
+            {shareCopied && <span className="ml-auto text-xs font-medium text-slate-light">Copied</span>}
+            <button
+              onClick={share}
+              aria-label="Share"
+              className={`${shareCopied ? '' : 'ml-auto'} text-slate-light hover:text-indigo transition-colors`}
+            >
+              <ShareIcon className="w-5 h-5" />
+            </button>
             <button
               onClick={toggleSave}
               aria-label={saved ? 'Unsave' : 'Save'}
-              className={`ml-auto transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
+              className={`transition-colors ${saved ? 'text-indigo' : 'text-slate-light hover:text-indigo'}`}
             >
               <BookmarkIcon filled={saved} className="w-5 h-5" />
             </button>

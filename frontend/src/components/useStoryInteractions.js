@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../AuthContext'
@@ -29,6 +29,10 @@ export function useStoryInteractions(story) {
   const [saved, setSaved] = useState(story.is_saved)
   const [reposted, setReposted] = useState(story.is_reposted)
   const [repostCount, setRepostCount] = useState(story.repost_count)
+  // Brief "Copied" confirmation after the clipboard fallback.
+  const [shareCopied, setShareCopied] = useState(false)
+  const copyTimer = useRef(null)
+  useEffect(() => () => clearTimeout(copyTimer.current), [])
 
   function promptSignIn() {
     navigate('/login', { state: { from: location } })
@@ -63,6 +67,73 @@ export function useStoryInteractions(story) {
     }
   }
 
+  // The phone's own share sheet where there is one -- that's what puts
+  // Messages, WhatsApp and the rest in the list without Inspire integrating
+  // with any of them. Desktop browsers mostly don't implement it, so there
+  // the link goes to the clipboard instead.
+  //
+  // Sharing deliberately needs no account: it's a link to a page the
+  // backend already gates on its own, so a stranger handed a link to a
+  // followers-only post still sees nothing.
+  function copyViaSelection(text) {
+    // execCommand is deprecated, and still the only copy that works when
+    // the Clipboard API is refused -- which it is in embedded webviews, on
+    // older browsers, and anywhere the permission is denied. Without this
+    // those people get an error and no way to share at all.
+    const field = document.createElement('textarea')
+    field.value = text
+    field.setAttribute('readonly', '')
+    field.style.position = 'fixed'
+    field.style.top = '0'
+    field.style.opacity = '0'
+    document.body.appendChild(field)
+    field.select()
+    let copied = false
+    try {
+      copied = document.execCommand('copy')
+    } catch (e) {
+      copied = false
+    }
+    document.body.removeChild(field)
+    return copied
+  }
+
+  function confirmCopied() {
+    setShareCopied(true)
+    clearTimeout(copyTimer.current)
+    copyTimer.current = setTimeout(() => setShareCopied(false), 2000)
+  }
+
+  async function share() {
+    const url = `${window.location.origin}/stories/${story.id}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: story.display_title || 'Inspire', url })
+        return
+      } catch (e) {
+        // Dismissing the sheet rejects with AbortError. That's a choice,
+        // not a failure -- falling through to the clipboard would copy a
+        // link for someone who just decided not to share it.
+        if (e && e.name === 'AbortError') return
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      confirmCopied()
+      return
+    } catch (e) {
+      // Permission denied or no Clipboard API at all -- try the old way.
+    }
+
+    if (copyViaSelection(url)) {
+      confirmCopied()
+      return
+    }
+    setError('Could not copy the link.')
+  }
+
   async function toggleSave() {
     if (!user) { promptSignIn(); return }
     const next = !saved
@@ -93,6 +164,7 @@ export function useStoryInteractions(story) {
     supportCount, picked, error,
     reactorsOpen, setReactorsOpen,
     saved, reposted, repostCount,
-    toggleLike, unreact, toggleSave, toggleRepost,
+    shareCopied,
+    toggleLike, unreact, toggleSave, toggleRepost, share,
   }
 }
