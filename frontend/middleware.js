@@ -44,7 +44,7 @@ function trim(text, max) {
   return `${clean.slice(0, max - 1).trimEnd()}…`
 }
 
-function page({ title, description, image, url, generated }) {
+function page({ title, description, image, url }) {
   const t = escapeHtml(title)
   const d = escapeHtml(description)
   const i = escapeHtml(image)
@@ -64,10 +64,7 @@ function page({ title, description, image, url, generated }) {
 <meta property="og:title" content="${t}" />
 <meta property="og:description" content="${d}" />
 <meta property="og:image" content="${i}" />
-<meta property="og:image:alt" content="${t}" />${generated ? `
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />` : ''}
+<meta property="og:image:alt" content="${t}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${t}" />
 <meta name="twitter:description" content="${d}" />
@@ -126,30 +123,11 @@ export default async function middleware(request) {
   const body = trim(story.body, 200)
   const isImage = story.media_url && story.media_type !== 'video'
 
-  // A post with no photo of its own gets a card drawn from its words. The
-  // alternative is the site banner, which makes a link to someone's hardest
-  // week look identical to a link to the homepage.
-  //
-  // The text is passed in the URL rather than looked up again inside the
-  // renderer: it has already come back from an unauthenticated fetch, so
-  // it's public, and the renderer stays a pure function of its query string
-  // with no second chance to leak something private.
-  let image = FALLBACK_IMAGE
-  let generated = false
-  if (isImage) {
-    image = story.media_url
-  } else if (body) {
-    const q = new URLSearchParams({ text: trim(story.body, 300), who })
-    image = `${SITE}/api/og?${q.toString()}`
-    generated = true
-  }
-
   return new Response(
     page({
       title: `${who} on Inspire`,
       description: body || 'A story on Inspire.',
-      image,
-      generated,
+      image: isImage ? story.media_url : FALLBACK_IMAGE,
       url,
     }),
     {
