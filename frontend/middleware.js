@@ -138,22 +138,19 @@ export default async function middleware(request) {
   const body = trim(story.body, 200)
   const isImage = story.media_url && story.media_type !== 'video'
 
-  // A post with no photo of its own gets a card drawn from its words. The
-  // alternative is the site banner, which makes a link to someone's hardest
-  // week look identical to a link to the homepage.
+  // Photo posts preview with their own photo. Everything else gets the
+  // Inspire mark.
   //
-  // The text is passed in the URL rather than looked up again inside the
-  // renderer: it has already come back from an unauthenticated fetch, so
-  // it's public, and the renderer stays a pure function of its query string
-  // with no second chance to leak something private.
-  let image = FALLBACK_IMAGE
-  let generated = false
-  if (isImage) {
-    image = story.media_url
-  } else if (body) {
-    image = `${SITE}/api/og?q=${packed({ t: trim(story.body, 150), w: who })}`
-    generated = true
-  }
+  // Text posts used to get a card drawn from their own words, which reads
+  // well wide -- iMessage, WhatsApp -- and badly anywhere it is cropped to
+  // a square, which is what Snapchat's link sticker does: two thirds of the
+  // width is thrown away along with the logo and the author's name. The
+  // mark crops to a square cleanly, so it is the safer thing to send.
+  //
+  // api/og.js still renders those cards and is one line from being used
+  // again, either everywhere or for everyone except Snapchat.
+  const image = isImage ? story.media_url : FALLBACK_IMAGE
+  const generated = false
 
   return new Response(
     page({
